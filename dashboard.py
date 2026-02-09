@@ -53,7 +53,7 @@ with col1:
 @st.cache_data(ttl=3600)
 def fetch_prices(tickers):
     data = yf.download(tickers, start="2025-10-01", progress=False)
-    return data["Close"]
+    return data["Close"].ffill().dropna()
 
 symbols = df["Symbol"].tolist()
 close_df = fetch_prices(symbols)
