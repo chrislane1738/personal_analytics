@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>💕 Our Love Story 💕</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Quicksand:wght@400;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; touch-action: manipulation; }
+
+  body {
+    font-family: 'Quicksand', sans-serif;
+    background: linear-gradient(135deg, #1a0a1e 0%, #2d1035 30%, #1a0a2e 60%, #0d0515 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: #fff;
+    position: relative;
+  }
+
+  /* Floating hearts background */
+  .bg-hearts {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .bg-heart {
+    position: absolute;
+    font-size: 20px;
+    opacity: 0.15;
+    animation: floatUp linear infinite;
+  }
+
+  @keyframes floatUp {
+    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.15; }
+    90% { opacity: 0.15; }
+    100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+  }
+
+  /* Background photo slideshow */
+  .bg-slideshow {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .bg-slideshow img {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out;
+  }
+
+  .bg-slideshow img.active {
+    opacity: 0.12;
+  }
+
+  /* Game container */
+  .game-container {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+    max-width: 500px;
+    width: 100%;
+  }
+
+  .game-title {
+    font-family: 'Dancing Script', cursive;
+    font-size: 2rem;
+    color: #ff6b9d;
+    text-shadow: 0 0 20px rgba(255, 107, 157, 0.5);
+    text-align: center;
+  }
+
+  .game-subtitle {
+    font-size: 0.85rem;
+    color: rgba(255, 182, 210, 0.7);
+    margin-top: -6px;
+    text-align: center;
+  }
+
+  /* Progress bar */
+  .progress-container {
+    width: 100%;
+    max-width: 380px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 3px;
+    position: relative;
+  }
+
+  .progress-bar {
+    height: 22px;
+    border-radius: 18px;
+    background: linear-gradient(90deg, #ff6b9d, #ff3d7f, #e91e63);
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    min-width: 50px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .milestone-label {
+    font-size: 0.8rem;
+    color: #ffb6d2;
+    text-align: center;
+    margin-top: 4px;
+    font-weight: 600;
+    height: 20px;
+  }
+
+  /* Grid - 6x6 */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 5px;
+    background: rgba(255, 107, 157, 0.08);
+    border: 2px solid rgba(255, 107, 157, 0.2);
+    border-radius: 16px;
+    padding: 8px;
+    width: 100%;
+    max-width: 380px;
+    aspect-ratio: 1;
+    box-shadow: 0 0 40px rgba(255, 107, 157, 0.1);
+  }
+
+  .cell {
+    aspect-ratio: 1;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    position: relative;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .cell:hover { background: rgba(255,255,255,0.08); }
+
+  .cell.empty { cursor: pointer; }
+
+  .cell.empty.move-target {
+    border: 2px dashed rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.06);
+    cursor: pointer;
+  }
+
+  .cell.selected {
+    border: 2px solid #ff6b9d;
+    box-shadow: 0 0 15px rgba(255, 107, 157, 0.5);
+    background: rgba(255, 107, 157, 0.15);
+    transform: scale(1.05);
+  }
+
+  .cell.merge-target {
+    border: 2px dashed #ff6b9d;
+    animation: pulse 0.8s ease-in-out infinite;
+  }
+
+  .cell.just-merged { animation: mergeFlash 0.4s ease-out; }
+  .cell.spawning { animation: spawnIn 0.3s ease-out; }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 5px rgba(255,107,157,0.3); }
+    50% { box-shadow: 0 0 20px rgba(255,107,157,0.6); }
+  }
+
+  @keyframes mergeFlash {
+    0% { transform: scale(1.3); background: rgba(255,107,157,0.4); }
+    100% { transform: scale(1); background: rgba(255,255,255,0.04); }
+  }
+
+  @keyframes spawnIn {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .cell-emoji { font-size: 1.5rem; line-height: 1; }
+  .cell-label {
+    font-size: 0.4rem;
+    color: rgba(255,255,255,0.6);
+    margin-top: 1px;
+    text-align: center;
+    line-height: 1.1;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  /* Tier color backgrounds - gradient from cool to warm */
+  .cell[data-tier="1"]  { background: rgba(200,200,255,0.06); }
+  .cell[data-tier="2"]  { background: rgba(255,200,200,0.07); }
+  .cell[data-tier="3"]  { background: rgba(200,180,255,0.08); }
+  .cell[data-tier="4"]  { background: rgba(180,200,255,0.09); }
+  .cell[data-tier="5"]  { background: rgba(255,230,180,0.10); }
+  .cell[data-tier="6"]  { background: rgba(255,180,200,0.11); }
+  .cell[data-tier="7"]  { background: rgba(255,200,220,0.12); }
+  .cell[data-tier="8"]  { background: rgba(255,215,180,0.13); }
+  .cell[data-tier="9"]  { background: rgba(200,180,255,0.15); }
+  .cell[data-tier="10"] { background: rgba(180,200,255,0.16); }
+  .cell[data-tier="11"] { background: rgba(255,100,150,0.17); }
+  .cell[data-tier="12"] { background: rgba(255,215,0,0.18); }
+  .cell[data-tier="13"] { background: rgba(255,180,100,0.20); }
+  .cell[data-tier="14"] { background: rgba(100,200,150,0.20); }
+  .cell[data-tier="15"] { background: linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,107,157,0.25)); }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .btn {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 25px;
+    font-family: 'Quicksand', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-hint {
+    background: rgba(255,255,255,0.1);
+    color: #ffb6d2;
+    border: 1px solid rgba(255,107,157,0.3);
+  }
+
+  .btn-hint:hover { background: rgba(255,107,157,0.2); }
+
+  .hint-count {
+    font-size: 0.75rem;
+    color: rgba(255,182,210,0.6);
+  }
+
+  .move-tip {
+    font-size: 0.75rem;
+    color: rgba(255,182,210,0.5);
+    text-align: center;
+  }
+
+  /* Screens (Intro / Win) */
+  .screen {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    background: linear-gradient(135deg, #1a0a1e 0%, #2d1035 30%, #1a0a2e 60%, #0d0515 100%);
+    transition: opacity 0.6s ease;
+    padding: 20px;
+    overflow-y: auto;
+  }
+
+  .screen.hidden { opacity: 0; pointer-events: none; }
+
+  .intro-title {
+    font-family: 'Dancing Script', cursive;
+    font-size: 2.8rem;
+    color: #ff6b9d;
+    text-shadow: 0 0 30px rgba(255,107,157,0.5);
+    margin-bottom: 10px;
+  }
+
+  .intro-text {
+    font-size: 1rem;
+    color: rgba(255,182,210,0.8);
+    text-align: center;
+    max-width: 340px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+
+  .intro-chain {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 6px;
+    margin-bottom: 25px;
+    max-width: 370px;
+  }
+
+  .intro-chain-item {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.7rem;
+    color: rgba(255,182,210,0.7);
+  }
+
+  .intro-chain-item .emoji { font-size: 1rem; }
+
+  .intro-chain-arrow {
+    color: rgba(255,107,157,0.4);
+    font-size: 0.7rem;
+  }
+
+  .btn-start {
+    background: linear-gradient(135deg, #ff6b9d, #ff3d7f);
+    color: #fff;
+    font-size: 1.1rem;
+    padding: 14px 40px;
+    box-shadow: 0 4px 20px rgba(255,61,127,0.4);
+  }
+
+  .btn-start:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(255,61,127,0.5);
+  }
+
+  /* Win screen */
+  .win-screen { text-align: center; }
+
+  .win-title {
+    font-family: 'Dancing Script', cursive;
+    font-size: 2.8rem;
+    color: #ff6b9d;
+    text-shadow: 0 0 30px rgba(255,107,157,0.6);
+    margin-bottom: 15px;
+  }
+
+  .win-photo-frame {
+    width: 250px;
+    height: 250px;
+    border-radius: 20px;
+    border: 4px solid rgba(255,107,157,0.5);
+    box-shadow: 0 0 40px rgba(255,107,157,0.3);
+    margin: 0 auto 20px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .win-photo-frame img { width: 100%; height: 100%; object-fit: cover; }
+
+  .win-photo-placeholder {
+    font-size: 0.8rem;
+    color: rgba(255,182,210,0.5);
+    padding: 20px;
+    text-align: center;
+  }
+
+  .win-message {
+    font-size: 1.1rem;
+    color: rgba(255,182,210,0.9);
+    max-width: 300px;
+    margin: 0 auto 25px;
+    line-height: 1.6;
+  }
+
+  .win-particles {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 9;
+  }
+
+  .particle {
+    position: absolute;
+    font-size: 1.5rem;
+    animation: particleFall linear forwards;
+  }
+
+  @keyframes particleFall {
+    0% { transform: translateY(-20px) rotate(0deg) scale(1); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg) scale(0.3); opacity: 0; }
+  }
+
+  /* Triple merge floating quote */
+  .triple-quote {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 20;
+    max-width: 200px;
+    padding: 14px 18px;
+    border-radius: 16px;
+    background: rgba(255, 107, 157, 0.15);
+    border: 1px solid rgba(255, 107, 157, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 700;
+    font-style: normal;
+    font-size: 1.05rem;
+    color: #ffb6d2;
+    text-shadow: 0 0 10px rgba(255, 107, 157, 0.4);
+    text-align: center;
+    line-height: 1.4;
+    pointer-events: none;
+    animation: quoteAppear 5s ease-out forwards;
+    box-shadow: 0 0 30px rgba(255, 107, 157, 0.2);
+  }
+
+  .triple-quote.left { left: 8px; }
+  .triple-quote.right { right: 8px; }
+
+  @keyframes quoteAppear {
+    0% { opacity: 0; transform: translateY(-50%) scale(0.7); }
+    8% { opacity: 1; transform: translateY(-50%) scale(1.05); }
+    12% { opacity: 1; transform: translateY(-50%) scale(1); }
+    80% { opacity: 1; transform: translateY(-50%) scale(1); }
+    100% { opacity: 0; transform: translateY(-50%) scale(1); }
+  }
+
+  /* Score display */
+  .score-row {
+    display: flex;
+    gap: 20px;
+    font-size: 0.85rem;
+    color: rgba(255,182,210,0.7);
+  }
+  .score-row span { font-weight: 700; color: #ff6b9d; }
+
+  /* Responsive */
+  @media (max-width: 420px) {
+    .game-title { font-size: 1.6rem; }
+    .cell-emoji { font-size: 1.2rem; }
+    .cell-label { font-size: 0.35rem; }
+    .grid { gap: 3px; padding: 6px; }
+    .intro-title { font-size: 2.2rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-hearts" id="bgHearts"></div>
+<div class="bg-slideshow" id="bgSlideshow"></div>
+
+<!-- INTRO SCREEN -->
+<div class="screen" id="introScreen">
+  <div class="intro-title">Our Love Story</div>
+  <div class="intro-text">
+    Merge matching items to relive our love story together...
+    <br><br>
+    Tap to select, then tap a matching neighbor to merge — or tap an empty space to move it there 💕
+  </div>
+  <button class="btn btn-start" onclick="startGame()">Begin Our Story</button>
+</div>
+
+<!-- WIN SCREEN -->
+<div class="screen hidden" id="winScreen">
+  <div class="win-screen">
+    <div class="win-title">Happily Ever After</div>
+    <div class="win-photo-frame">
+      <img src="images/final-image.jpg" alt="Us">
+    </div>
+    <div class="win-message" id="winMessage">
+      <!-- REPLACE: Your custom Valentine's message -->
+      Happy Valentine's Day! 💕<br>
+      Every moment with you is my favorite chapter, Bryanna.
+      <br><br>
+      Love, Chris
+    </div>
+    <button class="btn btn-start" onclick="resetGame()">Play Again</button>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div class="game-container" id="gameContainer" style="display:none;">
+  <div class="game-title" id="gameTitle">Our Love Story</div>
+  <div class="game-subtitle">Merge matching items to grow our love</div>
+
+  <div class="progress-container">
+    <div class="progress-bar" id="progressBar" style="width: 5%;">👻 Snapchat</div>
+  </div>
+  <div class="milestone-label" id="milestoneLabel">Discover what comes next...</div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="score-row">
+    Merges: <span id="mergeCount">0</span>
+    &nbsp;|&nbsp;
+    Highest: <span id="highestTier">👻 Snapchat</span>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-hint" onclick="showHint()">💡 Hint <span class="hint-count" id="hintCount">(5)</span></button>
+  </div>
+  <div class="move-tip">Tap to select → tap empty space to move, or tap a match to merge!</div>
+</div>
+
+<div class="win-particles" id="winParticles"></div>
+
+<script>
+// ============================================================
+// MERGE CHAIN — Your love story!
+// ============================================================
+const TIERS = [
+  { emoji: '👻', name: 'Snapchat'          },  // 0
+  { emoji: '🍒', name: 'Cherry Pics?'      },  // 1
+  { emoji: '🚪', name: 'Can I Come In?'    },  // 2
+  { emoji: '🚗', name: 'Uber Drive'        },  // 3
+  { emoji: '✨', name: 'Spark'              },  // 4
+  { emoji: '🌉', name: 'SF Date'           },  // 5
+  { emoji: '🎂', name: 'Birthdays!'        },  // 6
+  { emoji: '🥂', name: '1st Anniversary'   },  // 7
+  { emoji: '🏰', name: 'Disneyland'        },  // 8
+  { emoji: '🎢', name: 'Disney World'      },  // 9
+  { emoji: '💝', name: '4th Valentines!'   },  // 10
+  { emoji: '💍', name: 'Proposal'          },  // 11
+  { emoji: '🏝️', name: 'Honeymoon'        },  // 12
+  { emoji: '🏡', name: 'Homeowners'        },  // 13
+  { emoji: '💖', name: 'Happily Ever After' }, // 14
+];
+
+const GRID_SIZE = 6;
+const TOTAL_CELLS = GRID_SIZE * GRID_SIZE; // 36
+const WIN_TIER = TIERS.length - 1; // 14
+
+let grid = [];
+let selectedCell = -1;
+let merges = 0;
+let highestTier = 0;
+let hints = 5;
+let gameWon = false;
+
+// ============================================================
+// BACKGROUND HEARTS
+// ============================================================
+function createBgHearts() {
+  const container = document.getElementById('bgHearts');
+  const emojis = ['💕', '💗', '💖', '💘', '💝', '♥️', '🩷'];
+  for (let i = 0; i < 20; i++) {
+    const h = document.createElement('div');
+    h.className = 'bg-heart';
+    h.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    h.style.left = Math.random() * 100 + '%';
+    h.style.fontSize = (12 + Math.random() * 20) + 'px';
+    h.style.animationDuration = (8 + Math.random() * 12) + 's';
+    h.style.animationDelay = (Math.random() * 10) + 's';
+    container.appendChild(h);
+  }
+}
+
+// ============================================================
+// TRIPLE MERGE QUOTES
+// ============================================================
+const TRIPLE_QUOTES = [
+  '"Reconciliation!!"',
+  '"With Discipline, comes Strength. With Strength, Comes Power!"',
+  '"Chris, the dogs are Depressed :("',
+  '"A Laci Poop!"',
+  '"Green Aura with Flies..."',
+  '"Chris, Unclog the Toilet"',
+  '"We Have Chicken in the Air Fryer"',
+];
+
+function showTripleQuote() {
+  const quote = document.createElement('div');
+  const side = Math.random() < 0.5 ? 'left' : 'right';
+  quote.className = `triple-quote ${side}`;
+  quote.textContent = TRIPLE_QUOTES[Math.floor(Math.random() * TRIPLE_QUOTES.length)];
+  document.body.appendChild(quote);
+  setTimeout(() => quote.remove(), 5100);
+}
+
+// ============================================================
+// GAME INIT
+// ============================================================
+function startGame() {
+  document.getElementById('introScreen').classList.add('hidden');
+  document.getElementById('gameContainer').style.display = 'flex';
+  initGrid();
+}
+
+function initGrid() {
+  grid = new Array(TOTAL_CELLS).fill(-1);
+  selectedCell = -1;
+  merges = 0;
+  highestTier = 0;
+  hints = 5;
+  gameWon = false;
+  document.getElementById('hintCount').textContent = `(${hints})`;
+  document.getElementById('mergeCount').textContent = '0';
+  document.getElementById('highestTier').textContent = TIERS[0].emoji + ' ' + TIERS[0].name;
+
+  // Start with 10 items on the 6x6 board
+  for (let i = 0; i < 10; i++) spawnItem();
+  renderGrid();
+  updateProgress();
+}
+
+function resetGame() {
+  document.getElementById('winScreen').classList.add('hidden');
+  document.getElementById('winParticles').innerHTML = '';
+  document.getElementById('gameContainer').style.display = 'flex';
+  initGrid();
+}
+
+// ============================================================
+// SPAWN LOGIC — scales aggressively so 15 tiers is reachable
+// ============================================================
+function getSpawnTier() {
+  // The "floor" rises as you progress so you're always getting useful pieces
+  // Floor: roughly highestTier - 4 (min 0)
+  // Ceiling: roughly highestTier - 1 (but at least 1)
+  const floor = Math.max(0, highestTier - 4);
+  const ceiling = Math.max(1, highestTier - 1);
+
+  // Weighted: favor lower end of range but with spread
+  const range = ceiling - floor + 1;
+  const rand = Math.random();
+
+  // 50% chance: floor, 30% floor+1, 15% floor+2, 5% floor+3+
+  if (rand < 0.45) return floor;
+  if (rand < 0.75) return Math.min(floor + 1, ceiling);
+  if (rand < 0.92) return Math.min(floor + 2, ceiling);
+  return ceiling;
+}
+
+function spawnItem() {
+  const empty = [];
+  for (let i = 0; i < TOTAL_CELLS; i++) {
+    if (grid[i] === -1) empty.push(i);
+  }
+  if (empty.length === 0) return false;
+  const cell = empty[Math.floor(Math.random() * empty.length)];
+  grid[cell] = getSpawnTier();
+  return cell;
+}
+
+// ============================================================
+// RENDERING
+// ============================================================
+function renderGrid() {
+  const container = document.getElementById('grid');
+  container.innerHTML = '';
+
+  for (let i = 0; i < TOTAL_CELLS; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.dataset.index = i;
+
+    if (grid[i] >= 0) {
+      const tier = TIERS[grid[i]];
+      cell.dataset.tier = grid[i] + 1;
+      cell.innerHTML = `
+        <div class="cell-emoji">${tier.emoji}</div>
+        <div class="cell-label">${tier.name}</div>
+      `;
+
+      if (i === selectedCell) {
+        cell.classList.add('selected');
+      }
+
+      // Highlight merge targets (adjacent + same tier)
+      if (selectedCell >= 0 && i !== selectedCell &&
+          grid[i] === grid[selectedCell] && grid[i] < WIN_TIER &&
+          isAdjacent(i, selectedCell)) {
+        cell.classList.add('merge-target');
+      }
+    } else {
+      cell.classList.add('empty');
+      // If something is selected, all empty cells are move targets
+      if (selectedCell >= 0 && grid[selectedCell] >= 0) {
+        cell.classList.add('move-target');
+      }
+    }
+
+    cell.addEventListener('click', () => onCellClick(i));
+    container.appendChild(cell);
+  }
+}
+
+function isAdjacent(a, b) {
+  const rowA = Math.floor(a / GRID_SIZE), colA = a % GRID_SIZE;
+  const rowB = Math.floor(b / GRID_SIZE), colB = b % GRID_SIZE;
+  return Math.abs(rowA - rowB) + Math.abs(colA - colB) === 1;
+}
+
+// ============================================================
+// GAME LOGIC — with MOVEMENT to any empty cell
+// ============================================================
+function onCellClick(index) {
+  if (gameWon) return;
+
+  // === EMPTY CELL CLICKED ===
+  if (grid[index] === -1) {
+    // If we have something selected, MOVE it here
+    if (selectedCell >= 0 && grid[selectedCell] >= 0) {
+      grid[index] = grid[selectedCell];
+      grid[selectedCell] = -1;
+      selectedCell = -1;
+      renderGrid();
+      return;
+    }
+    // Nothing selected, do nothing
+    selectedCell = -1;
+    renderGrid();
+    return;
+  }
+
+  // === ITEM CELL CLICKED ===
+
+  // Nothing selected — select this
+  if (selectedCell === -1) {
+    selectedCell = index;
+    renderGrid();
+    return;
+  }
+
+  // Same cell — deselect
+  if (selectedCell === index) {
+    selectedCell = -1;
+    renderGrid();
+    return;
+  }
+
+  // Adjacent + same tier + not max → MERGE
+  if (grid[selectedCell] === grid[index] &&
+      grid[selectedCell] < WIN_TIER &&
+      isAdjacent(selectedCell, index)) {
+    doMerge(selectedCell, index);
+    return;
+  }
+
+  // Otherwise — select the new cell
+  selectedCell = index;
+  renderGrid();
+}
+
+function doMerge(from, to) {
+  const tier = grid[from];
+  const newTier = tier + 1;
+  let isTriple = false;
+  let thirdCell = -1;
+
+  // --- Check for 3-in-a-row ---
+  // Direction from 'from' to 'to'
+  const rowF = Math.floor(from / GRID_SIZE), colF = from % GRID_SIZE;
+  const rowT = Math.floor(to / GRID_SIZE),   colT = to % GRID_SIZE;
+  const dr = rowT - rowF, dc = colT - colF;
+
+  // Check extending beyond 'to' (from → to → third)
+  const extR = rowT + dr, extC = colT + dc;
+  if (extR >= 0 && extR < GRID_SIZE && extC >= 0 && extC < GRID_SIZE) {
+    const extIdx = extR * GRID_SIZE + extC;
+    if (grid[extIdx] === tier) {
+      thirdCell = extIdx;
+      isTriple = true;
+    }
+  }
+
+  // Check extending before 'from' (third → from → to)
+  if (!isTriple) {
+    const preR = rowF - dr, preC = colF - dc;
+    if (preR >= 0 && preR < GRID_SIZE && preC >= 0 && preC < GRID_SIZE) {
+      const preIdx = preR * GRID_SIZE + preC;
+      if (grid[preIdx] === tier) {
+        thirdCell = preIdx;
+        isTriple = true;
+      }
+    }
+  }
+
+  selectedCell = -1;
+  merges++;
+
+  if (isTriple && newTier < TIERS.length) {
+    // Triple merge: consume all 3, place 2 of next tier
+    grid[from] = newTier;
+    grid[to] = newTier;
+    grid[thirdCell] = -1;
+    showTripleQuote();
+  } else {
+    // Normal merge: consume 2, place 1 of next tier
+    grid[from] = -1;
+    grid[to] = newTier;
+  }
+
+  if (newTier > highestTier) highestTier = newTier;
+
+  document.getElementById('mergeCount').textContent = merges;
+  const tierInfo = TIERS[highestTier];
+  document.getElementById('highestTier').textContent = tierInfo.emoji + ' ' + tierInfo.name;
+
+  // Win check
+  if (newTier >= WIN_TIER) {
+    gameWon = true;
+    renderGrid();
+    setTimeout(() => triggerWin(), 600);
+    return;
+  }
+
+  // Spawn 1–2 new items after each merge
+  const spawnCount = Math.random() < 0.35 ? 2 : 1;
+  const spawned = [];
+  for (let i = 0; i < spawnCount; i++) {
+    const s = spawnItem();
+    if (s !== false) spawned.push(s);
+  }
+
+  renderGrid();
+  updateProgress();
+
+  // Animations
+  const cells = document.querySelectorAll('.cell');
+  if (isTriple) {
+    cells[from]?.classList.add('just-merged');
+    cells[to]?.classList.add('just-merged');
+  } else {
+    cells[to]?.classList.add('just-merged');
+  }
+  spawned.forEach(s => cells[s]?.classList.add('spawning'));
+
+  checkGameOver();
+}
+
+function checkGameOver() {
+  const emptyCells = grid.filter(g => g === -1).length;
+  if (emptyCells > 0) return; // can always move
+
+  // Board full — check for any adjacent merges
+  for (let i = 0; i < TOTAL_CELLS; i++) {
+    if (grid[i] === -1 || grid[i] >= WIN_TIER) continue;
+    const row = Math.floor(i / GRID_SIZE), col = i % GRID_SIZE;
+    if (col < GRID_SIZE - 1 && grid[i] === grid[i + 1]) return;
+    if (row < GRID_SIZE - 1 && grid[i] === grid[i + GRID_SIZE]) return;
+  }
+
+  // Truly stuck — clear lowest 4 items
+  clearSomeCells();
+}
+
+function clearSomeCells() {
+  let indices = [];
+  for (let i = 0; i < TOTAL_CELLS; i++) {
+    if (grid[i] >= 0) indices.push(i);
+  }
+  indices.sort((a, b) => grid[a] - grid[b]);
+  indices.slice(0, 4).forEach(i => grid[i] = -1);
+  renderGrid();
+
+  const label = document.getElementById('milestoneLabel');
+  label.textContent = '💫 Made some room for you!';
+  setTimeout(() => updateProgress(), 2000);
+}
+
+function updateProgress() {
+  const pct = Math.max(5, ((highestTier + 1) / TIERS.length) * 100);
+  const bar = document.getElementById('progressBar');
+  bar.style.width = pct + '%';
+  bar.textContent = TIERS[highestTier].emoji + ' ' + TIERS[highestTier].name;
+
+  const label = document.getElementById('milestoneLabel');
+  if (highestTier < WIN_TIER) {
+    label.textContent = `Next: ${TIERS[highestTier + 1].emoji} ${TIERS[highestTier + 1].name}`;
+  }
+}
+
+// ============================================================
+// HINT SYSTEM
+// ============================================================
+function showHint() {
+  if (hints <= 0) return;
+
+  // Find a valid adjacent merge pair
+  for (let i = 0; i < TOTAL_CELLS; i++) {
+    if (grid[i] === -1 || grid[i] >= WIN_TIER) continue;
+    const row = Math.floor(i / GRID_SIZE), col = i % GRID_SIZE;
+    const neighbors = [];
+    if (col < GRID_SIZE - 1) neighbors.push(i + 1);
+    if (col > 0) neighbors.push(i - 1);
+    if (row < GRID_SIZE - 1) neighbors.push(i + GRID_SIZE);
+    if (row > 0) neighbors.push(i - GRID_SIZE);
+
+    for (const n of neighbors) {
+      if (grid[n] === grid[i]) {
+        hints--;
+        document.getElementById('hintCount').textContent = `(${hints})`;
+        const cells = document.querySelectorAll('.cell');
+        cells[i]?.classList.add('merge-target');
+        cells[n]?.classList.add('merge-target');
+        setTimeout(() => {
+          cells[i]?.classList.remove('merge-target');
+          cells[n]?.classList.remove('merge-target');
+        }, 1500);
+        return;
+      }
+    }
+  }
+
+  // No adjacent merges — hint to rearrange
+  const label = document.getElementById('milestoneLabel');
+  label.textContent = '💫 Move matching items next to each other!';
+  setTimeout(() => updateProgress(), 2500);
+}
+
+// ============================================================
+// WIN SEQUENCE
+// ============================================================
+function triggerWin() {
+  document.getElementById('gameContainer').style.display = 'none';
+
+  const pc = document.getElementById('winParticles');
+  const emojis = ['💕', '💖', '💗', '💘', '💝', '✨', '🍒', '💍', '🎉', '♥️', '🏡', '🌉'];
+  for (let i = 0; i < 60; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    p.style.left = Math.random() * 100 + '%';
+    p.style.top = '-20px';
+    p.style.fontSize = (1 + Math.random() * 2) + 'rem';
+    p.style.animationDuration = (2 + Math.random() * 3) + 's';
+    p.style.animationDelay = (Math.random() * 2) + 's';
+    pc.appendChild(p);
+  }
+
+  setTimeout(() => {
+    document.getElementById('winScreen').classList.remove('hidden');
+  }, 800);
+}
+
+// ============================================================
+// BACKGROUND PHOTO SLIDESHOW
+// ============================================================
+const BG_PHOTOS = [
+  'images/bg-photos/1.jpg',
+  'images/bg-photos/2.jpg',
+  'images/bg-photos/3.jpg',
+  'images/bg-photos/4.jpg',
+  'images/bg-photos/5.jpg',
+  'images/bg-photos/6.jpg',
+  'images/bg-photos/7.jpg',
+  'images/bg-photos/8.jpg',
+  'images/bg-photos/9.jpg',
+  'images/bg-photos/10.jpg',
+  'images/bg-photos/11.jpg',
+  'images/bg-photos/12.jpg',
+  'images/bg-photos/13.jpg',
+  'images/bg-photos/14.jpg',
+  'images/bg-photos/15.jpg',
+];
+
+function initSlideshow() {
+  const container = document.getElementById('bgSlideshow');
+  const imgs = [];
+
+  BG_PHOTOS.forEach((src, i) => {
+    const img = document.createElement('img');
+    img.src = src;
+    // Hide broken images gracefully
+    img.onerror = () => { img.style.display = 'none'; };
+    container.appendChild(img);
+    imgs.push(img);
+  });
+
+  if (imgs.length === 0) return;
+
+  let current = 0;
+  // Show first image
+  imgs[0].classList.add('active');
+
+  setInterval(() => {
+    imgs[current].classList.remove('active');
+    current = (current + 1) % imgs.length;
+    // Skip hidden (broken) images
+    let attempts = 0;
+    while (imgs[current].style.display === 'none' && attempts < imgs.length) {
+      current = (current + 1) % imgs.length;
+      attempts++;
+    }
+    imgs[current].classList.add('active');
+  }, 6000);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+createBgHearts();
+initSlideshow();
+
+// Secret cheat: tap title 6 times to trigger win screen
+let titleTaps = 0;
+let titleTapTimer = null;
+document.getElementById('gameTitle').addEventListener('click', () => {
+  titleTaps++;
+  clearTimeout(titleTapTimer);
+  titleTapTimer = setTimeout(() => { titleTaps = 0; }, 2000);
+  if (titleTaps >= 6) {
+    titleTaps = 0;
+    gameWon = true;
+    triggerWin();
+  }
+});
+</script>
+
+</body>
+</html>
