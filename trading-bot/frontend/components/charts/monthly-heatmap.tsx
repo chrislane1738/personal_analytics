@@ -148,7 +148,7 @@ export function MonthlyHeatmap({ data }: MonthlyHeatmapProps) {
                 const key = `${year}-${month}`;
                 const value = grid.get(key);
 
-                if (value === undefined) {
+                if (value === undefined || value === null || Number.isNaN(value)) {
                   return (
                     <td
                       key={month}
