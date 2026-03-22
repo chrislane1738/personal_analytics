@@ -18,8 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { Trade } from "@/lib/types";
-import { formatCurrency, formatDate } from "@/lib/format";
-import { pnlColor } from "@/lib/format";
+import { formatCurrency, formatDate, pnlColor } from "@/lib/format";
 import { ArrowUpDown } from "lucide-react";
 
 interface TradesTableProps {
@@ -28,18 +27,12 @@ interface TradesTableProps {
 
 const columnHelper = createColumnHelper<Trade>();
 
-function holdingDays(durationSeconds: number | null): string {
-  if (durationSeconds === null) return "-";
-  const days = Math.round(durationSeconds / 86400);
-  return days === 1 ? "1d" : `${days}d`;
-}
-
 export function TradesTable({ data }: TradesTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const columns = useMemo(
     () => [
-      columnHelper.accessor("entry_time", {
+      columnHelper.accessor("entry_date", {
         header: "Date",
         cell: (info) => (
           <span className="font-mono text-xs text-zinc-300">
@@ -47,17 +40,18 @@ export function TradesTable({ data }: TradesTableProps) {
           </span>
         ),
       }),
-      columnHelper.accessor("side", {
+      columnHelper.accessor("direction", {
         header: "Direction",
         cell: (info) => {
-          const side = info.getValue();
+          const dir = info.getValue();
+          const isBuy = dir === "long" || dir === "buy";
           return (
             <span
               className={`font-mono text-xs font-semibold ${
-                side === "long" ? "text-[#22c55e]" : "text-[#ef4444]"
+                isBuy ? "text-[#22c55e]" : "text-[#ef4444]"
               }`}
             >
-              {side === "long" ? "BUY" : "SELL"}
+              {isBuy ? "BUY" : "SELL"}
             </span>
           );
         },
@@ -92,7 +86,7 @@ export function TradesTable({ data }: TradesTableProps) {
           const val = info.getValue();
           return (
             <span className="font-mono text-xs text-zinc-300">
-              {val !== null ? formatCurrency(val) : "-"}
+              {val != null ? formatCurrency(val) : "-"}
             </span>
           );
         },
@@ -103,7 +97,7 @@ export function TradesTable({ data }: TradesTableProps) {
           const val = info.getValue();
           return (
             <span className={`font-mono text-xs font-semibold ${pnlColor(val)}`}>
-              {val !== null ? formatCurrency(val) : "-"}
+              {val != null ? formatCurrency(val) : "-"}
             </span>
           );
         },
@@ -114,18 +108,27 @@ export function TradesTable({ data }: TradesTableProps) {
           const val = info.getValue();
           return (
             <span className={`font-mono text-xs font-semibold ${pnlColor(val)}`}>
-              {val !== null ? `${(val * 100).toFixed(2)}%` : "-"}
+              {val != null ? `${(val * 100).toFixed(2)}%` : "-"}
             </span>
           );
         },
       }),
-      columnHelper.accessor("duration_seconds", {
+      columnHelper.display({
+        id: "hold",
         header: "Hold",
-        cell: (info) => (
-          <span className="font-mono text-xs text-zinc-400">
-            {holdingDays(info.getValue())}
-          </span>
-        ),
+        cell: ({ row }) => {
+          const entry = row.original.entry_date;
+          const exit = row.original.exit_date;
+          if (!entry || !exit) return <span className="font-mono text-xs text-zinc-400">-</span>;
+          const days = Math.round(
+            (new Date(exit).getTime() - new Date(entry).getTime()) / 86400000
+          );
+          return (
+            <span className="font-mono text-xs text-zinc-400">
+              {days}d
+            </span>
+          );
+        },
       }),
     ],
     []

@@ -50,7 +50,7 @@ function CustomTooltip({
           className="font-mono text-xs"
           style={{ color: entry.color }}
         >
-          {entry.dataKey === "equity" ? "Strategy" : "Benchmark"}:{" "}
+          {entry.dataKey === "strategy_value" ? "Strategy" : "Benchmark"}:{" "}
           {formatCurrency(entry.value)}
         </p>
       ))}
@@ -90,7 +90,7 @@ export function EquityCurve({ data }: EquityCurveProps) {
           vertical={false}
         />
         <XAxis
-          dataKey="timestamp"
+          dataKey="date"
           tickFormatter={formatAxisDate}
           stroke={CHART_COLORS.text}
           tick={{ fontSize: 10, fill: CHART_COLORS.text }}
@@ -109,7 +109,7 @@ export function EquityCurve({ data }: EquityCurveProps) {
         <Tooltip content={<CustomTooltip />} />
         <Area
           type="monotone"
-          dataKey="equity"
+          dataKey="strategy_value"
           stroke={CHART_COLORS.strategy}
           strokeWidth={2}
           fill="url(#equityGradient)"
@@ -118,7 +118,7 @@ export function EquityCurve({ data }: EquityCurveProps) {
         />
         <Area
           type="monotone"
-          dataKey="benchmark"
+          dataKey="benchmark_value"
           stroke={CHART_COLORS.benchmark}
           strokeWidth={1.5}
           fill="transparent"

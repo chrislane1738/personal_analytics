@@ -8,7 +8,7 @@ import type { Trade } from "@/lib/types";
 export function useTrades(runId: string | undefined) {
   return useQuery<Trade[]>({
     queryKey: ["trades", runId],
-    queryFn: () => apiFetch<Trade[]>(`/api/runs/${runId}/trades`),
+    queryFn: () => apiFetch<Trade[]>(`/api/trades?run_id=${runId}`),
     enabled: !!runId,
   });
 }
