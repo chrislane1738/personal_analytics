@@ -93,12 +93,12 @@ export function RunsTable({ data, onDelete }: RunsTableProps) {
   const columns = useMemo<ColumnDef<Run>[]>(
     () => [
       {
-        accessorKey: "id",
+        accessorKey: "run_id",
         header: ({ column }) => (
           <SortableHeader label="Run ID" column={column} />
         ),
         cell: ({ row }) => {
-          const runId = row.original.id;
+          const runId = row.original.run_id;
           return (
             <Link
               href={`/runs/${runId}`}
@@ -111,7 +111,7 @@ export function RunsTable({ data, onDelete }: RunsTableProps) {
         },
       },
       {
-        accessorKey: "strategy",
+        accessorKey: "strategy_name",
         header: ({ column }) => (
           <SortableHeader label="Strategy" column={column} />
         ),
@@ -156,7 +156,7 @@ export function RunsTable({ data, onDelete }: RunsTableProps) {
         },
       },
       {
-        accessorKey: "sharpe_ratio",
+        accessorKey: "sharpe",
         header: ({ column }) => (
           <SortableHeader label="Sharpe" column={column} />
         ),
@@ -203,7 +203,7 @@ export function RunsTable({ data, onDelete }: RunsTableProps) {
             className="rounded p-1 text-zinc-600 hover:bg-zinc-800 hover:text-red-400 transition-colors"
             onClick={(e) => {
               e.stopPropagation();
-              onDelete(row.original.id);
+              onDelete(row.original.run_id);
             }}
             aria-label="Delete run"
           >
@@ -265,7 +265,7 @@ export function RunsTable({ data, onDelete }: RunsTableProps) {
               <TableRow
                 key={row.id}
                 className="cursor-pointer border-[#1a1a1a] hover:bg-zinc-900/50 transition-colors"
-                onClick={() => router.push(`/runs/${row.original.id}`)}
+                onClick={() => router.push(`/runs/${row.original.run_id}`)}
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
