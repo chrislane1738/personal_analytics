@@ -94,6 +94,9 @@ class BacktestEngine:
         # Wire up event handlers
         self.event_bus.subscribe(EventType.FILL, self._on_fill)
 
+        # Current simulated date (set during main loop, used by _on_fill)
+        self._current_date: date | None = None
+
         # Pre-loaded bar data: symbol -> {date -> DailyBar}
         self._bar_data: dict[str, dict[date, object]] = {}
 
@@ -137,6 +140,8 @@ class BacktestEngine:
         for i, current_date in enumerate(sorted_dates):
             if self.cancel_event and self.cancel_event.is_set():
                 break
+
+            self._current_date = current_date
 
             # Collect bars for all symbols on this date
             bars: dict[str, BarEvent] = {}
@@ -269,11 +274,7 @@ class BacktestEngine:
 
     def _on_fill(self, fill: FillEvent) -> None:
         """Handle fill events: update portfolio and trade log."""
-        current_date = (
-            fill.timestamp.date()
-            if hasattr(fill, "timestamp") and fill.timestamp
-            else date.today()
-        )
+        current_date = self._current_date or date.today()
 
         self.portfolio.update_on_fill(fill, current_date)
 
