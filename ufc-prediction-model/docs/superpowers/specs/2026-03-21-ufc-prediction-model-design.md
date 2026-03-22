@@ -35,10 +35,26 @@
 
 1. **UFC 2025 Dataset** (aminealibi) — Most current (Mar 2026), includes fighting style membership scores. CC BY 4.0.
 2. **MMA Dataset 2023** (remypereira) — Relational structure (events → fights → fight_stats → fighters) with PKs/FKs. Ideal reference for time-aware feature engineering.
-3. **UFC Rankings** (martj42) — Weekly rankings by weight class since 2013, CC0. Join by fighter name + date.
+3. **UFC Rankings** (martj42) — Weekly rankings by weight class since 2013, CC0. Ranking is looked up as the most recent ranking published *before* the fight date for the fighter's weight class.
 4. **Ultimate UFC Dataset** (mdabbert) — 5,900+ fights, 160 columns, includes betting odds. CC BY 4.0.
 
-### 2.3 Data Pipeline Flow
+**Important:** Pre-computed fighting style membership scores from the UFC 2025 Dataset (or any external source) must be **discarded**. Style scores are always recomputed from time-aware aggregated stats using the system defined in Section 4. Using pre-computed scores would violate the time-aware aggregation rule (§3.1 Rule #3).
+
+### 2.4 Fighter Identity Resolution
+
+Fighter name matching across datasets is the hardest data engineering problem. Strategy:
+
+1. **Canonical ID:** Use ufcstats.com fighter IDs as the canonical identifier (stable, unique per fighter).
+2. **Fuzzy matching:** Use `rapidfuzz` library to match names across sources with a minimum similarity threshold of 85%.
+3. **Manual alias table:** Maintain `backend/data/fighter_aliases.json` mapping known discrepancies (e.g., "Charles Oliveira" ↔ "Charles Do Bronx Oliveira", transliterated names, name changes).
+4. **Validation:** Log all fuzzy matches below 95% similarity for manual review. Never silently accept ambiguous matches.
+
+### 2.5 External API Resilience
+
+- **ufcapi.aristotle.me (100 req/day):** Cache all API responses locally in `backend/data/cache/`. Implement exponential backoff on failures. When limit is hit, fall back to cached data.
+- **ufcscraper:** Scraper failures must fail loudly with clear error messages, never silently produce bad data. If ufcstats.com structure changes, the scraper will raise exceptions rather than returning malformed data.
+
+### 2.6 Data Pipeline Flow
 
 ```
 Kaggle CSVs / ufcscraper output
@@ -74,8 +90,10 @@ These rules are non-negotiable:
 2. **No outcome-derived features.** Winner, finish method, finish round, bonus awards from the target fight are forbidden.
 3. **Time-aware aggregation only.** All career statistics (SLpM, TD avg, etc.) must be computed from fights *strictly before* the target fight date. No future information leakage.
 4. **Knockdowns — career rate only.** Career knockdown rate (scored and absorbed) is included as a single feature among many. It is NOT weighted specially. Same-fight knockdowns are excluded per rule #1. Rationale: ~90% of UFC knockdowns lead to finishes, so in-fight knockdown data is essentially synonymous with the outcome.
+5. **No pre-computed external scores.** Fighting style scores, "entertainment ratings," or any derived metrics from external datasets must be discarded and recomputed using our time-aware pipeline. External scores may incorporate future data.
+6. **Exclude draws, no-contests, and DQs.** Fights ending in draw, no-contest, or disqualification are excluded from training data. These outcomes are not modeled in v1.
 
-### 3.2 Feature Categories (9 Selected)
+### 3.2 Feature Categories (9 Feature Groups)
 
 All features are computed as **Fighter A value** and **Fighter B value**, plus a **differential** (A minus B).
 
@@ -122,7 +140,16 @@ Feature importance varies by weight class. Rather than training separate models 
 
 The model performance dashboard will show feature importance broken down by weight class to validate these interactions.
 
-### 3.4 Estimated Feature Count
+### 3.4 Cold Start: Debuting Fighters
+
+Many features are undefined for fighters making their UFC debut (especially common on early prelims). Strategy:
+
+- **Minimum fight threshold:** Fighters with fewer than 3 prior UFC fights get flagged with a `is_debut_or_near_debut` boolean feature.
+- **Imputation for debutants:** Missing career stats (SLpM, TD avg, etc.) are filled with **weight-class median values** from the training set. This provides a neutral baseline rather than zeros (which would be misleading).
+- **Regional record:** If available from Sherdog/external sources, pre-UFC record (wins/losses) is included as a supplementary feature. Not all debutants will have this data.
+- **Style scores:** Debutants with insufficient data get all style scores set to the Balanced archetype defaults (0.25 across all four primaries) until enough fights accumulate.
+
+### 3.5 Estimated Feature Count
 
 ~40-50 total features per fight (raw + derived + differentials).
 
@@ -185,14 +212,18 @@ Four primary archetypes, each with sub-types. Fighters get fuzzy membership scor
 
 Same architecture, same hyperparameters, same training data. Only the feature set differs.
 
-### 5.3 Training & Validation
+### 5.3 Fighter A/B Ordering (Symmetry)
+
+The model must not learn a positional bias from how fighters are assigned to "A" vs "B" slots. Strategy: **data augmentation with swap**. Each fight is included twice in the training set — once as-is, once with fighters swapped and the label inverted. This makes the model perfectly order-invariant. The differential features (A minus B) naturally flip sign when swapped, so the model learns from the stats, not the position.
+
+### 5.4 Training & Validation
 
 - **Target variable:** Binary — Fighter A wins (1) or Fighter B wins (0)
-- **Validation:** Time-based cross-validation (train on pre-2024 fights, validate on 2024+). Never randomize — temporal ordering prevents future leakage.
+- **Validation:** Expanding-window time-series cross-validation. Train on pre-2020, validate 2020. Train on pre-2021, validate 2021. Etc. This gives multiple validation scores and detects temporal drift. A final held-out test set (2025-2026 fights) is reserved and never used during tuning.
 - **Hyperparameter tuning:** Bayesian optimization (Optuna) over learning rate, max depth, num leaves, feature fraction, regularization
 - **Evaluation metrics:** Accuracy, AUC-ROC, log loss, calibration curve (predicted probability should match actual win rate)
 
-### 5.4 Explainability
+### 5.5 Explainability
 
 - **SHAP values** computed per prediction → identifies which features drove the outcome
 - Feeds the dashboard's "Key Decision Factors" display (e.g., "↑ Reach advantage +4" · Impact: High")
@@ -221,7 +252,7 @@ Same architecture, same hyperparameters, same training data. Only the feature se
 | Framework | Next.js (App Router) |
 | UI components | shadcn/ui |
 | Styling | Tailwind CSS |
-| Charts | Recharts or Nivo |
+| Charts | Recharts (line/bar/area) + Nivo (radar charts for style matchups) |
 | Theme | Dark mode, UFC-themed accent colors (red/dark) |
 
 ### 6.3 No Database Required (v1)
@@ -230,6 +261,16 @@ Same architecture, same hyperparameters, same training data. Only the feature se
 - Predictions stored as JSON
 - FastAPI serves predictions from memory/file
 - Database can be added later if needed for user accounts, saved predictions, etc.
+
+### 6.4 Frontend ↔ Backend Communication
+
+Next.js uses **server-side data fetching** (React Server Components) to call the FastAPI backend. The FastAPI server is not exposed directly to the browser — Next.js acts as the intermediary. No CORS configuration required.
+
+```
+Browser → Next.js Server Components → FastAPI (internal) → JSON response
+```
+
+For local development, FastAPI runs on `localhost:8000` and Next.js on `localhost:3000`.
 
 ---
 
@@ -250,7 +291,7 @@ Same architecture, same hyperparameters, same training data. Only the feature se
 - **Dark mode** default — dark backgrounds (#0a0a0f, #0d1117), subtle borders (#1e2a3a)
 - **Accent colors:** Red (#e94560) for UFC branding, green (#06d6a0) for strong predictions, yellow (#ffd166) for toss-ups
 - **Style archetype colors:** Striker red (#e94560), Wrestler blue (#4cc9f0), Grappler purple (#7b2ff7), Balanced green (#06d6a0)
-- **Confidence color coding:** Green (65%+) = strong pick, yellow (55-64%) = lean/toss-up
+- **Confidence color coding:** Green (65%+) = strong pick, yellow (55-64%) = lean, gray/neutral (50-54%) = coin flip
 - **Typography:** Geist Sans for UI, Geist Mono for stats/numbers
 - **Components:** shadcn/ui Card, Tabs, Badge, Progress bar, Charts
 
@@ -334,7 +375,16 @@ The model predicts ALL UFC fights, but the dashboard and analysis emphasize prel
 
 ---
 
-## 10. Future Enhancements (Out of Scope for v1)
+## 10. Deployment (v1)
+
+- **Local development:** Both FastAPI and Next.js run locally. FastAPI on port 8000, Next.js on port 3000.
+- **Model artifacts:** Trained models saved as `.joblib` files in `backend/models/artifacts/`. Versioned by training date (e.g., `model_a_2026-03-21.joblib`).
+- **Data refresh:** Manual — run scraper scripts before events. No automated scheduling in v1.
+- **No cloud deployment in v1.** The system runs locally. Cloud deployment (Docker, Vercel + Railway/Render for backend) is a future enhancement.
+
+---
+
+## 11. Future Enhancements (Out of Scope for v1)
 
 - Method of victory prediction (KO/Sub/Decision)
 - Live odds integration (real-time line movement)
@@ -342,3 +392,5 @@ The model predicts ALL UFC fights, but the dashboard and analysis emphasize prel
 - Notification system before events
 - Historical backtesting simulator
 - Weight class-specific model variants (if data grows)
+- Cloud deployment (Docker Compose, CI/CD)
+- Automated scraper scheduling (cron)
