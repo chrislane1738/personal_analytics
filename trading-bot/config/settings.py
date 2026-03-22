@@ -7,7 +7,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # FMP
     fmp_api_key: str = ""
-    fmp_base_url: str = "https://financialmodelingprep.com/api"
+    fmp_base_url: str = "https://financialmodelingprep.com"
     fmp_rate_limit: int = 700  # req/min, headroom below 750
 
     # Database

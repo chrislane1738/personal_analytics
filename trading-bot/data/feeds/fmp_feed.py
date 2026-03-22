@@ -36,7 +36,7 @@ class FMPFeed(DataFeed):
         limiter is created when *None* is passed.
     """
 
-    DEFAULT_BASE_URL = "https://financialmodelingprep.com/api"
+    DEFAULT_BASE_URL = "https://financialmodelingprep.com"
 
     def __init__(
         self,
@@ -73,8 +73,10 @@ class FMPFeed(DataFeed):
             Bars sorted by date ascending.
         """
         self._rate_limiter.acquire()
-        url = f"{self._base_url}/v3/historical-price-full/{symbol}"
+        # Use the /stable/ API (FMP deprecated /api/v3/ after Aug 2025)
+        url = f"{self._base_url}/stable/historical-price-eod/full"
         params = {
+            "symbol": symbol,
             "from": start.isoformat(),
             "to": end.isoformat(),
             "apikey": self._api_key,
@@ -82,7 +84,7 @@ class FMPFeed(DataFeed):
         response = self._client.get(url, params=params)
         response.raise_for_status()
         data = response.json()
-        return self._parse_daily_bars(symbol, data)
+        return self._parse_daily_bars_stable(symbol, data)
 
     def get_symbols(self, universe: str) -> list[str]:
         """Fetch the component tickers of a named *universe*.
@@ -102,12 +104,12 @@ class FMPFeed(DataFeed):
         """
         self._rate_limiter.acquire()
         endpoint_map = {
-            "sp500": "sp500_constituent",
-            "nasdaq100": "nasdaq_constituent",
-            "dowjones": "dowjones_constituent",
+            "sp500": "sp500-constituent",
+            "nasdaq100": "nasdaq-constituent",
+            "dowjones": "dowjones-constituent",
         }
-        endpoint = endpoint_map.get(universe.lower(), f"{universe}_constituent")
-        url = f"{self._base_url}/v3/{endpoint}"
+        endpoint = endpoint_map.get(universe.lower(), f"{universe}-constituent")
+        url = f"{self._base_url}/stable/{endpoint}"
         params = {"apikey": self._api_key}
         response = self._client.get(url, params=params)
         response.raise_for_status()
@@ -132,8 +134,8 @@ class FMPFeed(DataFeed):
             Populated metadata record with ``updated_at`` set to now.
         """
         self._rate_limiter.acquire()
-        url = f"{self._base_url}/v3/profile/{symbol}"
-        params = {"apikey": self._api_key}
+        url = f"{self._base_url}/stable/profile"
+        params = {"symbol": symbol, "apikey": self._api_key}
         response = self._client.get(url, params=params)
         response.raise_for_status()
         data = response.json()
@@ -154,16 +156,56 @@ class FMPFeed(DataFeed):
             by FMP.
         """
         self._rate_limiter.acquire()
-        url = f"{self._base_url}/v3/historical-stock-split/{symbol}"
-        params = {"apikey": self._api_key}
+        url = f"{self._base_url}/stable/splits-company"
+        params = {"symbol": symbol, "apikey": self._api_key}
         response = self._client.get(url, params=params)
         response.raise_for_status()
         data = response.json()
-        return self._parse_stock_splits(symbol, data)
+        return self._parse_stock_splits_stable(symbol, data)
 
     # ------------------------------------------------------------------
     # Parsing helpers
     # ------------------------------------------------------------------
+
+    @staticmethod
+    def _parse_daily_bars_stable(symbol: str, data: list[dict[str, Any]] | dict[str, Any]) -> list[DailyBar]:
+        """Parse the /stable/historical-price-eod/full response (flat array of bar objects)."""
+        items = data if isinstance(data, list) else data.get("historical", [])
+        bars: list[DailyBar] = []
+        for item in items:
+            try:
+                bars.append(DailyBar(
+                    symbol=item.get("symbol", symbol),
+                    date=date.fromisoformat(item["date"]),
+                    open=float(item["open"]),
+                    high=float(item["high"]),
+                    low=float(item["low"]),
+                    close=float(item["close"]),
+                    adj_close=float(item.get("adjClose", item.get("adjclose", item["close"]))),
+                    volume=int(item.get("volume", 0)),
+                    vwap=float(item.get("vwap", item["close"])),
+                ))
+            except (KeyError, ValueError, TypeError):
+                continue
+        bars.sort(key=lambda b: b.date)
+        return bars
+
+    @staticmethod
+    def _parse_stock_splits_stable(symbol: str, data: list[dict[str, Any]] | dict[str, Any]) -> list[StockSplitEvent]:
+        """Parse the /stable/splits-company response (flat array)."""
+        items = data if isinstance(data, list) else data.get("historical", [])
+        events: list[StockSplitEvent] = []
+        for item in items:
+            try:
+                events.append(StockSplitEvent(
+                    symbol=item.get("symbol", symbol),
+                    date=date.fromisoformat(item["date"]),
+                    numerator=float(item.get("numerator", 1)),
+                    denominator=float(item.get("denominator", 1)),
+                ))
+            except (KeyError, ValueError, TypeError):
+                continue
+        return events
 
     @staticmethod
     def _parse_daily_bars(symbol: str, data: dict[str, Any]) -> list[DailyBar]:
