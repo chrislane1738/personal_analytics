@@ -83,3 +83,7 @@ def generate_spy_bars(
         current += timedelta(days=1)
 
     return bars
+
+
+# Alias used by tests that import generate_sample_bars
+generate_sample_bars = generate_spy_bars
