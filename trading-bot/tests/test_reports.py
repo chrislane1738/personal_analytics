@@ -65,6 +65,8 @@ def make_monte_carlo(is_outlier: bool = False) -> MonteCarloResult:
         is_outlier=is_outlier,
         equity_distribution=[],
         drawdown_distribution=[],
+        percentile_bands={"p5": [], "p25": [], "p50": [], "p75": [], "p95": []},
+        actual_curve=[],
     )
 
 

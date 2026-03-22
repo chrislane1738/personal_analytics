@@ -207,6 +207,8 @@ def compute_regime_stats(
             "win_rate": len(wins) / len(pnls),
             "avg_pnl": sum(pnls) / len(pnls),
             "total_pnl": sum(pnls),
+            "best_trade": max(pnls),
+            "worst_trade": min(pnls),
         }
 
     return result
