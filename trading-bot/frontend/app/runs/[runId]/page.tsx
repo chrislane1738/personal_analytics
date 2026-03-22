@@ -188,15 +188,14 @@ export default function RunDetailPage({
             Back to Runs
           </Link>
           <h1 className="text-2xl font-medium tracking-tight text-[#fafafa]">
-            {run.strategy}
+            {run.strategy_name}
           </h1>
           <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-zinc-500">
-            <span className="font-mono">{runId.slice(0, 8)}</span>
+            <span className="font-mono">{run.run_id}</span>
             <span>
               {formatDate(run.start_date)} &mdash; {formatDate(run.end_date)}
             </span>
-            <span>{run.symbols.join(", ")}</span>
-            <span>{run.timeframe}</span>
+            <span>{formatCurrency(run.initial_capital)}</span>
           </div>
         </div>
       </div>
