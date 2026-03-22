@@ -44,21 +44,12 @@ export function RegimeCards({ data }: RegimeCardsProps) {
 
             {/* Stats grid */}
             <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-              <StatRow label="Trades" value={String(stat.trade_count)} />
-              <StatRow label="Win Rate" value={formatPercent(stat.win_rate)} />
-              <StatRow label="Avg P&L" value={formatCurrency(stat.avg_pnl)} />
-              <StatRow
-                label="Sharpe"
-                value={stat.sharpe_ratio.toFixed(2)}
-              />
-              <StatRow
-                label="Return"
-                value={formatPercent(stat.total_return)}
-              />
-              <StatRow
-                label="Max DD"
-                value={formatPercent(stat.max_drawdown)}
-              />
+              <StatRow label="Trades" value={String(stat.trades)} />
+              <StatRow label="Win Rate" value={stat.win_rate ? formatPercent(stat.win_rate) : "—"} />
+              <StatRow label="Avg P&L" value={stat.avg_pnl ? formatCurrency(stat.avg_pnl) : "—"} />
+              <StatRow label="Total P&L" value={stat.total_pnl ? formatCurrency(stat.total_pnl) : "—"} />
+              <StatRow label="Best" value={stat.best_trade ? formatCurrency(stat.best_trade) : "—"} />
+              <StatRow label="Worst" value={stat.worst_trade ? formatCurrency(stat.worst_trade) : "—"} />
             </div>
           </div>
         );

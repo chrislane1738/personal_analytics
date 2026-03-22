@@ -9,9 +9,9 @@ indicators:
   bb_20:  { type: BollingerBands, period: 20, std_dev: 2 }
 
 entry_rules:
-  - condition: "close < bb_20.lower AND rsi_14 < 30"
+  - condition: "close < bb_20.lower AND rsi_14 < 45"
     direction: long
-    reason: "Price below lower BB with oversold RSI"
+    reason: "Price below lower BB with weakening RSI"
 
 exit_rules:
   - condition: "close > sma_20"
