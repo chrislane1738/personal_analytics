@@ -270,7 +270,14 @@ Side-by-side analysis of 2-4 selected runs.
 
 **Drawdown distribution:** Histogram of max drawdowns across all simulations. Vertical line showing actual max drawdown.
 
-**API:** `GET /api/analytics/{id}/monte-carlo?simulations=10000` — runs on demand, result cached in memory. Returns equity_distribution, drawdown_distribution, summary stats.
+**API:** `GET /api/analytics/{id}/monte-carlo?simulations=10000` — runs on demand, result cached in memory. Returns:
+- `percentile_bands`: `{ "p5": [...], "p25": [...], "p50": [...], "p75": [...], "p95": [...] }` — equity value at each time step for each percentile (powers the fan chart)
+- `actual_curve`: `[...]` — the real equity values for overlay
+- `final_equity_distribution`: `[...]` — histogram of final equity values across simulations
+- `drawdown_distribution`: `[...]` — histogram of max drawdowns
+- `summary`: `{ median, p5, p95, probability_of_ruin, is_outlier, simulations }`
+
+Note: The existing `run_monte_carlo()` only returns final equities. Phase 0 extends it to track percentile bands per time step.
 
 ### 4.6 Options Analytics (Tab within Run Detail, conditional)
 
@@ -385,6 +392,12 @@ Real-time dashboard during active backtest execution. Connects via WebSocket.
 { "type": "error", "data": { "message": "..." } }
 ```
 
+**WebSocket resilience:**
+- Server sends `{ "type": "ping" }` every 15 seconds; client responds with `{ "type": "pong" }`. If no pong in 30s, server closes connection.
+- Client auto-reconnects with exponential backoff (1s, 2s, 4s, max 10s). On reconnect, sends `{ "action": "subscribe", "run_id": "..." }` to resume.
+- No event replay on reconnect — client shows a "Reconnected, some events may have been missed" toast. The equity curve and portfolio state are re-synced via a full state snapshot sent on subscribe.
+- **Throttling:** Backend batches events and sends at most 1 message per 50ms (20 events/sec max). BarEvents are summarized (only latest per symbol), while Signal/Fill/Risk events are always forwarded individually.
+
 **API:** `WS /ws/monitor` — bidirectional WebSocket. Backend subscribes to EventBus, serializes events to JSON, forwards to all connected clients for the active run.
 
 ### 4.10 Data Manager (`/data`)
@@ -462,10 +475,12 @@ No backend work needed — purely a frontend placeholder page.
 
 - FastAPI routers import directly from existing modules: `from data.storage.database import Database`, `from core.engine import BacktestEngine`, etc.
 - Backtest runs execute in a background thread (or asyncio task) so the API stays responsive.
+- **Cancellation mechanism:** Add a `threading.Event` cancellation token to `BacktestEngine`. The engine checks `cancel_event.is_set()` on each date iteration. `POST /api/backtest/stop/{id}` sets the event. On cancellation, the engine saves partial results before exiting.
 - EventBus bridge: register a subscriber on the engine's EventBus that serializes events and pushes to WebSocket connections.
 - Monte Carlo results cached in a dict keyed by run_id (recomputed if params change).
 - Strategy files read/written directly from `config/strategies/` directory using pathlib.
-- CORS configured for localhost:3000 → localhost:8000.
+- CORS configured with `allow_origins=["http://localhost:3000"]`, `allow_methods=["*"]`, `allow_headers=["*"]`.
+- **Error response schema:** All error responses use `{ "detail": "message", "code": "ERROR_CODE" }` format for consistent frontend handling.
 
 ---
 
@@ -474,7 +489,7 @@ No backend work needed — purely a frontend placeholder page.
 ### Shared components
 
 - **Sidebar:** Fixed left, collapsible. Icons + labels for each section. Active state = orange left border.
-- **EventTicker:** Fixed bottom bar across all pages. Shows last 5-10 events from most recent run (fetched on mount from `/api/runs/latest/events` or cached from WebSocket).
+- **EventTicker:** Fixed bottom bar across all pages. Shows last 5-10 events from the active WebSocket connection (live monitor). When no backtest is running, shows the last run's summary metrics instead. No separate API endpoint — state comes from WebSocket hook or TanStack Query cache.
 - **MetricsStrip:** Reusable grid of KPI cards. Takes array of { label, value, format, color_rule }.
 - **Chart wrappers:** EquityCurveChart, DrawdownChart, MonthlyHeatmap, FanChart, RegimeTimeline — each wraps Recharts with consistent dark theme styling.
 
@@ -494,6 +509,33 @@ No backend work needed — purely a frontend placeholder page.
 ---
 
 ## 7. Build Phases
+
+### Phase 0: Persistence Prerequisites
+Patch existing Python modules so the database contains all data the dashboard needs. **Must complete before Phase 1.**
+
+**Engine patches (core/engine.py):**
+- Call `database.insert_trades(run_id, trade_log.trades)` in `_save_run()` to persist all trades
+- Persist equity curve data: add `equity_curves` table to schema (run_id, date, strategy_value, benchmark_value) and save in `_save_run()`
+- Store benchmark_symbol in `RunRecord.config` JSON (already partially there, ensure consistent)
+- Add `threading.Event` cancellation token — check `cancel_event.is_set()` each date iteration
+- Fix `full_metrics` serialization: store numeric values as numbers, not strings (`json.dumps({k: str(v) ...})` → proper types)
+
+**Database patches (data/storage/database.py):**
+- Add `equity_curves` table: `(run_id TEXT, date TEXT, strategy_value REAL, benchmark_value REAL, PRIMARY KEY (run_id, date))`
+- Add `insert_equity_curve(run_id, curve_data)` method
+- Add `get_equity_curve(run_id)` method
+- Add `delete_run(run_id)` method — deletes from `runs`, `trades`, and `equity_curves` (cascade)
+- Add `list_runs(sort, order, strategy_filter, limit, offset)` with pagination/filtering
+- Add `get_trades(run_id)` query method
+- Add `get_aggregate_quality_score(symbol)` method (avg of per-bar quality scores)
+
+**Analytics patches:**
+- `monte_carlo.py`: Extend `run_monte_carlo()` to return percentile bands per time step (`percentile_bands: dict[str, list[float]]` for P5/P25/P50/P75/P95) so the fan chart can be rendered, not just final equity distribution
+- `regime.py`: Extend `compute_regime_stats()` to include `best_trade` and `worst_trade` per regime
+
+**Metric naming:** Standardize metric keys across the codebase. The canonical names used by the API and frontend will be: `total_return`, `sharpe`, `sortino`, `calmar`, `max_drawdown`, `win_rate`, `profit_factor`, `expectancy`, `volatility`, `var_95`, `alpha`, `beta`. The backend schemas map from whatever the engine produces.
+
+**Run existing tests** after all patches to ensure no regressions across the 714 test suite.
 
 ### Phase 1: Foundation
 Backend API + Frontend Shell + Run Browser + Run Detail.
@@ -568,6 +610,11 @@ Data Manager + Paper Trading Stub + UX polish.
 
 Each phase will be executed with aggressive parallelization:
 
+**Phase 0 (3 parallel agents):**
+1. Engine persistence agent — patch `_save_run()` to persist trades + equity curves, add cancellation token, fix metric serialization
+2. Database schema agent — new `equity_curves` table, `delete_run`, `list_runs` with pagination, `get_trades`, quality score aggregation
+3. Analytics extension agent — Monte Carlo percentile bands, regime best/worst trade
+
 **Phase 1 (4 parallel agents):**
 1. Backend API agent — FastAPI app + runs/trades/analytics routers + schemas
 2. Frontend shell agent — Next.js init + shadcn + theme + sidebar + ticker
@@ -589,4 +636,4 @@ Each phase will be executed with aggressive parallelization:
 1. Data Manager agent (backend + frontend)
 2. Polish agent (loading states, error boundaries, paper trading placeholder)
 
-Total: ~13 agent deployments across 4 phases.
+Total: ~16 agent deployments across 5 phases.
