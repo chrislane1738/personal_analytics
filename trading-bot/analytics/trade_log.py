@@ -128,7 +128,7 @@ class TradeLog:
         return list(self.trades)
 
     def get_trade_dicts(self) -> list[dict]:
-        """Return trades as dicts with keys expected by metrics functions."""
+        """Return trades as dicts with all fields for metrics and persistence."""
         return [
             {
                 "pnl": t.pnl,
@@ -136,6 +136,16 @@ class TradeLog:
                 "symbol": t.symbol,
                 "holding_days": t.holding_days,
                 "direction": t.direction,
+                "entry_date": t.entry_date,
+                "exit_date": t.exit_date,
+                "entry_price": t.entry_price,
+                "exit_price": t.exit_price,
+                "quantity": t.quantity,
+                "entry_reason": t.entry_reason,
+                "exit_reason": t.exit_reason,
+                "option_type": t.option_type,
+                "strike": t.strike,
+                "expiration": t.expiration,
             }
             for t in self.trades
         ]

@@ -10,15 +10,17 @@ console report, and optionally persists the run to the database.
 from __future__ import annotations
 
 import json
+import threading
 import uuid
 from datetime import date, datetime, timezone
+from typing import Any
 
 from analytics.metrics import compute_all_metrics
 from analytics.reports import ReportGenerator
 from analytics.trade_log import TradeLog
 from core.event_bus import EventBus
 from core.events import BarEvent, EventType, FillEvent, SignalEvent
-from data.storage.models import RunRecord
+from data.storage.models import EquityCurvePoint, RunRecord, TradeRecord
 from execution.sim_broker import SimBroker
 from portfolio.benchmark import BenchmarkTracker
 from portfolio.portfolio import Portfolio
@@ -67,6 +69,7 @@ class BacktestEngine:
         slippage_pct: float = 0.0001,
         commission_per_share: float = 0.005,
         position_size_pct: float = 0.06,
+        cancel_event: threading.Event | None = None,
     ) -> None:
         self.strategy = strategy
         self.database = database
@@ -76,6 +79,7 @@ class BacktestEngine:
         self.initial_capital = initial_capital
         self.benchmark_symbol = benchmark_symbol
         self.position_size_pct = position_size_pct
+        self.cancel_event = cancel_event
 
         # --- Create components ---
         self.event_bus = EventBus()
@@ -131,6 +135,9 @@ class BacktestEngine:
 
         # ---- Main simulation loop ----
         for i, current_date in enumerate(sorted_dates):
+            if self.cancel_event and self.cancel_event.is_set():
+                break
+
             # Collect bars for all symbols on this date
             bars: dict[str, BarEvent] = {}
             for symbol in self.universe:
@@ -225,6 +232,7 @@ class BacktestEngine:
         metrics["start_date"] = str(self.start_date)
         metrics["end_date"] = str(self.end_date)
         metrics["total_trades"] = len(self.trade_log.trades)
+        metrics["_run_id"] = run_id
 
         # Console report
         report = ReportGenerator(
@@ -305,13 +313,46 @@ class BacktestEngine:
 
         self.strategy.on_fill(fill)
 
+    @staticmethod
+    def _safe_serialize(value: Any) -> Any:
+        """Convert a metric value to a JSON-safe type, preserving numerics."""
+        if value is None:
+            return None
+        if isinstance(value, (int, float, bool)):
+            return value
+        if isinstance(value, (date, datetime)):
+            return value.isoformat()
+        if isinstance(value, (list, tuple)):
+            return [BacktestEngine._safe_serialize(v) for v in value]
+        if isinstance(value, dict):
+            return {
+                str(k): BacktestEngine._safe_serialize(v)
+                for k, v in value.items()
+            }
+        # numpy scalar types
+        type_name = type(value).__name__
+        if "float" in type_name or "int" in type_name:
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                pass
+        return str(value)
+
     def _save_run(self, run_id: str, metrics: dict) -> None:
-        """Persist backtest results to the database."""
+        """Persist backtest results, trades, and equity curve to the database."""
+        config = json.dumps({
+            "universe": list(self.universe),
+            "benchmark_symbol": self.benchmark_symbol,
+            "position_size_pct": self.position_size_pct,
+            "slippage_pct": self.broker.slippage_pct,
+            "commission_per_share": self.broker.commission_per_share,
+        })
+
         run = RunRecord(
             run_id=run_id,
             mode="backtest",
             strategy_name=type(self.strategy).__name__,
-            config="",
+            config=config,
             start_date=self.start_date,
             end_date=self.end_date,
             initial_capital=self.initial_capital,
@@ -321,13 +362,59 @@ class BacktestEngine:
             max_drawdown=metrics.get("max_drawdown_pct", 0),
             created_at=datetime.now(tz=timezone.utc),
             full_metrics=json.dumps(
-                {k: str(v) for k, v in metrics.items()}
+                {k: self._safe_serialize(v) for k, v in metrics.items()}
             ),
         )
         try:
             self.database.insert_run(run)
         except Exception:
-            pass  # Don't crash on DB save failure
+            return  # Don't crash on DB save failure; skip trade/curve persistence
+
+        # Persist trades
+        try:
+            trade_records = []
+            for t in self.trade_log.trades:
+                trade_records.append(TradeRecord(
+                    trade_id=str(uuid.uuid4())[:8],
+                    run_id=run_id,
+                    symbol=t.symbol,
+                    direction=t.direction,
+                    entry_date=t.entry_date,
+                    exit_date=t.exit_date,
+                    entry_price=t.entry_price,
+                    exit_price=t.exit_price,
+                    quantity=t.quantity,
+                    pnl=t.pnl,
+                    pnl_pct=t.pnl_pct,
+                    entry_reason=t.entry_reason,
+                    exit_reason=t.exit_reason,
+                    option_type=t.option_type,
+                    strike=t.strike,
+                    expiration=t.expiration,
+                ))
+            if trade_records:
+                self.database.insert_trades(trade_records)
+        except Exception:
+            pass  # Don't crash on trade persistence failure
+
+        # Persist equity curve
+        try:
+            benchmark_dict: dict[date, float] = {
+                d: v for d, v in self.benchmark.equity_curve
+            }
+            equity_points = []
+            for d, strategy_value in self.portfolio.equity_curve:
+                benchmark_value = benchmark_dict.get(d, 0.0)
+                equity_points.append(EquityCurvePoint(
+                    run_id=run_id,
+                    date=d,
+                    strategy_value=strategy_value,
+                    benchmark_value=benchmark_value,
+                ))
+            if equity_points:
+                self.database.insert_equity_curve(equity_points)
+        except Exception:
+            pass  # Don't crash on equity curve persistence failure
 
     def _empty_metrics(self, run_id: str) -> dict:
         """Return a minimal metrics dict when no data is available."""
@@ -340,6 +427,7 @@ class BacktestEngine:
             "max_drawdown_pct": 0.0,
             "end_value": self.initial_capital,
             "start_value": self.initial_capital,
+            "_run_id": run_id,
         }
         self._save_run(run_id, metrics)
         return metrics

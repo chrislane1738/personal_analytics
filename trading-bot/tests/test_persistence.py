@@ -1,12 +1,19 @@
-"""Tests for dashboard persistence: equity curves, get_trades, delete_run, paginated list_runs."""
+"""Tests for dashboard persistence: equity curves, get_trades, delete_run, paginated list_runs,
+engine persistence (trades + equity curves), and cancellation token."""
+import json
 import os
 import tempfile
+import threading
 from datetime import date, datetime
 
 import pytest
 
+from core.engine import BacktestEngine
+from core.events import BarEvent, SignalEvent
 from data.storage.database import Database
-from data.storage.models import EquityCurvePoint, RunRecord, TradeRecord
+from data.storage.models import DailyBar, EquityCurvePoint, RunRecord, TradeRecord
+from strategy.base import BacktestContext, Strategy
+from tests.fixtures.sample_bars import generate_spy_bars
 
 
 @pytest.fixture
@@ -388,3 +395,327 @@ class TestListRunsPaginated:
                               limit=1, offset=1)
         assert len(page2) == 1
         assert page2[0].total_return == 0.10
+
+
+# ---------------------------------------------------------------------------
+# Helper strategy for engine persistence tests
+# ---------------------------------------------------------------------------
+
+class _SimpleBuyStrategy(Strategy):
+    """Buys the first symbol once, then holds. Minimal for persistence tests."""
+
+    def __init__(self):
+        super().__init__()
+        self._bought = False
+
+    def warm_up_period(self) -> int:
+        return 0
+
+    def generate_signals(self, bar: BarEvent, portfolio) -> list[SignalEvent]:
+        if not self._bought and not portfolio.has_position(bar.symbol):
+            self._bought = True
+            return [
+                SignalEvent(
+                    symbol=bar.symbol,
+                    direction="long",
+                    reason="buy once",
+                    strength=0.8,
+                )
+            ]
+        return []
+
+
+@pytest.fixture
+def engine_db():
+    """Provide a temporary database pre-loaded with SPY bars."""
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
+        db_path = f.name
+    database = Database(db_path)
+    database.create_tables()
+    bars = generate_spy_bars("SPY")
+    database.insert_daily_bars(bars)
+    yield database
+    database.close()
+    os.unlink(db_path)
+
+
+# ---------------------------------------------------------------------------
+# Task 0.3: Engine persists trades and equity curves
+# ---------------------------------------------------------------------------
+
+class TestEnginePersistence:
+    def test_run_persists_trades_to_database(self, engine_db):
+        """After engine.run(), trades should be in the trades table."""
+        bars = generate_spy_bars("SPY")
+        engine = BacktestEngine(
+            strategy=_SimpleBuyStrategy(),
+            database=engine_db,
+            universe=["SPY"],
+            start_date=bars[0].date,
+            end_date=bars[-1].date,
+            initial_capital=100_000.0,
+            benchmark_symbol="SPY",
+        )
+        metrics = engine.run()
+        run_id = metrics["_run_id"]
+
+        db_trades = engine_db.get_trades(run_id)
+        # The buy strategy opens one trade; the engine closes it at end-of-backtest
+        assert len(db_trades) >= 1
+        trade = db_trades[0]
+        assert trade.run_id == run_id
+        assert trade.symbol == "SPY"
+        assert trade.direction == "long"
+        assert trade.entry_price > 0
+        assert trade.exit_price is not None
+        assert trade.quantity > 0
+        assert trade.entry_reason != ""
+
+    def test_run_persists_equity_curve_to_database(self, engine_db):
+        """After engine.run(), equity curve should be in the equity_curves table."""
+        bars = generate_spy_bars("SPY")
+        engine = BacktestEngine(
+            strategy=_SimpleBuyStrategy(),
+            database=engine_db,
+            universe=["SPY"],
+            start_date=bars[0].date,
+            end_date=bars[-1].date,
+            initial_capital=100_000.0,
+            benchmark_symbol="SPY",
+        )
+        metrics = engine.run()
+        run_id = metrics["_run_id"]
+
+        curve = engine_db.get_equity_curve(run_id)
+        assert len(curve) > 0
+        # First point should reflect initial capital area
+        assert curve[0].strategy_value > 0
+        assert curve[0].benchmark_value > 0
+
+    def test_run_config_stored_as_json(self, engine_db):
+        """The run's config field should be proper JSON with engine parameters."""
+        bars = generate_spy_bars("SPY")
+        engine = BacktestEngine(
+            strategy=_SimpleBuyStrategy(),
+            database=engine_db,
+            universe=["SPY"],
+            start_date=bars[0].date,
+            end_date=bars[-1].date,
+            initial_capital=100_000.0,
+            benchmark_symbol="SPY",
+            slippage_pct=0.001,
+            commission_per_share=0.01,
+            position_size_pct=0.10,
+        )
+        metrics = engine.run()
+        run_id = metrics["_run_id"]
+
+        run_record = engine_db.get_run(run_id)
+        assert run_record is not None
+        config = json.loads(run_record.config)
+        assert config["universe"] == ["SPY"]
+        assert config["benchmark_symbol"] == "SPY"
+        assert config["position_size_pct"] == 0.10
+        assert config["slippage_pct"] == 0.001
+        assert config["commission_per_share"] == 0.01
+
+    def test_safe_serialize_preserves_numeric_types(self, engine_db):
+        """full_metrics JSON should preserve numeric values, not stringify them."""
+        bars = generate_spy_bars("SPY")
+        engine = BacktestEngine(
+            strategy=_SimpleBuyStrategy(),
+            database=engine_db,
+            universe=["SPY"],
+            start_date=bars[0].date,
+            end_date=bars[-1].date,
+            initial_capital=100_000.0,
+            benchmark_symbol="SPY",
+        )
+        metrics = engine.run()
+        run_id = metrics["_run_id"]
+
+        run_record = engine_db.get_run(run_id)
+        full_metrics = json.loads(run_record.full_metrics)
+        # total_return should be a number, not a string like "0.05"
+        assert isinstance(full_metrics["total_return"], (int, float))
+        assert isinstance(full_metrics["total_trades"], (int, float))
+
+    def test_run_id_in_returned_metrics(self, engine_db):
+        """metrics['_run_id'] should be present and match the persisted run."""
+        bars = generate_spy_bars("SPY")
+        engine = BacktestEngine(
+            strategy=_SimpleBuyStrategy(),
+            database=engine_db,
+            universe=["SPY"],
+            start_date=bars[0].date,
+            end_date=bars[-1].date,
+            initial_capital=100_000.0,
+            benchmark_symbol="SPY",
+        )
+        metrics = engine.run()
+        assert "_run_id" in metrics
+        run_id = metrics["_run_id"]
+        assert isinstance(run_id, str)
+        assert len(run_id) > 0
+
+        # Should be retrievable from DB
+        run_record = engine_db.get_run(run_id)
+        assert run_record is not None
+
+    def test_empty_run_also_returns_run_id(self):
+        """Even when there's no data, _run_id should be in the metrics."""
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
+            db_path = f.name
+        database = Database(db_path)
+        database.create_tables()
+        try:
+            engine = BacktestEngine(
+                strategy=_SimpleBuyStrategy(),
+                database=database,
+                universe=["NODATA"],
+                start_date=date(2024, 1, 1),
+                end_date=date(2024, 6, 1),
+                initial_capital=100_000.0,
+                benchmark_symbol="SPY",
+            )
+            metrics = engine.run()
+            assert "_run_id" in metrics
+        finally:
+            database.close()
+            os.unlink(db_path)
+
+    def test_trade_dicts_include_all_fields(self):
+        """get_trade_dicts() should include entry_date, exit_date, etc."""
+        from analytics.trade_log import TradeLog
+        tl = TradeLog()
+        tl.open_trade("AAPL", "long", date(2024, 1, 5), 150.0, 100, "buy signal")
+        tl.close_trade("AAPL", date(2024, 1, 10), 155.0, "target hit")
+
+        dicts = tl.get_trade_dicts()
+        assert len(dicts) == 1
+        d = dicts[0]
+        assert d["entry_date"] == date(2024, 1, 5)
+        assert d["exit_date"] == date(2024, 1, 10)
+        assert d["entry_price"] == 150.0
+        assert d["exit_price"] == 155.0
+        assert d["quantity"] == 100
+        assert d["entry_reason"] == "buy signal"
+        assert d["exit_reason"] == "target hit"
+        assert d["option_type"] is None
+        assert d["strike"] is None
+        assert d["expiration"] is None
+        # Original fields still present
+        assert d["pnl"] == 500.0
+        assert d["symbol"] == "AAPL"
+        assert d["direction"] == "long"
+        assert d["holding_days"] == 5
+
+
+# ---------------------------------------------------------------------------
+# Task 0.6: Cancellation token
+# ---------------------------------------------------------------------------
+
+class TestCancellationToken:
+    def test_cancel_event_stops_backtest_early(self, engine_db):
+        """Setting cancel_event should cause the engine to stop before processing all bars."""
+        bars = generate_spy_bars("SPY")
+        cancel = threading.Event()
+
+        class _CountingStrategy(Strategy):
+            """Counts bars processed to verify early stop."""
+            def __init__(self):
+                super().__init__()
+                self.bar_count = 0
+
+            def warm_up_period(self) -> int:
+                return 0
+
+            def generate_signals(self, bar, portfolio):
+                self.bar_count += 1
+                # Cancel after 10 bars
+                if self.bar_count >= 10:
+                    cancel.set()
+                return []
+
+        strategy = _CountingStrategy()
+        engine = BacktestEngine(
+            strategy=strategy,
+            database=engine_db,
+            universe=["SPY"],
+            start_date=bars[0].date,
+            end_date=bars[-1].date,
+            initial_capital=100_000.0,
+            benchmark_symbol="SPY",
+            cancel_event=cancel,
+        )
+        metrics = engine.run()
+
+        # Strategy should have processed far fewer bars than the full 100
+        assert strategy.bar_count < 50, (
+            f"Expected early stop but processed {strategy.bar_count} bars"
+        )
+
+    def test_no_cancel_event_runs_full(self, engine_db):
+        """Without cancel_event, the engine should process all bars normally."""
+        bars = generate_spy_bars("SPY")
+
+        class _CountingStrategy(Strategy):
+            def __init__(self):
+                super().__init__()
+                self.bar_count = 0
+
+            def warm_up_period(self) -> int:
+                return 0
+
+            def generate_signals(self, bar, portfolio):
+                self.bar_count += 1
+                return []
+
+        strategy = _CountingStrategy()
+        engine = BacktestEngine(
+            strategy=strategy,
+            database=engine_db,
+            universe=["SPY"],
+            start_date=bars[0].date,
+            end_date=bars[-1].date,
+            initial_capital=100_000.0,
+            benchmark_symbol="SPY",
+        )
+        engine.run()
+
+        # Should process all 100 bars
+        assert strategy.bar_count == 100
+
+    def test_cancel_event_already_set_processes_zero_bars(self, engine_db):
+        """If cancel_event is set before run(), zero bars should be processed."""
+        bars = generate_spy_bars("SPY")
+        cancel = threading.Event()
+        cancel.set()  # Pre-set
+
+        class _CountingStrategy(Strategy):
+            def __init__(self):
+                super().__init__()
+                self.bar_count = 0
+
+            def warm_up_period(self) -> int:
+                return 0
+
+            def generate_signals(self, bar, portfolio):
+                self.bar_count += 1
+                return []
+
+        strategy = _CountingStrategy()
+        engine = BacktestEngine(
+            strategy=strategy,
+            database=engine_db,
+            universe=["SPY"],
+            start_date=bars[0].date,
+            end_date=bars[-1].date,
+            initial_capital=100_000.0,
+            benchmark_symbol="SPY",
+            cancel_event=cancel,
+        )
+        metrics = engine.run()
+
+        assert strategy.bar_count == 0
+        assert metrics["total_trades"] == 0
