@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Data files (large CSVs)
+backend/data/raw/*.csv
+backend/data/processed/*.csv
+backend/data/processed/*.parquet
+backend/data/cache/
+backend/models/artifacts/*.joblib
+
+# Node
+node_modules/
+frontend/.next/
+frontend/out/
+
+# Environment
+.env
+.env.local
+.env*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Brainstorm artifacts
+.superpowers/
