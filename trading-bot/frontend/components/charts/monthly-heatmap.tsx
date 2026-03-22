@@ -71,7 +71,7 @@ export function MonthlyHeatmap({ data }: MonthlyHeatmapProps) {
     >();
 
     for (const point of data) {
-      const d = new Date(point.timestamp);
+      const d = new Date(point.date);
       const year = d.getFullYear();
       const month = d.getMonth();
       const key = `${year}-${month}`;
@@ -79,11 +79,11 @@ export function MonthlyHeatmap({ data }: MonthlyHeatmapProps) {
       const existing = monthBounds.get(key);
       if (!existing) {
         monthBounds.set(key, {
-          startEquity: point.equity,
-          endEquity: point.equity,
+          startEquity: point.strategy_value,
+          endEquity: point.strategy_value,
         });
       } else {
-        existing.endEquity = point.equity;
+        existing.endEquity = point.strategy_value;
       }
     }
 
