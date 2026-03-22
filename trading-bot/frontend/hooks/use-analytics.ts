@@ -13,7 +13,7 @@ export function useEquityCurve(runId: string | undefined) {
   return useQuery<EquityCurvePoint[]>({
     queryKey: ["equity-curve", runId],
     queryFn: () =>
-      apiFetch<EquityCurvePoint[]>(`/api/runs/${runId}/equity-curve`),
+      apiFetch<{ points: EquityCurvePoint[] }>(`/api/analytics/${runId}/equity-curve`).then(r => r.points),
     enabled: !!runId,
   });
 }
@@ -25,7 +25,7 @@ export function useRegimeStats(runId: string | undefined) {
   return useQuery<RegimeStat[]>({
     queryKey: ["regime-stats", runId],
     queryFn: () =>
-      apiFetch<RegimeStat[]>(`/api/runs/${runId}/regime-stats`),
+      apiFetch<RegimeStat[]>(`/api/analytics/${runId}/regime`),
     enabled: !!runId,
   });
 }
@@ -41,7 +41,7 @@ export function useMonteCarlo(
     queryKey: ["monte-carlo", runId, simulations],
     queryFn: () =>
       apiFetch<MonteCarloResult>(
-        `/api/runs/${runId}/monte-carlo?simulations=${simulations}`
+        `/api/analytics/${runId}/monte-carlo?simulations=${simulations}`
       ),
     enabled: !!runId,
   });

@@ -41,61 +41,56 @@ export default function RunDetailPage({
   // Compute drawdown series from equity curve
   const drawdownData = useMemo(() => {
     if (!equityCurve || equityCurve.length === 0) return [];
-    let peak = equityCurve[0].equity;
+    let peak = equityCurve[0].strategy_value;
     return equityCurve.map((point: EquityCurvePoint) => {
-      if (point.equity > peak) peak = point.equity;
-      const drawdown = peak > 0 ? -((peak - point.equity) / peak) : 0;
-      return { date: point.timestamp, drawdown };
+      if (point.strategy_value > peak) peak = point.strategy_value;
+      const drawdown = peak > 0 ? -((peak - point.strategy_value) / peak) : 0;
+      return { date: point.date, drawdown };
     });
   }, [equityCurve]);
 
   // Build metrics from run data
   const metrics = useMemo(() => {
     if (!run) return [];
+    const fm = (run.full_metrics ?? {}) as Record<string, unknown>;
+    const num = (key: string, fallback?: number) => {
+      const v = fm[key];
+      return typeof v === "number" ? v : typeof v === "string" ? parseFloat(v) : (fallback ?? null);
+    };
     return [
       {
         label: "Total Return",
-        value:
-          run.total_return !== null ? formatPercent(run.total_return) : "-",
-        colorClass: run.total_return !== null ? pnlColor(run.total_return) : undefined,
+        value: run.total_return != null ? formatPercent(run.total_return) : "-",
+        colorClass: run.total_return != null ? pnlColor(run.total_return) : undefined,
       },
       {
         label: "Sharpe Ratio",
-        value: run.sharpe_ratio !== null ? run.sharpe_ratio.toFixed(2) : "-",
+        value: run.sharpe != null ? run.sharpe.toFixed(2) : "-",
+      },
+      {
+        label: "Sortino",
+        value: num("sortino_ratio") != null ? num("sortino_ratio")!.toFixed(2) : "-",
       },
       {
         label: "Max Drawdown",
-        value:
-          run.max_drawdown !== null ? formatPercent(run.max_drawdown) : "-",
+        value: run.max_drawdown != null ? formatPercent(run.max_drawdown) : "-",
         colorClass: "text-[#ef4444]",
       },
       {
         label: "Win Rate",
-        value: run.win_rate !== null ? formatPercent(run.win_rate) : "-",
+        value: num("win_rate") != null ? formatPercent(num("win_rate")!) : "-",
+      },
+      {
+        label: "Profit Factor",
+        value: num("profit_factor") != null ? num("profit_factor")!.toFixed(2) : "-",
       },
       {
         label: "Total Trades",
-        value: run.total_trades !== null ? String(run.total_trades) : "-",
+        value: num("total_trades") != null ? String(Math.round(num("total_trades")!)) : "-",
       },
       {
         label: "Strategy",
-        value: run.strategy,
-      },
-      {
-        label: "Timeframe",
-        value: run.timeframe,
-      },
-      {
-        label: "Status",
-        value: run.status.charAt(0).toUpperCase() + run.status.slice(1),
-        colorClass:
-          run.status === "completed"
-            ? "text-[#22c55e]"
-            : run.status === "failed"
-              ? "text-[#ef4444]"
-              : run.status === "running"
-                ? "text-[#eab308]"
-                : undefined,
+        value: run.strategy_name ?? "-",
       },
     ];
   }, [run]);
@@ -111,7 +106,7 @@ export default function RunDetailPage({
     return [
       {
         label: "Final Equity",
-        value: formatCurrency(lastPoint.equity),
+        value: formatCurrency(lastPoint.strategy_value ?? 0),
       },
       {
         label: "Peak Drawdown",
@@ -119,12 +114,12 @@ export default function RunDetailPage({
         colorClass: "text-[#ef4444]",
       },
       {
-        label: "Cash",
-        value: formatCurrency(lastPoint.cash),
+        label: "Initial Capital",
+        value: formatCurrency(run.initial_capital ?? 0),
       },
       {
-        label: "Positions Value",
-        value: formatCurrency(lastPoint.positions_value),
+        label: "Benchmark",
+        value: formatCurrency(lastPoint.benchmark_value ?? 0),
       },
     ];
   }, [equityCurve, drawdownData, run]);

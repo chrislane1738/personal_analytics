@@ -39,7 +39,7 @@ function eventColor(type: string): string {
 // Component
 // ---------------------------------------------------------------------------
 
-const WS_BASE = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000";
+const WS_BASE = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8001";
 const MAX_TICKER_EVENTS = 50;
 
 export function EventTicker() {
@@ -53,7 +53,7 @@ export function EventTicker() {
   // Fetch last run summary from REST API
   useEffect(() => {
     const API_BASE =
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
     fetch(`${API_BASE}/api/runs?limit=1&sort=created_at&order=desc`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {

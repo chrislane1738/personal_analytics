@@ -52,7 +52,7 @@ export interface UseWebSocketReturn {
 // Constants
 // ---------------------------------------------------------------------------
 
-const WS_BASE = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000";
+const WS_BASE = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8001";
 const MAX_EVENTS = 500;
 const MAX_EQUITY_POINTS = 2000;
 const RECONNECT_BASE_MS = 1000;
