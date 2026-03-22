@@ -1,0 +1,24 @@
+name: "Mean Reversion SPY"
+universe: ["SPY"]
+timeframe: daily
+
+indicators:
+  sma_20: { type: SMA, period: 20 }
+  sma_50: { type: SMA, period: 50 }
+  rsi_14: { type: RSI, period: 14 }
+  bb_20:  { type: BollingerBands, period: 20, std_dev: 2 }
+
+entry_rules:
+  - condition: "close < bb_20.lower AND rsi_14 < 30"
+    direction: long
+    reason: "Price below lower BB with oversold RSI"
+
+exit_rules:
+  - condition: "close > sma_20"
+    reason: "Price reverted to mean"
+  - condition: "pnl_pct < -0.05"
+    reason: "Stop loss at -5%"
+
+position_sizing:
+  method: fixed_pct
+  value: 0.06
