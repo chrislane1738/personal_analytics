@@ -24,3 +24,8 @@ dev = ["pytest>=7.4", "pytest-asyncio>=0.23"]
 
 [project.scripts]
 trading-bot = "main:app"
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: marks tests that call real external APIs (deselect with '-m \"not integration\"')",
+]
