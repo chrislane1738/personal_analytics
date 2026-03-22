@@ -77,6 +77,50 @@ export interface MonteCarloResult {
     p95: number;
   };
   probability_of_profit: number;
+  probability_of_ruin: number;
   expected_max_drawdown: number;
+  median_final_equity: number;
+  is_outlier: boolean;
+  fan_chart: FanChartPoint[];
+  drawdown_distribution: number[];
   paths: number[][];
+}
+
+/** A single point on the Monte Carlo fan chart */
+export interface FanChartPoint {
+  step: number;
+  p5: number;
+  p25: number;
+  p50: number;
+  p75: number;
+  p95: number;
+  actual: number | null;
+}
+
+/** Options analytics response */
+export interface OptionsAnalyticsResponse {
+  total_collected: number;
+  total_paid: number;
+  net_premium: number;
+  assignment_count: number;
+  total_short_options: number;
+  assignment_rate: number;
+  win_rate_by_dte: DteBucketWinRate[];
+  greeks_timeline: GreeksPoint[];
+}
+
+/** Win rate for a DTE bucket */
+export interface DteBucketWinRate {
+  bucket: string;
+  win_rate: number;
+  trade_count: number;
+}
+
+/** A single point on the Greeks timeline */
+export interface GreeksPoint {
+  timestamp: string;
+  delta: number;
+  gamma: number;
+  theta: number;
+  vega: number;
 }
