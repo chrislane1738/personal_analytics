@@ -131,8 +131,41 @@ export default function RunDetailPage({
 
   if (runLoading) {
     return (
-      <div className="p-6">
-        <p className="text-sm text-zinc-500">Loading run details...</p>
+      <div className="flex flex-col gap-4 p-6">
+        {/* Header skeleton */}
+        <div>
+          <div className="h-3 w-20 rounded bg-zinc-800/60 animate-pulse mb-2" />
+          <div className="h-7 w-48 rounded bg-zinc-800/60 animate-pulse" />
+          <div className="mt-2 flex gap-3">
+            <div className="h-3 w-16 rounded bg-zinc-800/40 animate-pulse" />
+            <div className="h-3 w-32 rounded bg-zinc-800/40 animate-pulse" />
+            <div className="h-3 w-20 rounded bg-zinc-800/40 animate-pulse" />
+          </div>
+        </div>
+        {/* Metrics strip skeleton */}
+        <div className="flex gap-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex-1 rounded-lg border border-[#1a1a1a] bg-[#0f0f0f] p-3">
+              <div className="h-2 w-12 rounded bg-zinc-800/40 animate-pulse mb-2" />
+              <div className="h-5 w-16 rounded bg-zinc-800/60 animate-pulse" />
+            </div>
+          ))}
+        </div>
+        {/* Chart skeletons */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="rounded-lg border border-[#1a1a1a] bg-[#0f0f0f] p-4 lg:col-span-2">
+            <div className="h-3 w-20 rounded bg-zinc-800/40 animate-pulse mb-4" />
+            <div className="h-[300px] rounded bg-zinc-800/20 animate-pulse" />
+          </div>
+          <div className="rounded-lg border border-[#1a1a1a] bg-[#0a0a0a] p-4">
+            <div className="h-3 w-28 rounded bg-zinc-800/40 animate-pulse mb-4" />
+            <div className="space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-16 rounded bg-zinc-800/20 animate-pulse" />
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

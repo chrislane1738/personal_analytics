@@ -8,7 +8,7 @@ import logging
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.routers import analytics, backtest, runs, strategies, trades
+from backend.routers import analytics, backtest, data, runs, strategies, trades
 from backend.services.ws_manager import ws_manager
 
 logger = logging.getLogger(__name__)
@@ -37,6 +37,7 @@ app.include_router(trades.router)
 app.include_router(analytics.router)
 app.include_router(strategies.router)
 app.include_router(backtest.router)
+app.include_router(data.router)
 
 
 # ---------------------------------------------------------------------------

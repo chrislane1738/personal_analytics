@@ -175,6 +175,69 @@ class BacktestStatusResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------
+# Data Manager
+# ---------------------------------------------------------------------------
+
+
+class SymbolInfoResponse(BaseModel):
+    symbol: str
+    company_name: Optional[str] = None
+    sector: Optional[str] = None
+    industry: Optional[str] = None
+    exchange: Optional[str] = None
+    market_cap: Optional[float] = None
+    bar_count: int = 0
+    min_date: Optional[date] = None
+    max_date: Optional[date] = None
+    updated_at: Optional[datetime] = None
+
+
+class SymbolListResponse(BaseModel):
+    symbols: list[SymbolInfoResponse]
+    total_symbols: int
+    total_bars: int
+
+
+class DataFetchRequest(BaseModel):
+    symbol: str
+    start_date: date
+    end_date: date
+
+
+class DataFetchResponse(BaseModel):
+    symbol: str
+    bars_fetched: int
+    message: str
+
+
+class DataValidateRequest(BaseModel):
+    symbols: list[str]
+
+
+class DataValidateResponse(BaseModel):
+    results: dict[str, str]
+
+
+class DataQualityLogEntry(BaseModel):
+    symbol: str
+    date: date
+    issue_type: str
+    severity: Optional[str] = None
+    details: Optional[str] = None
+    resolved: bool = False
+
+
+class DataQualityResponse(BaseModel):
+    entries: list[DataQualityLogEntry]
+    total: int
+
+
+# ---------------------------------------------------------------------------
+# Error
+# ---------------------------------------------------------------------------
+
+
 class ErrorResponse(BaseModel):
     detail: str
     code: Optional[str] = None
