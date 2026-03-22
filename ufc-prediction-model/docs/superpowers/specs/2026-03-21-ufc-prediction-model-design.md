@@ -40,7 +40,7 @@
 
 **Important:** Pre-computed fighting style membership scores from the UFC 2025 Dataset (or any external source) must be **discarded**. Style scores are always recomputed from time-aware aggregated stats using the system defined in Section 4. Using pre-computed scores would violate the time-aware aggregation rule (§3.1 Rule #3).
 
-### 2.4 Fighter Identity Resolution
+### 2.3 Fighter Identity Resolution
 
 Fighter name matching across datasets is the hardest data engineering problem. Strategy:
 
@@ -49,12 +49,12 @@ Fighter name matching across datasets is the hardest data engineering problem. S
 3. **Manual alias table:** Maintain `backend/data/fighter_aliases.json` mapping known discrepancies (e.g., "Charles Oliveira" ↔ "Charles Do Bronx Oliveira", transliterated names, name changes).
 4. **Validation:** Log all fuzzy matches below 95% similarity for manual review. Never silently accept ambiguous matches.
 
-### 2.5 External API Resilience
+### 2.4 External API Resilience
 
 - **ufcapi.aristotle.me (100 req/day):** Cache all API responses locally in `backend/data/cache/`. Implement exponential backoff on failures. When limit is hit, fall back to cached data.
 - **ufcscraper:** Scraper failures must fail loudly with clear error messages, never silently produce bad data. If ufcstats.com structure changes, the scraper will raise exceptions rather than returning malformed data.
 
-### 2.6 Data Pipeline Flow
+### 2.5 Data Pipeline Flow
 
 ```
 Kaggle CSVs / ufcscraper output
@@ -305,7 +305,9 @@ ufc-prediction-model/
 │   ├── data/
 │   │   ├── raw/                    # Original CSVs from Kaggle/scraper
 │   │   ├── processed/              # Feature-engineered datasets
-│   │   └── predictions/            # Model output JSONs
+│   │   ├── predictions/            # Model output JSONs
+│   │   ├── cache/                  # Cached API responses
+│   │   └── fighter_aliases.json    # Name matching alias table
 │   ├── features/
 │   │   ├── physical.py             # Physical attribute features
 │   │   ├── record.py               # Career record features
@@ -318,6 +320,7 @@ ufc-prediction-model/
 │   │   ├── context.py              # Fight context features
 │   │   └── pipeline.py             # Orchestrates all feature modules
 │   ├── models/
+│   │   ├── artifacts/              # Trained .joblib model files (versioned by date)
 │   │   ├── train.py                # Model training (both variants)
 │   │   ├── evaluate.py             # Validation, metrics, calibration
 │   │   ├── predict.py              # Generate predictions for upcoming fights
