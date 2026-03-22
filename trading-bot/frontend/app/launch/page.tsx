@@ -260,7 +260,7 @@ export default function LaunchPage() {
           {isCompleted && (
             <div className="mt-3">
               <Link
-                href={`/runs/${activeRunId}`}
+                href={`/runs/${runStatus?.run_id ?? activeRunId}`}
                 className="text-sm text-[#f97316] underline-offset-4 hover:underline"
               >
                 View Run Details

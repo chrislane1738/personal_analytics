@@ -150,6 +150,16 @@ class BacktestRunner:
             metrics = engine.run()
             info.metrics = metrics
 
+            # The engine generates its own run_id internally.
+            # Update our tracking to use the real DB run_id.
+            real_run_id = metrics.get("_run_id")
+            if real_run_id and real_run_id != info.run_id:
+                old_id = info.run_id
+                info.run_id = real_run_id
+                with self._lock:
+                    self._runs[real_run_id] = info
+                    self._runs.pop(old_id, None)
+
             if info.cancel_event.is_set():
                 info.status = RunStatus.CANCELLED
             else:
