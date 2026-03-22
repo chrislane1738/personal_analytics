@@ -127,12 +127,17 @@ class BacktestRunner:
     ) -> None:
         """Execute the backtest (runs in a worker thread)."""
         try:
+            # Create a fresh DB connection for this thread to avoid SQLite
+            # thread-safety issues with the shared API connection.
+            thread_db = Database(database._db_path)
+            thread_db.create_tables()
+
             # Resolve strategy — either a YAML file or a Python dotted path
             strategy = self._load_strategy(strategy_name)
 
             engine = BacktestEngine(
                 strategy=strategy,
-                database=database,
+                database=thread_db,
                 universe=universe,
                 start_date=start_date,
                 end_date=end_date,
@@ -154,6 +159,11 @@ class BacktestRunner:
             logger.exception("Backtest %s failed", info.run_id)
             info.status = RunStatus.FAILED
             info.error = f"{type(exc).__name__}: {exc}"
+        finally:
+            try:
+                thread_db.close()
+            except Exception:
+                pass
 
     @staticmethod
     def _load_strategy(strategy_name: str):
