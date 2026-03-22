@@ -19,10 +19,8 @@ export interface Run {
 
 /** Paginated run list response */
 export interface RunListResponse {
-  items: Run[];
+  runs: Run[];
   total: number;
-  page: number;
-  page_size: number;
 }
 
 /** A single trade record */

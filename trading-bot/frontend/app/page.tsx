@@ -25,7 +25,7 @@ function SkeletonRows() {
             <div
               key={j}
               className="h-4 rounded bg-zinc-800/40 animate-pulse"
-              style={{ width: `${60 + Math.random() * 40}px` }}
+              style={{ width: `${60 + ((j * 17 + i * 31) % 40)}px` }}
             />
           ))}
         </div>
@@ -61,7 +61,7 @@ export default function HomePage() {
 
       {data && (
         <RunsTable
-          data={data.items}
+          data={data.runs}
           onDelete={(runId) => deleteRun.mutate(runId)}
         />
       )}

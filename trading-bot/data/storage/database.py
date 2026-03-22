@@ -31,7 +31,7 @@ class Database:
         # deprecated in Python 3.12 and no longer works in 3.14 for ISO-8601
         # strings that use a 'T' separator.  We handle type conversion
         # explicitly in _to_date / _to_datetime instead.
-        self._conn = sqlite3.connect(db_path)
+        self._conn = sqlite3.connect(db_path, check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.execute("PRAGMA foreign_keys=ON")
