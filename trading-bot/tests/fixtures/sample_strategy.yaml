@@ -1,0 +1,5 @@
+# Sample strategy config used by tests/test_strategy_base.py
+name: sample
+type: momentum
+params:
+  lookback: 20
