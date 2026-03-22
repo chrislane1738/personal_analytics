@@ -5,7 +5,10 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useRun } from "@/hooks/use-runs";
 import { useTrades } from "@/hooks/use-trades";
-import { useEquityCurve, useRegimeStats } from "@/hooks/use-analytics";
+import { useEquityCurve, useRegimeStats, useMonteCarlo } from "@/hooks/use-analytics";
+import { useOptionsAnalytics } from "@/hooks/use-options";
+import { FanChart } from "@/components/charts/fan-chart";
+import { OptionsAnalytics } from "@/components/options-analytics";
 import { EquityCurve } from "@/components/charts/equity-curve";
 import { DrawdownChart } from "@/components/charts/drawdown-chart";
 import { MonthlyHeatmap } from "@/components/charts/monthly-heatmap";
@@ -32,6 +35,8 @@ export default function RunDetailPage({
   const { data: trades, isLoading: tradesLoading } = useTrades(runId);
   const { data: equityCurve, isLoading: curveLoading } = useEquityCurve(runId);
   const { data: regimeStats, isLoading: regimeLoading } = useRegimeStats(runId);
+  const { data: mcData, isLoading: mcLoading } = useMonteCarlo(runId);
+  const { data: optionsData, isLoading: optionsLoading } = useOptionsAnalytics(runId);
 
   // Compute drawdown series from equity curve
   const drawdownData = useMemo(() => {
@@ -277,14 +282,26 @@ export default function RunDetailPage({
         </TabsContent>
 
         <TabsContent value="monte-carlo">
-          <div className="flex h-48 items-center justify-center rounded-lg border border-dashed border-zinc-800 text-sm text-zinc-600">
-            Monte Carlo simulation coming soon
+          <div className="rounded-lg border border-[#1a1a1a] bg-[#0a0a0a] p-4">
+            {mcLoading ? (
+              <p className="text-sm text-zinc-500">Running Monte Carlo simulation...</p>
+            ) : mcData ? (
+              <FanChart data={mcData} />
+            ) : (
+              <p className="text-sm text-zinc-500">No trade data available for simulation</p>
+            )}
           </div>
         </TabsContent>
 
         <TabsContent value="options">
-          <div className="flex h-48 items-center justify-center rounded-lg border border-dashed border-zinc-800 text-sm text-zinc-600">
-            Options analytics coming soon
+          <div className="rounded-lg border border-[#1a1a1a] bg-[#0a0a0a] p-4">
+            {optionsLoading ? (
+              <p className="text-sm text-zinc-500">Loading options analytics...</p>
+            ) : optionsData ? (
+              <OptionsAnalytics data={optionsData} />
+            ) : (
+              <p className="text-sm text-zinc-500">No options trades in this run</p>
+            )}
           </div>
         </TabsContent>
       </Tabs>
