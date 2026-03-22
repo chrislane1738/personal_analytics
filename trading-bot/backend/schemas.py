@@ -126,6 +126,51 @@ class OptionsAnalyticsResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Strategies
+# ---------------------------------------------------------------------------
+
+
+class StrategyFileResponse(BaseModel):
+    name: str
+    content: str
+
+
+class StrategyCreateRequest(BaseModel):
+    name: str
+    content: str
+
+
+class StrategyUpdateRequest(BaseModel):
+    content: str
+
+
+# ---------------------------------------------------------------------------
+# Backtest Launcher
+# ---------------------------------------------------------------------------
+
+
+class BacktestRunRequest(BaseModel):
+    strategy: str
+    universe: str
+    start_date: date
+    end_date: date
+    initial_capital: float = 100_000.0
+    benchmark: str = "SPY"
+    position_size_pct: float = 0.06
+
+
+class BacktestRunResponse(BaseModel):
+    run_id: str
+    status: str
+
+
+class BacktestStatusResponse(BaseModel):
+    run_id: str
+    status: str
+    error: Optional[str] = None
+
+
+# ---------------------------------------------------------------------------
 # Error
 # ---------------------------------------------------------------------------
 
