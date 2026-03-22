@@ -83,3 +83,11 @@ class TradeRecord:
     option_type: Optional[str] = None
     strike: Optional[float] = None
     expiration: Optional[date] = None
+
+
+@dataclass
+class EquityCurvePoint:
+    run_id: str
+    date: date
+    strategy_value: float
+    benchmark_value: float

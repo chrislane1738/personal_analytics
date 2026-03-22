@@ -4,7 +4,13 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Optional
 
-from data.storage.models import DailyBar, RunRecord, SymbolMetadata, TradeRecord
+from data.storage.models import (
+    DailyBar,
+    EquityCurvePoint,
+    RunRecord,
+    SymbolMetadata,
+    TradeRecord,
+)
 
 
 class Database:
@@ -36,7 +42,7 @@ class Database:
     # ------------------------------------------------------------------
 
     def create_tables(self) -> None:
-        """Create all 8 schema tables and their indexes if they do not exist."""
+        """Create all 9 schema tables and their indexes if they do not exist."""
         ddl = """
         CREATE TABLE IF NOT EXISTS daily_bars (
             symbol              TEXT    NOT NULL,
@@ -158,6 +164,17 @@ class Database:
 
         CREATE INDEX IF NOT EXISTS idx_trades_run_id
             ON trades (run_id);
+
+        CREATE TABLE IF NOT EXISTS equity_curves (
+            run_id          TEXT    NOT NULL REFERENCES runs(run_id),
+            date            DATE    NOT NULL,
+            strategy_value  REAL    NOT NULL,
+            benchmark_value REAL    NOT NULL,
+            PRIMARY KEY (run_id, date)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_equity_curves_run_id
+            ON equity_curves (run_id);
         """
         self._conn.executescript(ddl)
         self._conn.commit()
@@ -325,16 +342,56 @@ class Database:
             full_metrics=row["full_metrics"] or "",
         )
 
-    def list_runs(self) -> list[RunRecord]:
-        """Return all run records ordered by created_at descending."""
+    _VALID_SORT_COLUMNS = frozenset({
+        "created_at", "total_return", "sharpe", "max_drawdown",
+        "strategy_name", "start_date", "end_date",
+    })
+
+    def list_runs(
+        self,
+        sort: str = "created_at",
+        order: str = "desc",
+        strategy_filter: Optional[str] = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[RunRecord]:
+        """Return run records with sorting, filtering, and pagination.
+
+        Args:
+            sort: Column to sort by. Must be one of: created_at, total_return,
+                sharpe, max_drawdown, strategy_name, start_date, end_date.
+            order: Sort direction, "asc" or "desc" (case-insensitive).
+            strategy_filter: If provided, only return runs with this strategy_name.
+            limit: Maximum number of records to return (default 50).
+            offset: Number of records to skip (default 0).
+
+        Raises:
+            ValueError: If *sort* is not a whitelisted column name.
+        """
+        if sort not in self._VALID_SORT_COLUMNS:
+            raise ValueError(
+                f"Invalid sort column: {sort!r}. "
+                f"Must be one of {sorted(self._VALID_SORT_COLUMNS)}"
+            )
+        order = "DESC" if order.lower() == "desc" else "ASC"
+
         sql = """
         SELECT run_id, mode, strategy_name, config, start_date, end_date,
                initial_capital, final_value, total_return, sharpe,
                max_drawdown, created_at, full_metrics
         FROM   runs
-        ORDER  BY created_at DESC
         """
-        rows = self._conn.execute(sql).fetchall()
+        params: list = []
+        if strategy_filter is not None:
+            sql += " WHERE strategy_name = ?"
+            params.append(strategy_filter)
+
+        # sort is validated against _VALID_SORT_COLUMNS whitelist above
+        sql += f" ORDER BY {sort} {order}"
+        sql += " LIMIT ? OFFSET ?"
+        params.extend([limit, offset])
+
+        rows = self._conn.execute(sql, params).fetchall()
         return [
             RunRecord(
                 run_id=row["run_id"],
@@ -353,6 +410,13 @@ class Database:
             )
             for row in rows
         ]
+
+    def delete_run(self, run_id: str) -> None:
+        """Delete a run and all associated trades and equity curve points."""
+        self._conn.execute("DELETE FROM equity_curves WHERE run_id = ?", (run_id,))
+        self._conn.execute("DELETE FROM trades WHERE run_id = ?", (run_id,))
+        self._conn.execute("DELETE FROM runs WHERE run_id = ?", (run_id,))
+        self._conn.commit()
 
     # ------------------------------------------------------------------
     # trades
@@ -390,6 +454,81 @@ class Database:
         ]
         self._conn.executemany(sql, params)
         self._conn.commit()
+
+    def get_trades(self, run_id: str) -> list[TradeRecord]:
+        """Return all trades for a given run_id."""
+        sql = """
+        SELECT trade_id, run_id, symbol, direction, entry_date, exit_date,
+               entry_price, exit_price, quantity, pnl, pnl_pct,
+               entry_reason, exit_reason, option_type, strike, expiration
+        FROM   trades
+        WHERE  run_id = ?
+        ORDER  BY entry_date ASC
+        """
+        rows = self._conn.execute(sql, (run_id,)).fetchall()
+        return [
+            TradeRecord(
+                trade_id=row["trade_id"],
+                run_id=row["run_id"],
+                symbol=row["symbol"],
+                direction=row["direction"],
+                entry_date=self._to_date(row["entry_date"]),
+                exit_date=self._to_date(row["exit_date"]),
+                entry_price=row["entry_price"],
+                exit_price=row["exit_price"],
+                quantity=row["quantity"],
+                pnl=row["pnl"],
+                pnl_pct=row["pnl_pct"],
+                entry_reason=row["entry_reason"] or "",
+                exit_reason=row["exit_reason"] or "",
+                option_type=row["option_type"],
+                strike=row["strike"],
+                expiration=self._to_date(row["expiration"]),
+            )
+            for row in rows
+        ]
+
+    # ------------------------------------------------------------------
+    # equity_curves
+    # ------------------------------------------------------------------
+
+    def insert_equity_curve(self, points: list[EquityCurvePoint]) -> None:
+        """Bulk insert equity curve points."""
+        sql = """
+        INSERT OR REPLACE INTO equity_curves
+            (run_id, date, strategy_value, benchmark_value)
+        VALUES (?, ?, ?, ?)
+        """
+        params = [
+            (
+                p.run_id,
+                p.date.isoformat(),
+                p.strategy_value,
+                p.benchmark_value,
+            )
+            for p in points
+        ]
+        self._conn.executemany(sql, params)
+        self._conn.commit()
+
+    def get_equity_curve(self, run_id: str) -> list[EquityCurvePoint]:
+        """Return equity curve points for a given run_id, ordered by date."""
+        sql = """
+        SELECT run_id, date, strategy_value, benchmark_value
+        FROM   equity_curves
+        WHERE  run_id = ?
+        ORDER  BY date ASC
+        """
+        rows = self._conn.execute(sql, (run_id,)).fetchall()
+        return [
+            EquityCurvePoint(
+                run_id=row["run_id"],
+                date=self._to_date(row["date"]),
+                strategy_value=row["strategy_value"],
+                benchmark_value=row["benchmark_value"],
+            )
+            for row in rows
+        ]
 
     # ------------------------------------------------------------------
     # symbol_metadata
