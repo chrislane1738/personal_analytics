@@ -8,9 +8,11 @@ import { useTrades } from "@/hooks/use-trades";
 import { useEquityCurve, useRegimeStats } from "@/hooks/use-analytics";
 import { EquityCurve } from "@/components/charts/equity-curve";
 import { DrawdownChart } from "@/components/charts/drawdown-chart";
+import { MonthlyHeatmap } from "@/components/charts/monthly-heatmap";
 import { MetricsStrip } from "@/components/metrics-strip";
 import { TradesTable } from "@/components/tables/trades-table";
 import { RegimeCards } from "@/components/regime-cards";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   formatCurrency,
   formatPercent,
@@ -255,6 +257,37 @@ export default function RunDetailPage({
           </div>
         </div>
       </div>
+
+      {/* Analysis Tabs */}
+      <Tabs defaultValue="monthly-returns">
+        <TabsList variant="line">
+          <TabsTrigger value="monthly-returns">Monthly Returns</TabsTrigger>
+          <TabsTrigger value="monte-carlo">Monte Carlo</TabsTrigger>
+          <TabsTrigger value="options">Options</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="monthly-returns">
+          <div className="rounded-lg border border-[#1a1a1a] bg-[#0a0a0a] p-4">
+            {curveLoading ? (
+              <p className="text-sm text-zinc-500">Loading...</p>
+            ) : (
+              <MonthlyHeatmap data={equityCurve ?? []} />
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="monte-carlo">
+          <div className="flex h-48 items-center justify-center rounded-lg border border-dashed border-zinc-800 text-sm text-zinc-600">
+            Monte Carlo simulation coming soon
+          </div>
+        </TabsContent>
+
+        <TabsContent value="options">
+          <div className="flex h-48 items-center justify-center rounded-lg border border-dashed border-zinc-800 text-sm text-zinc-600">
+            Options analytics coming soon
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
