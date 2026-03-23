@@ -169,7 +169,7 @@ export default function ComparePage() {
 
   const curveQueries = [curve0, curve1, curve2, curve3];
 
-  const runs = runsData?.items ?? [];
+  const runs = runsData?.runs ?? [];
 
   const toggleRun = (runId: string) => {
     setSelectedIds((prev) => {
@@ -203,7 +203,7 @@ export default function ComparePage() {
         curves.push({
           id: selectedIds[i],
           data: curveData,
-          initial: curveData[0].equity,
+          initial: curveData[0].strategy_value,
         });
       }
     }
@@ -216,7 +216,7 @@ export default function ComparePage() {
     const timestampSet = new Set<string>();
     for (const curve of curves) {
       for (const point of curve.data) {
-        timestampSet.add(point.timestamp);
+        timestampSet.add(point.date);
       }
     }
 
@@ -226,7 +226,7 @@ export default function ComparePage() {
     const lookups = curves.map((curve) => {
       const map = new Map<string, number>();
       for (const point of curve.data) {
-        map.set(point.timestamp, point.equity);
+        map.set(point.date, point.strategy_value);
       }
       return { id: curve.id, map, initial: curve.initial, lastValue: 0 };
     });

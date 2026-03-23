@@ -12,10 +12,13 @@ export interface WalkForwardRunRequest {
   start_date: string;
   end_date: string;
   initial_capital: number;
+  benchmark: string;
   train_months: number;
   oos_months: number;
   step_months: number;
   objective: string;
+  monte_carlo_modes: string[];
+  simulations: number;
 }
 
 export interface WalkForwardRunResponse {

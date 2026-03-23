@@ -171,8 +171,8 @@ export function TradesTable({ data, totalGain }: TradesTableProps) {
   });
 
   const realizedPnl = data.reduce((sum, t) => sum + (t.pnl ?? 0), 0);
-  const winners = data.filter((t) => t.pnl > 0).length;
-  const losers = data.filter((t) => t.pnl < 0).length;
+  const winners = data.filter((t) => (t.pnl ?? 0) > 0).length;
+  const losers = data.filter((t) => (t.pnl ?? 0) < 0).length;
   const appreciationGain = totalGain != null ? totalGain - realizedPnl : null;
   const avgPnlPct = data.length > 0
     ? data.reduce((sum, t) => sum + (t.pnl_pct ?? 0), 0) / data.length

@@ -1,13 +1,20 @@
 /** A single backtest run summary */
 export interface Run {
   id: string;
+  run_id: string;
+  mode: string;
   strategy: string;
+  strategy_name: string;
   symbols: string[];
+  config: string | null;
   start_date: string;
   end_date: string;
   timeframe: string;
   status: "pending" | "running" | "completed" | "failed" | "cancelled";
+  initial_capital: number;
+  final_value: number;
   total_return: number | null;
+  sharpe: number | null;
   sharpe_ratio: number | null;
   max_drawdown: number | null;
   total_trades: number | null;
@@ -15,6 +22,7 @@ export interface Run {
   created_at: string;
   completed_at: string | null;
   parameters: Record<string, unknown>;
+  full_metrics: Record<string, unknown> | null;
 }
 
 /** Paginated run list response */
@@ -26,11 +34,15 @@ export interface RunListResponse {
 /** A single trade record */
 export interface Trade {
   id: string;
+  trade_id: string;
   run_id: string;
   symbol: string;
   side: "long" | "short";
+  direction: string;
   entry_time: string;
   exit_time: string | null;
+  entry_date: string | null;
+  exit_date: string | null;
   entry_price: number;
   exit_price: number | null;
   quantity: number;
@@ -41,16 +53,21 @@ export interface Trade {
   mae: number | null;
   mfe: number | null;
   duration_seconds: number | null;
+  entry_reason: string;
+  exit_reason: string;
+  option_type: string | null;
+  strike: number | null;
+  expiration: string | null;
 }
 
 /** A single point on the equity curve */
 export interface EquityCurvePoint {
-  timestamp: string;
-  equity: number;
-  drawdown: number;
-  benchmark: number | null;
-  cash: number;
-  positions_value: number;
+  date: string;
+  strategy_value: number;
+  benchmark_value: number | null;
+  drawdown?: number;
+  cash?: number;
+  positions_value?: number;
 }
 
 /** Performance statistics per market regime */
@@ -61,7 +78,11 @@ export interface RegimeStat {
   max_drawdown: number;
   win_rate: number;
   trade_count: number;
+  trades: number;
   avg_pnl: number;
+  total_pnl: number;
+  best_trade: number;
+  worst_trade: number;
 }
 
 /** Monte Carlo simulation result */
