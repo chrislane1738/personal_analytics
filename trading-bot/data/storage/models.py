@@ -91,3 +91,21 @@ class EquityCurvePoint:
     date: date
     strategy_value: float
     benchmark_value: float
+
+
+@dataclass
+class WalkForwardStudy:
+    study_id: str
+    strategy_name: str
+    config: str          # JSON
+    start_date: date
+    end_date: date
+    initial_capital: float
+    train_months: int
+    oos_months: int
+    step_months: int
+    objective: str
+    status: str          # running/completed/failed/cancelled
+    results: str = ""    # JSON
+    monte_carlo: str = ""  # JSON
+    created_at: Optional[datetime] = None

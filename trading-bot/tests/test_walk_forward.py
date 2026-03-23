@@ -513,3 +513,132 @@ class TestWalkForwardWithOptimization:
 
         # Should have 0 windows since we cancelled before the first window
         assert len(result["windows"]) == 0
+
+
+# ---------------------------------------------------------------------------
+# A.4 — Database schema + CRUD for WalkForwardStudy
+# ---------------------------------------------------------------------------
+
+from data.storage.models import WalkForwardStudy
+
+
+class TestWalkForwardStudyCRUD:
+    """Tests for walk_forward_studies table CRUD operations."""
+
+    def _make_study(self, study_id: str = "test-001", **kwargs) -> WalkForwardStudy:
+        """Create a WalkForwardStudy with sensible defaults."""
+        defaults = dict(
+            study_id=study_id,
+            strategy_name="mean_reversion",
+            config='{"name": "test"}',
+            start_date=date(2020, 1, 1),
+            end_date=date(2023, 12, 31),
+            initial_capital=100_000.0,
+            train_months=12,
+            oos_months=6,
+            step_months=3,
+            objective="sharpe",
+            status="running",
+            results="",
+            monte_carlo="",
+            created_at=None,
+        )
+        defaults.update(kwargs)
+        return WalkForwardStudy(**defaults)
+
+    def test_insert_and_get(self, tmp_db):
+        """Insert a study and retrieve it by ID."""
+        study = self._make_study()
+        tmp_db.insert_walk_forward_study(study)
+
+        fetched = tmp_db.get_walk_forward_study("test-001")
+        assert fetched is not None
+        assert fetched.study_id == "test-001"
+        assert fetched.strategy_name == "mean_reversion"
+        assert fetched.initial_capital == 100_000.0
+        assert fetched.train_months == 12
+        assert fetched.objective == "sharpe"
+        assert fetched.status == "running"
+
+    def test_get_nonexistent_returns_none(self, tmp_db):
+        """Getting a nonexistent study should return None."""
+        assert tmp_db.get_walk_forward_study("nope") is None
+
+    def test_list_studies_empty(self, tmp_db):
+        """Listing when no studies exist returns empty list."""
+        studies = tmp_db.list_walk_forward_studies()
+        assert studies == []
+
+    def test_list_studies_pagination(self, tmp_db):
+        """List with limit and offset should paginate correctly."""
+        for i in range(5):
+            tmp_db.insert_walk_forward_study(
+                self._make_study(study_id=f"s-{i:03d}")
+            )
+
+        page1 = tmp_db.list_walk_forward_studies(limit=2, offset=0)
+        assert len(page1) == 2
+
+        page2 = tmp_db.list_walk_forward_studies(limit=2, offset=2)
+        assert len(page2) == 2
+
+        page3 = tmp_db.list_walk_forward_studies(limit=2, offset=4)
+        assert len(page3) == 1
+
+    def test_list_studies_sort_validation(self, tmp_db):
+        """Invalid sort column should raise ValueError."""
+        with pytest.raises(ValueError, match="Invalid sort column"):
+            tmp_db.list_walk_forward_studies(sort="invalid_column")
+
+    def test_count_studies(self, tmp_db):
+        """Count should reflect the number of inserted studies."""
+        assert tmp_db.count_walk_forward_studies() == 0
+
+        tmp_db.insert_walk_forward_study(self._make_study("s1"))
+        tmp_db.insert_walk_forward_study(self._make_study("s2"))
+        assert tmp_db.count_walk_forward_studies() == 2
+
+    def test_update_study_status(self, tmp_db):
+        """Update status field of an existing study."""
+        tmp_db.insert_walk_forward_study(self._make_study())
+        tmp_db.update_walk_forward_study("test-001", status="completed")
+
+        fetched = tmp_db.get_walk_forward_study("test-001")
+        assert fetched.status == "completed"
+
+    def test_update_study_results(self, tmp_db):
+        """Update results and monte_carlo fields."""
+        tmp_db.insert_walk_forward_study(self._make_study())
+        tmp_db.update_walk_forward_study(
+            "test-001",
+            results='{"windows": []}',
+            monte_carlo='{"trade_shuffle": {}}',
+        )
+
+        fetched = tmp_db.get_walk_forward_study("test-001")
+        assert fetched.results == '{"windows": []}'
+        assert fetched.monte_carlo == '{"trade_shuffle": {}}'
+
+    def test_update_ignores_disallowed_fields(self, tmp_db):
+        """Fields not in the allowed set should be silently ignored."""
+        tmp_db.insert_walk_forward_study(self._make_study())
+        # strategy_name is not in the allowed update set
+        tmp_db.update_walk_forward_study(
+            "test-001", strategy_name="hacked", status="completed"
+        )
+
+        fetched = tmp_db.get_walk_forward_study("test-001")
+        assert fetched.strategy_name == "mean_reversion"  # unchanged
+        assert fetched.status == "completed"  # allowed field updated
+
+    def test_delete_study(self, tmp_db):
+        """Delete a study and verify it's gone."""
+        tmp_db.insert_walk_forward_study(self._make_study())
+        assert tmp_db.get_walk_forward_study("test-001") is not None
+
+        tmp_db.delete_walk_forward_study("test-001")
+        assert tmp_db.get_walk_forward_study("test-001") is None
+
+    def test_delete_nonexistent_is_noop(self, tmp_db):
+        """Deleting a nonexistent study should not raise."""
+        tmp_db.delete_walk_forward_study("nope")  # should not raise

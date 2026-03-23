@@ -10,6 +10,7 @@ from data.storage.models import (
     RunRecord,
     SymbolMetadata,
     TradeRecord,
+    WalkForwardStudy,
 )
 
 
@@ -175,6 +176,23 @@ class Database:
 
         CREATE INDEX IF NOT EXISTS idx_equity_curves_run_id
             ON equity_curves (run_id);
+
+        CREATE TABLE IF NOT EXISTS walk_forward_studies (
+            study_id        TEXT    PRIMARY KEY,
+            strategy_name   TEXT    NOT NULL,
+            config          TEXT    NOT NULL,
+            start_date      DATE    NOT NULL,
+            end_date        DATE    NOT NULL,
+            initial_capital REAL    NOT NULL DEFAULT 100000.0,
+            train_months    INTEGER NOT NULL DEFAULT 24,
+            oos_months      INTEGER NOT NULL DEFAULT 6,
+            step_months     INTEGER NOT NULL DEFAULT 3,
+            objective       TEXT    NOT NULL DEFAULT 'sharpe',
+            status          TEXT    NOT NULL DEFAULT 'running',
+            results         TEXT    DEFAULT '',
+            monte_carlo     TEXT    DEFAULT '',
+            created_at      TIMESTAMP
+        );
         """
         self._conn.executescript(ddl)
         self._conn.commit()
@@ -576,6 +594,161 @@ class Database:
             market_cap=row["market_cap"],
             updated_at=self._to_datetime(row["updated_at"]),
         )
+
+    # ------------------------------------------------------------------
+    # walk_forward_studies
+    # ------------------------------------------------------------------
+
+    def insert_walk_forward_study(self, study: WalkForwardStudy) -> None:
+        """Insert a walk-forward study record."""
+        sql = """
+        INSERT OR REPLACE INTO walk_forward_studies
+            (study_id, strategy_name, config, start_date, end_date,
+             initial_capital, train_months, oos_months, step_months,
+             objective, status, results, monte_carlo, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        self._conn.execute(
+            sql,
+            (
+                study.study_id,
+                study.strategy_name,
+                study.config,
+                study.start_date.isoformat() if study.start_date else None,
+                study.end_date.isoformat() if study.end_date else None,
+                study.initial_capital,
+                study.train_months,
+                study.oos_months,
+                study.step_months,
+                study.objective,
+                study.status,
+                study.results,
+                study.monte_carlo,
+                study.created_at.isoformat() if study.created_at else None,
+            ),
+        )
+        self._conn.commit()
+
+    def get_walk_forward_study(self, study_id: str) -> Optional[WalkForwardStudy]:
+        """Return a WalkForwardStudy by its ID, or None if not found."""
+        sql = """
+        SELECT study_id, strategy_name, config, start_date, end_date,
+               initial_capital, train_months, oos_months, step_months,
+               objective, status, results, monte_carlo, created_at
+        FROM   walk_forward_studies
+        WHERE  study_id = ?
+        """
+        row = self._conn.execute(sql, (study_id,)).fetchone()
+        if row is None:
+            return None
+        return WalkForwardStudy(
+            study_id=row["study_id"],
+            strategy_name=row["strategy_name"],
+            config=row["config"],
+            start_date=self._to_date(row["start_date"]),
+            end_date=self._to_date(row["end_date"]),
+            initial_capital=row["initial_capital"],
+            train_months=row["train_months"],
+            oos_months=row["oos_months"],
+            step_months=row["step_months"],
+            objective=row["objective"],
+            status=row["status"],
+            results=row["results"] or "",
+            monte_carlo=row["monte_carlo"] or "",
+            created_at=self._to_datetime(row["created_at"]),
+        )
+
+    _VALID_WF_SORT_COLUMNS = frozenset({
+        "created_at", "strategy_name", "start_date", "end_date", "status",
+    })
+
+    def list_walk_forward_studies(
+        self,
+        sort: str = "created_at",
+        order: str = "desc",
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[WalkForwardStudy]:
+        """Return walk-forward studies with sorting and pagination.
+
+        Args:
+            sort: Column to sort by. Must be one of: created_at, strategy_name,
+                start_date, end_date, status.
+            order: Sort direction, "asc" or "desc" (case-insensitive).
+            limit: Maximum number of records to return (default 50).
+            offset: Number of records to skip (default 0).
+
+        Raises:
+            ValueError: If *sort* is not a whitelisted column name.
+        """
+        if sort not in self._VALID_WF_SORT_COLUMNS:
+            raise ValueError(
+                f"Invalid sort column: {sort!r}. "
+                f"Must be one of {sorted(self._VALID_WF_SORT_COLUMNS)}"
+            )
+        order = "DESC" if order.lower() == "desc" else "ASC"
+
+        sql = """
+        SELECT study_id, strategy_name, config, start_date, end_date,
+               initial_capital, train_months, oos_months, step_months,
+               objective, status, results, monte_carlo, created_at
+        FROM   walk_forward_studies
+        """
+        # sort is validated against _VALID_WF_SORT_COLUMNS whitelist above
+        sql += f" ORDER BY {sort} {order}"
+        sql += " LIMIT ? OFFSET ?"
+        params: list = [limit, offset]
+
+        rows = self._conn.execute(sql, params).fetchall()
+        return [
+            WalkForwardStudy(
+                study_id=row["study_id"],
+                strategy_name=row["strategy_name"],
+                config=row["config"],
+                start_date=self._to_date(row["start_date"]),
+                end_date=self._to_date(row["end_date"]),
+                initial_capital=row["initial_capital"],
+                train_months=row["train_months"],
+                oos_months=row["oos_months"],
+                step_months=row["step_months"],
+                objective=row["objective"],
+                status=row["status"],
+                results=row["results"] or "",
+                monte_carlo=row["monte_carlo"] or "",
+                created_at=self._to_datetime(row["created_at"]),
+            )
+            for row in rows
+        ]
+
+    def count_walk_forward_studies(self) -> int:
+        """Return the total number of walk-forward studies."""
+        sql = "SELECT COUNT(*) FROM walk_forward_studies"
+        row = self._conn.execute(sql).fetchone()
+        return row[0] if row else 0
+
+    def update_walk_forward_study(self, study_id: str, **kwargs) -> None:
+        """Update specific fields of a walk-forward study.
+
+        Allowed fields: status, results, monte_carlo.
+        """
+        allowed = {"status", "results", "monte_carlo"}
+        updates = {k: v for k, v in kwargs.items() if k in allowed}
+        if not updates:
+            return
+
+        set_clause = ", ".join(f"{col} = ?" for col in updates)
+        values = list(updates.values()) + [study_id]
+
+        sql = f"UPDATE walk_forward_studies SET {set_clause} WHERE study_id = ?"
+        self._conn.execute(sql, values)
+        self._conn.commit()
+
+    def delete_walk_forward_study(self, study_id: str) -> None:
+        """Delete a walk-forward study."""
+        self._conn.execute(
+            "DELETE FROM walk_forward_studies WHERE study_id = ?", (study_id,)
+        )
+        self._conn.commit()
 
     # ------------------------------------------------------------------
     # Generic / housekeeping

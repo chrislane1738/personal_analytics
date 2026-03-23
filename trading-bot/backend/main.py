@@ -8,7 +8,7 @@ import logging
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.routers import analytics, backtest, data, runs, strategies, trades
+from backend.routers import analytics, backtest, data, runs, strategies, trades, walk_forward
 from backend.services.ws_manager import ws_manager
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ app = FastAPI(
 # ---------------------------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3004"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -38,6 +38,7 @@ app.include_router(analytics.router)
 app.include_router(strategies.router)
 app.include_router(backtest.router)
 app.include_router(data.router)
+app.include_router(walk_forward.router)
 
 
 # ---------------------------------------------------------------------------

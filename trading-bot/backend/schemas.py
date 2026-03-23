@@ -241,3 +241,61 @@ class DataQualityResponse(BaseModel):
 class ErrorResponse(BaseModel):
     detail: str
     code: Optional[str] = None
+
+
+# ---------------------------------------------------------------------------
+# Walk-Forward
+# ---------------------------------------------------------------------------
+
+
+class WalkForwardRunRequest(BaseModel):
+    strategy: str
+    universe: str  # comma-separated
+    start_date: date
+    end_date: date
+    initial_capital: float = 100_000.0
+    benchmark: str = "SPY"
+    train_months: int = 24
+    oos_months: int = 6
+    step_months: int = 3
+    objective: str = "sharpe"
+    monte_carlo_modes: list[str] = []
+    simulations: int = 1000
+
+
+class WalkForwardRunResponse(BaseModel):
+    study_id: str
+    status: str
+
+
+class WalkForwardStatusResponse(BaseModel):
+    study_id: str
+    status: str
+    windows_completed: int = 0
+    windows_total: int = 0
+    current_phase: str = "initializing"
+
+
+class WalkForwardStudyResponse(BaseModel):
+    study_id: str
+    strategy_name: str
+    config: Optional[dict] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    initial_capital: float = 100_000.0
+    train_months: int = 24
+    oos_months: int = 6
+    step_months: int = 3
+    objective: str = "sharpe"
+    status: str = "running"
+    created_at: Optional[datetime] = None
+    windows: list = []
+    aggregate: dict = {}
+    stitched_equity_curve: list = []
+    parameter_stability: dict = {}
+    monte_carlo: dict = {}
+
+
+class WalkForwardListResponse(BaseModel):
+    studies: list[WalkForwardStudyResponse]
+    total: int
