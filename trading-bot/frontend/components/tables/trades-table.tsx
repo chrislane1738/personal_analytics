@@ -173,23 +173,35 @@ export function TradesTable({ data, totalGain }: TradesTableProps) {
   const realizedPnl = data.reduce((sum, t) => sum + (t.pnl ?? 0), 0);
   const winners = data.filter((t) => t.pnl > 0).length;
   const losers = data.filter((t) => t.pnl < 0).length;
-  const unrealizedPnl = totalGain != null ? totalGain - realizedPnl : null;
+  const appreciationGain = totalGain != null ? totalGain - realizedPnl : null;
+  const avgPnlPct = data.length > 0
+    ? data.reduce((sum, t) => sum + (t.pnl_pct ?? 0), 0) / data.length
+    : 0;
+  const avgHoldDays = data.length > 0
+    ? data.reduce((sum, t) => {
+        if (!t.entry_date || !t.exit_date) return sum;
+        const days = Math.round(
+          (new Date(t.exit_date).getTime() - new Date(t.entry_date).getTime()) / 86400000
+        );
+        return sum + days;
+      }, 0) / data.length
+    : 0;
 
   return (
     <div className="overflow-auto rounded-lg border border-[#1a1a1a]">
       {data.length > 0 && (
-        <div className="flex gap-6 border-b border-[#1a1a1a] bg-[#0a0a0a] px-4 py-2">
+        <div className="flex flex-wrap gap-x-6 gap-y-1 border-b border-[#1a1a1a] bg-[#0a0a0a] px-4 py-2">
           <div>
-            <span className="text-[9px] uppercase tracking-wider text-zinc-500">Realized P&L</span>
+            <span className="text-[9px] uppercase tracking-wider text-zinc-500">Trade P&L</span>
             <span className={`ml-2 font-mono text-xs font-semibold ${pnlColor(realizedPnl)}`}>
               {formatCurrency(realizedPnl)}
             </span>
           </div>
-          {unrealizedPnl != null && (
+          {appreciationGain != null && (
             <div>
-              <span className="text-[9px] uppercase tracking-wider text-zinc-500">Unrealized P&L</span>
-              <span className={`ml-2 font-mono text-xs font-semibold ${pnlColor(unrealizedPnl)}`}>
-                {formatCurrency(unrealizedPnl)}
+              <span className="text-[9px] uppercase tracking-wider text-zinc-500">Holding Appreciation</span>
+              <span className={`ml-2 font-mono text-xs font-semibold ${pnlColor(appreciationGain)}`}>
+                {formatCurrency(appreciationGain)}
               </span>
             </div>
           )}
@@ -201,6 +213,18 @@ export function TradesTable({ data, totalGain }: TradesTableProps) {
               </span>
             </div>
           )}
+          <div>
+            <span className="text-[9px] uppercase tracking-wider text-zinc-500">Avg P&L %</span>
+            <span className={`ml-2 font-mono text-xs font-semibold ${pnlColor(avgPnlPct)}`}>
+              {(avgPnlPct * 100).toFixed(2)}%
+            </span>
+          </div>
+          <div>
+            <span className="text-[9px] uppercase tracking-wider text-zinc-500">Avg Hold</span>
+            <span className="ml-2 font-mono text-xs text-zinc-300">
+              {avgHoldDays.toFixed(1)}d
+            </span>
+          </div>
           <div>
             <span className="text-[9px] uppercase tracking-wider text-zinc-500">W/L</span>
             <span className="ml-2 font-mono text-xs text-zinc-300">
