@@ -66,3 +66,13 @@ class Strategy(ABC):
     def warm_up_period(self) -> int:
         """Bars needed before signals can be generated."""
         return 0
+
+    @classmethod
+    def get_parameter_space(cls) -> dict:
+        """Return optimizable parameter ranges. Override in subclasses."""
+        return {}
+
+    @classmethod
+    def from_params(cls, params: dict) -> "Strategy":
+        """Create a fresh instance with given parameters. Override in subclasses."""
+        return cls()

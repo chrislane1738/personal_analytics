@@ -5,7 +5,9 @@ rules from a YAML file and uses the expression parser to evaluate conditions.
 
 from __future__ import annotations
 
+import copy
 import logging
+import re
 from pathlib import Path
 from typing import Any
 
@@ -106,6 +108,70 @@ class ConfigStrategy(Strategy):
                 "ast": ast,
                 "reason": rule["reason"],
             })
+
+    # ------------------------------------------------------------------
+    # Alternative constructor: from in-memory dict with placeholders
+    # ------------------------------------------------------------------
+
+    @classmethod
+    def from_config_dict(
+        cls, config: dict, params: dict | None = None
+    ) -> "ConfigStrategy":
+        """Create a ConfigStrategy from an in-memory dict (no file I/O).
+
+        Parameters
+        ----------
+        config:
+            A strategy configuration dict (same schema as the YAML file).
+        params:
+            Optional mapping of placeholder names to values.  Strings like
+            ``"{{pos_size}}"`` in the config are replaced with the
+            corresponding value from *params*.
+        """
+        cfg = copy.deepcopy(config)
+        if params:
+            cfg = cls._substitute_params(cfg, params)
+
+        instance = object.__new__(cls)
+        instance.indicators = {}
+        instance.config = cfg
+        instance.name = cfg["name"]
+        instance.universe = cfg.get("universe", [])
+        instance._build_indicators()
+        instance._parse_rules()
+        return instance
+
+    @staticmethod
+    def _substitute_params(obj: Any, params: dict) -> Any:
+        """Recursively replace ``{{key}}`` placeholders in *obj*.
+
+        - If a string value is *entirely* a placeholder (e.g. ``"{{pos_size}}"``),
+          it is replaced with the raw parameter value (preserving int/float type).
+        - If a string *contains* a placeholder among other text
+          (e.g. ``"rsi_14 < {{rsi_thresh}}"``), string interpolation is used.
+        """
+        if isinstance(obj, dict):
+            return {
+                k: ConfigStrategy._substitute_params(v, params)
+                for k, v in obj.items()
+            }
+        if isinstance(obj, list):
+            return [ConfigStrategy._substitute_params(v, params) for v in obj]
+        if isinstance(obj, str):
+            # Full-value placeholder: the entire string is "{{key}}"
+            m = re.fullmatch(r"\{\{(\w+)\}\}", obj.strip())
+            if m:
+                key = m.group(1)
+                if key in params:
+                    return params[key]
+                return obj
+            # Inline placeholders: replace within the string
+            def replacer(match: re.Match) -> str:
+                key = match.group(1)
+                return str(params[key]) if key in params else match.group(0)
+
+            return re.sub(r"\{\{(\w+)\}\}", replacer, obj)
+        return obj
 
     # ------------------------------------------------------------------
     # Strategy interface

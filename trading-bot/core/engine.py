@@ -70,6 +70,7 @@ class BacktestEngine:
         commission_per_share: float = 0.005,
         position_size_pct: float = 0.06,
         cancel_event: threading.Event | None = None,
+        quiet: bool = False,
     ) -> None:
         self.strategy = strategy
         self.database = database
@@ -80,6 +81,7 @@ class BacktestEngine:
         self.benchmark_symbol = benchmark_symbol
         self.position_size_pct = position_size_pct
         self.cancel_event = cancel_event
+        self.quiet = quiet
 
         # --- Create components ---
         self.event_bus = EventBus()
@@ -239,20 +241,21 @@ class BacktestEngine:
         metrics["total_trades"] = len(self.trade_log.trades)
         metrics["_run_id"] = run_id
 
-        # Console report
-        report = ReportGenerator(
-            run_id=run_id,
-            strategy_name=type(self.strategy).__name__,
-            metrics=metrics,
-            trade_log=self.trade_log,
-            equity_curve=self.portfolio.equity_curve,
-            benchmark_curve=self.benchmark.equity_curve,
-        )
-        console_output = report.generate_console_report()
-        print(console_output)
+        if not self.quiet:
+            # Console report
+            report = ReportGenerator(
+                run_id=run_id,
+                strategy_name=type(self.strategy).__name__,
+                metrics=metrics,
+                trade_log=self.trade_log,
+                equity_curve=self.portfolio.equity_curve,
+                benchmark_curve=self.benchmark.equity_curve,
+            )
+            console_output = report.generate_console_report()
+            print(console_output)
 
-        # Persist run record
-        self._save_run(run_id, metrics)
+            # Persist run record
+            self._save_run(run_id, metrics)
 
         return metrics
 
