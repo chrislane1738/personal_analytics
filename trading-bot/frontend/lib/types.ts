@@ -122,3 +122,57 @@ export interface GreeksPoint {
   theta: number;
   vega: number;
 }
+
+/** A single walk-forward OOS window with params, metrics, and equity */
+export interface WalkForwardWindow {
+  window_index: number;
+  train_start: string;
+  train_end: string;
+  oos_start: string;
+  oos_end: string;
+  best_params: Record<string, number>;
+  train_metrics: Record<string, number>;
+  oos_metrics: Record<string, number>;
+  oos_trades: Trade[];
+  oos_equity_curve: EquityCurvePoint[];
+}
+
+/** Summary of a walk-forward study (used in list views) */
+export interface WalkForwardStudySummary {
+  study_id: string;
+  strategy_name: string;
+  start_date: string;
+  end_date: string;
+  train_months: number;
+  oos_months: number;
+  step_months: number;
+  objective: string;
+  status: string;
+  created_at: string;
+  aggregate?: Record<string, number>;
+}
+
+/** Full walk-forward study with windows and analysis */
+export interface WalkForwardStudy extends WalkForwardStudySummary {
+  config: string;
+  initial_capital: number;
+  windows: WalkForwardWindow[];
+  stitched_equity_curve: EquityCurvePoint[];
+  parameter_stability: Record<string, number[]>;
+  monte_carlo: Record<string, MonteCarloResult>;
+}
+
+/** Paginated walk-forward study list response */
+export interface WalkForwardListResponse {
+  studies: WalkForwardStudySummary[];
+  total: number;
+}
+
+/** Walk-forward study execution status */
+export interface WalkForwardStatusResponse {
+  study_id: string;
+  status: string;
+  windows_completed: number;
+  windows_total: number;
+  current_phase: string;
+}

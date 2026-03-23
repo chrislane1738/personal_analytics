@@ -9,6 +9,7 @@ import {
   Settings2,
   Play,
   Activity,
+  TrendingUp,
   Database,
   DollarSign,
 } from "lucide-react";
@@ -31,6 +32,7 @@ const navItems: NavItem[] = [
   { label: "Strategies", href: "/strategies", icon: Settings2 },
   { label: "Launch", href: "/launch", icon: Play },
   { label: "Monitor", href: "/monitor", icon: Activity },
+  { label: "Walk-Fwd", href: "/walk-forward", icon: TrendingUp },
   { label: "Data", href: "/data", icon: Database },
   { label: "Paper", href: "/paper", icon: DollarSign },
 ];
