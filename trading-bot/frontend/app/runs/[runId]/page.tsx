@@ -244,7 +244,10 @@ export default function RunDetailPage({
           {tradesLoading ? (
             <p className="text-sm text-zinc-500">Loading trades...</p>
           ) : (
-            <TradesTable data={trades ?? []} />
+            <TradesTable
+              data={trades ?? []}
+              totalGain={run ? (run.final_value - run.initial_capital) : undefined}
+            />
           )}
         </div>
 

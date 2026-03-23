@@ -23,11 +23,12 @@ import { ArrowUpDown } from "lucide-react";
 
 interface TradesTableProps {
   data: Trade[];
+  totalGain?: number; // total portfolio gain (final - initial)
 }
 
 const columnHelper = createColumnHelper<Trade>();
 
-export function TradesTable({ data }: TradesTableProps) {
+export function TradesTable({ data, totalGain }: TradesTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const columns = useMemo(
@@ -169,8 +170,47 @@ export function TradesTable({ data }: TradesTableProps) {
     getSortedRowModel: getSortedRowModel(),
   });
 
+  const realizedPnl = data.reduce((sum, t) => sum + (t.pnl ?? 0), 0);
+  const winners = data.filter((t) => t.pnl > 0).length;
+  const losers = data.filter((t) => t.pnl < 0).length;
+  const unrealizedPnl = totalGain != null ? totalGain - realizedPnl : null;
+
   return (
     <div className="overflow-auto rounded-lg border border-[#1a1a1a]">
+      {data.length > 0 && (
+        <div className="flex gap-6 border-b border-[#1a1a1a] bg-[#0a0a0a] px-4 py-2">
+          <div>
+            <span className="text-[9px] uppercase tracking-wider text-zinc-500">Realized P&L</span>
+            <span className={`ml-2 font-mono text-xs font-semibold ${pnlColor(realizedPnl)}`}>
+              {formatCurrency(realizedPnl)}
+            </span>
+          </div>
+          {unrealizedPnl != null && (
+            <div>
+              <span className="text-[9px] uppercase tracking-wider text-zinc-500">Unrealized P&L</span>
+              <span className={`ml-2 font-mono text-xs font-semibold ${pnlColor(unrealizedPnl)}`}>
+                {formatCurrency(unrealizedPnl)}
+              </span>
+            </div>
+          )}
+          {totalGain != null && (
+            <div>
+              <span className="text-[9px] uppercase tracking-wider text-zinc-500">Total Gain</span>
+              <span className={`ml-2 font-mono text-xs font-semibold ${pnlColor(totalGain)}`}>
+                {formatCurrency(totalGain)}
+              </span>
+            </div>
+          )}
+          <div>
+            <span className="text-[9px] uppercase tracking-wider text-zinc-500">W/L</span>
+            <span className="ml-2 font-mono text-xs text-zinc-300">
+              <span className="text-[#22c55e]">{winners}</span>
+              {" / "}
+              <span className="text-[#ef4444]">{losers}</span>
+            </span>
+          </div>
+        </div>
+      )}
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (

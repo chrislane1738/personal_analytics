@@ -21,4 +21,4 @@ exit_rules:
 
 position_sizing:
   method: fixed_pct
-  value: 0.06
+  value: 0.12
