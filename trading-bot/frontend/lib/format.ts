@@ -21,14 +21,15 @@ export function formatPercent(value: number): string {
 /**
  * Format an ISO date string to a human-readable date.
  */
-export function formatDate(dateStr: string): string {
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(dateStr));
+export function formatDate(dateStr: string | null): string {
+  if (!dateStr) return "—";
+  // Parse as local date (YYYY-MM-DD) to avoid timezone shift
+  const parts = dateStr.split("T")[0].split("-");
+  if (parts.length === 3) {
+    const d = new Date(+parts[0], +parts[1] - 1, +parts[2]);
+    return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  }
+  return new Date(dateStr).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 }
 
 /**
