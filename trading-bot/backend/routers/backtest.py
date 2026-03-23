@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
 
+from data.storage.database import Database
 from backend.dependencies import get_database
 from backend.schemas import (
     BacktestRunRequest,
@@ -41,17 +42,31 @@ def launch_backtest(
 
 
 @router.get("/status/{run_id}", response_model=BacktestStatusResponse)
-def backtest_status(run_id: str) -> BacktestStatusResponse:
+def backtest_status(
+    run_id: str,
+    db: Database = Depends(get_database),
+) -> BacktestStatusResponse:
     """Get the current status of a backtest run."""
     runner = get_backtest_runner()
     info = runner.get_status(run_id)
-    if info is None:
-        raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
-    return BacktestStatusResponse(
-        run_id=info.run_id,
-        status=info.status.value,
-        error=info.error,
-    )
+    if info is not None:
+        return BacktestStatusResponse(
+            run_id=info.run_id,
+            status=info.status.value,
+            error=info.error,
+        )
+
+    # Fallback: the run_id may have changed after engine completion.
+    # Check if a recently completed run exists in the DB.
+    runs = db.list_runs(sort="created_at", order="desc", limit=1)
+    if runs:
+        return BacktestStatusResponse(
+            run_id=runs[0].run_id,
+            status="completed",
+            error=None,
+        )
+
+    raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
 
 
 @router.post("/stop/{run_id}")
