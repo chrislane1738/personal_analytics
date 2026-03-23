@@ -299,6 +299,7 @@ export default function RunDetailPage({
           <TabsTrigger value="monthly-returns">Monthly Returns</TabsTrigger>
           <TabsTrigger value="monte-carlo">Monte Carlo</TabsTrigger>
           <TabsTrigger value="options">Options</TabsTrigger>
+          <TabsTrigger value="walk-forward">Walk-Forward</TabsTrigger>
         </TabsList>
 
         <TabsContent value="monthly-returns">
@@ -332,6 +333,22 @@ export default function RunDetailPage({
             ) : (
               <p className="text-sm text-zinc-500">No options trades in this run</p>
             )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="walk-forward">
+          <div className="rounded-lg border border-[#1a1a1a] bg-[#0a0a0a] p-6">
+            <h3 className="text-sm font-medium text-zinc-200 mb-2">Walk-Forward Validation</h3>
+            <p className="text-xs text-zinc-500 mb-4">
+              Run a rolling walk-forward optimization study to test if this strategy&apos;s parameters
+              generalize across different time periods. This proves robustness beyond a single backtest.
+            </p>
+            <a
+              href={`/walk-forward?strategy=${encodeURIComponent(run.strategy_name)}&start=${run.start_date}&end=${run.end_date}&capital=${run.initial_capital}`}
+              className="inline-flex items-center gap-2 rounded-md bg-[#f97316] px-4 py-2 text-sm font-medium text-black hover:bg-[#ea580c] transition-colors"
+            >
+              Launch Walk-Forward Study
+            </a>
           </div>
         </TabsContent>
       </Tabs>
