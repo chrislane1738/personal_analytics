@@ -80,6 +80,18 @@ export function TradesTable({ data }: TradesTableProps) {
           </span>
         ),
       }),
+      columnHelper.display({
+        id: "entry_value",
+        header: "Entry Value",
+        cell: ({ row }) => {
+          const val = row.original.entry_price * row.original.quantity;
+          return (
+            <span className="font-mono text-xs text-zinc-300">
+              {formatCurrency(val)}
+            </span>
+          );
+        },
+      }),
       columnHelper.accessor("exit_price", {
         header: "Exit",
         cell: (info) => {
@@ -87,6 +99,20 @@ export function TradesTable({ data }: TradesTableProps) {
           return (
             <span className="font-mono text-xs text-zinc-300">
               {val != null ? formatCurrency(val) : "-"}
+            </span>
+          );
+        },
+      }),
+      columnHelper.display({
+        id: "exit_value",
+        header: "Exit Value",
+        cell: ({ row }) => {
+          const ep = row.original.exit_price;
+          if (ep == null) return <span className="font-mono text-xs text-zinc-400">-</span>;
+          const val = ep * row.original.quantity;
+          return (
+            <span className="font-mono text-xs text-zinc-300">
+              {formatCurrency(val)}
             </span>
           );
         },
