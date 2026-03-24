@@ -7,10 +7,10 @@ import { useWalkForwardStudy } from "@/hooks/use-walk-forward";
 import { MetricsStrip } from "@/components/metrics-strip";
 import { EquityCurve } from "@/components/charts/equity-curve";
 import { ParameterStability } from "@/components/charts/parameter-stability";
-import { FanChart } from "@/components/charts/fan-chart";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   formatPercent,
+  formatCurrency,
   formatDate,
   pnlColor,
 } from "@/lib/format";
@@ -36,7 +36,7 @@ function buildAggregateMetrics(study: WalkForwardStudy) {
     },
     {
       label: "Max Drawdown",
-      value: num("max_drawdown") != null ? formatPercent(num("max_drawdown")!) : "-",
+      value: num("max_drawdown_pct") != null ? formatPercent(num("max_drawdown_pct")!) : "-",
       colorClass: "text-[#ef4444]",
     },
     {
@@ -52,6 +52,61 @@ function buildAggregateMetrics(study: WalkForwardStudy) {
       value: num("total_trades") != null ? String(Math.round(num("total_trades")!)) : "-",
     },
   ];
+}
+
+/** Simple Monte Carlo summary display (avoids FanChart type mismatch) */
+function McSummary({ mode, data }: { mode: string; data: Record<string, unknown> }) {
+  const num = (key: string) => {
+    const v = data[key];
+    return typeof v === "number" ? v : null;
+  };
+  return (
+    <div>
+      <h3 className="text-sm font-medium text-zinc-200 mb-3">{mode} Results</h3>
+      <div className="grid grid-cols-2 gap-x-8 gap-y-2 max-w-md">
+        <div className="flex justify-between">
+          <span className="text-[9px] uppercase tracking-wider text-zinc-500">Simulations</span>
+          <span className="font-mono text-xs text-zinc-300">{num("simulations")?.toLocaleString() ?? "—"}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-[9px] uppercase tracking-wider text-zinc-500">Median Equity</span>
+          <span className="font-mono text-xs text-zinc-300">{num("median_final_equity") != null ? formatCurrency(num("median_final_equity")!) : "—"}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-[9px] uppercase tracking-wider text-zinc-500">P5 (worst)</span>
+          <span className="font-mono text-xs text-[#ef4444]">{num("percentile_5") != null ? formatCurrency(num("percentile_5")!) : "—"}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-[9px] uppercase tracking-wider text-zinc-500">P95 (best)</span>
+          <span className="font-mono text-xs text-[#22c55e]">{num("percentile_95") != null ? formatCurrency(num("percentile_95")!) : "—"}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-[9px] uppercase tracking-wider text-zinc-500">P(Ruin)</span>
+          <span className="font-mono text-xs text-zinc-300">{num("probability_of_ruin") != null ? formatPercent(num("probability_of_ruin")!) : "—"}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-[9px] uppercase tracking-wider text-zinc-500">Outlier?</span>
+          <span className="font-mono text-xs text-zinc-300">{data["is_outlier"] === true ? "Yes" : data["is_outlier"] === false ? "No" : "—"}</span>
+        </div>
+        {Array.isArray(data["sharpe_ci"]) && (
+          <div className="flex justify-between col-span-2">
+            <span className="text-[9px] uppercase tracking-wider text-zinc-500">Sharpe 95% CI</span>
+            <span className="font-mono text-xs text-zinc-300">
+              [{(data["sharpe_ci"] as number[])[0]?.toFixed(2)}, {(data["sharpe_ci"] as number[])[1]?.toFixed(2)}]
+            </span>
+          </div>
+        )}
+        {Array.isArray(data["max_dd_ci"]) && (
+          <div className="flex justify-between col-span-2">
+            <span className="text-[9px] uppercase tracking-wider text-zinc-500">Max DD 95% CI</span>
+            <span className="font-mono text-xs text-zinc-300">
+              [{formatPercent((data["max_dd_ci"] as number[])[0] ?? 0)}, {formatPercent((data["max_dd_ci"] as number[])[1] ?? 0)}]
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 /** Format window config string like "24mo train / 6mo OOS / 3mo step" */
@@ -314,7 +369,7 @@ export default function WalkForwardStudyDetailPage({
             <TabsContent key={mode} value={mode}>
               <div className="rounded-lg border border-[#1a1a1a] bg-[#0a0a0a] p-4">
                 {mode in study.monte_carlo ? (
-                  <FanChart data={study.monte_carlo[mode]} />
+                  <McSummary mode={MC_MODE_LABELS[mode]} data={study.monte_carlo[mode] as unknown as Record<string, unknown>} />
                 ) : (
                   <p className="py-8 text-center text-sm text-zinc-500">
                     {MC_MODE_LABELS[mode]} simulation was not run for this study
