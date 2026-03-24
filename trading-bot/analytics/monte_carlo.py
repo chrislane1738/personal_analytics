@@ -216,8 +216,12 @@ def _replay_windows(
             "max_dd_ci": [0.0, 0.0],
         }
 
-    # Allocate paths matrix
-    all_paths = np.empty((num_simulations, num_trades))
+    # For shuffle mode all sims have the same length (num_trades).
+    # For bootstrap mode sims may have different lengths — use lists.
+    fixed_length = sample_mode == "shuffle"
+    if fixed_length:
+        all_paths = np.empty((num_simulations, num_trades))
+    final_equities_list = []
     max_drawdowns = np.empty(num_simulations)
     sharpe_values = np.empty(num_simulations)
     ruin_count = 0
@@ -234,7 +238,11 @@ def _replay_windows(
 
         # Replay equity curve
         equity_curve = initial_capital + np.cumsum(sim_pnls)
-        all_paths[sim_idx, :] = equity_curve
+
+        if fixed_length:
+            all_paths[sim_idx, :] = equity_curve
+
+        final_equities_list.append(float(equity_curve[-1]) if len(equity_curve) > 0 else initial_capital)
 
         # Max drawdown
         max_drawdowns[sim_idx] = _compute_max_drawdown(equity_curve, initial_capital)
@@ -246,17 +254,20 @@ def _replay_windows(
         if np.any(equity_curve <= ruin_threshold):
             ruin_count += 1
 
-    # Final equities
-    final_equities = all_paths[:, -1]
+    final_equities = np.array(final_equities_list)
 
-    # Percentile bands per time step
-    percentile_bands = {
-        "p5": np.percentile(all_paths, 5, axis=0).tolist(),
-        "p25": np.percentile(all_paths, 25, axis=0).tolist(),
-        "p50": np.percentile(all_paths, 50, axis=0).tolist(),
-        "p75": np.percentile(all_paths, 75, axis=0).tolist(),
-        "p95": np.percentile(all_paths, 95, axis=0).tolist(),
-    }
+    # Percentile bands per time step (only for fixed-length modes)
+    if fixed_length:
+        percentile_bands = {
+            "p5": np.percentile(all_paths, 5, axis=0).tolist(),
+            "p25": np.percentile(all_paths, 25, axis=0).tolist(),
+            "p50": np.percentile(all_paths, 50, axis=0).tolist(),
+            "p75": np.percentile(all_paths, 75, axis=0).tolist(),
+            "p95": np.percentile(all_paths, 95, axis=0).tolist(),
+        }
+    else:
+        # For variable-length sims, skip per-step bands — provide empty
+        percentile_bands = {"p5": [], "p25": [], "p50": [], "p75": [], "p95": []}
 
     # Confidence intervals
     ci = compute_metric_confidence_intervals(sharpe_values, max_drawdowns)
