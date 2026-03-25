@@ -101,7 +101,7 @@ function RunSelector({
         {run.strategy}
       </span>
       <span className="shrink-0 font-mono text-[10px] text-zinc-600">
-        {run.id.slice(0, 8)}
+        {run.run_id.slice(0, 8)}
       </span>
     </button>
   );
@@ -322,11 +322,11 @@ export default function ComparePage() {
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {runs.map((run) => (
               <RunSelector
-                key={run.id}
+                key={run.run_id}
                 run={run}
-                selected={selectedIds.includes(run.id)}
-                color={colorMap.get(run.id)}
-                onToggle={() => toggleRun(run.id)}
+                selected={selectedIds.includes(run.run_id)}
+                color={colorMap.get(run.run_id)}
+                onToggle={() => toggleRun(run.run_id)}
                 disabled={selectedIds.length >= 4}
               />
             ))}
@@ -425,13 +425,13 @@ export default function ComparePage() {
                   </th>
                   {selectedRuns.map((run, i) => (
                     <th
-                      key={run.id}
+                      key={run.run_id}
                       className="px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-wider"
                       style={{ color: RUN_COLORS[i] }}
                     >
                       {run.strategy}
                       <span className="ml-1 text-zinc-600">
-                        ({run.id.slice(0, 8)})
+                        ({run.run_id.slice(0, 8)})
                       </span>
                     </th>
                   ))}
@@ -450,8 +450,8 @@ export default function ComparePage() {
                       </td>
                       {selectedRuns.map((run) => {
                         const value = run[def.key] as number | null;
-                        const isBest = highlight?.best === run.id;
-                        const isWorst = highlight?.worst === run.id;
+                        const isBest = highlight?.best === run.run_id;
+                        const isWorst = highlight?.worst === run.run_id;
 
                         let cellClass =
                           "px-3 py-2 text-right font-mono text-xs ";
@@ -460,7 +460,7 @@ export default function ComparePage() {
                         else cellClass += "text-zinc-300";
 
                         return (
-                          <td key={run.id} className={cellClass}>
+                          <td key={run.run_id} className={cellClass}>
                             {value !== null ? def.format(value) : "-"}
                           </td>
                         );
