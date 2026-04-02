@@ -299,3 +299,38 @@ class WalkForwardStudyResponse(BaseModel):
 class WalkForwardListResponse(BaseModel):
     studies: list[WalkForwardStudyResponse]
     total: int
+
+
+# --- Eval Campaign Schemas ---
+
+class CampaignResponse(BaseModel):
+    campaign_id: str
+    strategy_name: str
+    instrument: str
+    state_machine: bool
+    num_attempts: int
+    pass_rate: float
+    ev_per_attempt: float
+    cost_to_funded: float
+    avg_days_to_pass: float
+    annual_ev: float
+    created_at: Optional[datetime] = None
+
+class CampaignListResponse(BaseModel):
+    campaigns: list[CampaignResponse]
+    total: int
+
+class CampaignDetailResponse(CampaignResponse):
+    full_results: Optional[dict] = None
+
+class CampaignRunRequest(BaseModel):
+    strategy: str = "orb"
+    instrument: str = "ES"
+    state_machine_enabled: bool = True
+    account_tier: str = "50k"
+    num_attempts: int = 1000
+    seed: int = 42
+
+class CampaignRunResponse(BaseModel):
+    campaign_id: str
+    status: str
