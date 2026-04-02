@@ -197,3 +197,57 @@ export interface WalkForwardStatusResponse {
   windows_total: number;
   current_phase: string;
 }
+
+/** Eval campaign summary */
+export interface Campaign {
+  campaign_id: string;
+  strategy_name: string;
+  instrument: string;
+  state_machine: boolean;
+  num_attempts: number;
+  pass_rate: number;
+  ev_per_attempt: number;
+  cost_to_funded: number;
+  avg_days_to_pass: number;
+  annual_ev: number;
+  created_at: string | null;
+}
+
+/** Eval campaign detail with full results */
+export interface CampaignDetail extends Campaign {
+  full_results: {
+    attempt_outcomes: Array<{
+      cumulative_pnl: number;
+      days_traded: number;
+      status: string;
+      daily_pnls: number[];
+      state_history: string[];
+    }>;
+    pnl_distribution: number[];
+    days_distribution: number[];
+    state_usage: Record<string, number>;
+    pass_by_regime: Record<string, number>;
+  } | null;
+}
+
+/** Paginated campaign list response */
+export interface CampaignListResponse {
+  campaigns: Campaign[];
+  total: number;
+}
+
+/** Request to run a new campaign */
+export interface CampaignRunRequest {
+  strategy: string;
+  instrument: string;
+  state_machine_enabled: boolean;
+  account_tier: string;
+  num_attempts: number;
+  seed: number;
+}
+
+/** Campaign run status response */
+export interface CampaignStatusResponse {
+  campaign_id: string;
+  status: string;
+}

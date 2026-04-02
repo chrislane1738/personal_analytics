@@ -11,6 +11,7 @@ import {
   Activity,
   TrendingUp,
   Database,
+  Crosshair,
   DollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -34,6 +35,7 @@ const navItems: NavItem[] = [
   { label: "Monitor", href: "/monitor", icon: Activity },
   { label: "Walk-Fwd", href: "/walk-forward", icon: TrendingUp },
   { label: "Data", href: "/data", icon: Database },
+  { label: "Eval", href: "/eval", icon: Crosshair },
   { label: "Paper", href: "/paper", icon: DollarSign },
 ];
 
