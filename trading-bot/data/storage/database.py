@@ -7,6 +7,7 @@ from typing import Optional
 from data.storage.models import (
     DailyBar,
     EquityCurvePoint,
+    EvalCampaignRecord,
     RunRecord,
     SymbolMetadata,
     TradeRecord,
@@ -193,6 +194,26 @@ class Database:
             monte_carlo     TEXT    DEFAULT '',
             created_at      TIMESTAMP
         );
+
+        CREATE TABLE IF NOT EXISTS eval_campaigns (
+            campaign_id      TEXT PRIMARY KEY,
+            strategy_name    TEXT NOT NULL,
+            instrument       TEXT NOT NULL,
+            state_machine    BOOLEAN NOT NULL DEFAULT 1,
+            topstep_config   TEXT NOT NULL,
+            num_attempts     INTEGER NOT NULL,
+            seed             INTEGER,
+            pass_rate        REAL,
+            ev_per_attempt   REAL,
+            cost_to_funded   REAL,
+            avg_days_to_pass REAL,
+            annual_ev        REAL,
+            created_at       TIMESTAMP,
+            full_results     TEXT
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_eval_campaigns_strategy
+            ON eval_campaigns (strategy_name);
         """
         self._conn.executescript(ddl)
         self._conn.commit()
@@ -747,6 +768,141 @@ class Database:
         """Delete a walk-forward study."""
         self._conn.execute(
             "DELETE FROM walk_forward_studies WHERE study_id = ?", (study_id,)
+        )
+        self._conn.commit()
+
+    # ------------------------------------------------------------------
+    # eval_campaigns
+    # ------------------------------------------------------------------
+
+    def insert_eval_campaign(self, record: EvalCampaignRecord) -> None:
+        """INSERT OR REPLACE an eval campaign record."""
+        sql = """
+        INSERT OR REPLACE INTO eval_campaigns
+            (campaign_id, strategy_name, instrument, state_machine,
+             topstep_config, num_attempts, seed, pass_rate, ev_per_attempt,
+             cost_to_funded, avg_days_to_pass, annual_ev, created_at,
+             full_results)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        self._conn.execute(
+            sql,
+            (
+                record.campaign_id,
+                record.strategy_name,
+                record.instrument,
+                int(record.state_machine),
+                record.topstep_config,
+                record.num_attempts,
+                record.seed,
+                record.pass_rate,
+                record.ev_per_attempt,
+                record.cost_to_funded,
+                record.avg_days_to_pass,
+                record.annual_ev,
+                record.created_at.isoformat() if record.created_at else None,
+                record.full_results,
+            ),
+        )
+        self._conn.commit()
+
+    def get_eval_campaign(self, campaign_id: str) -> Optional[EvalCampaignRecord]:
+        """Return an EvalCampaignRecord by its ID, or None if not found."""
+        sql = """
+        SELECT campaign_id, strategy_name, instrument, state_machine,
+               topstep_config, num_attempts, seed, pass_rate, ev_per_attempt,
+               cost_to_funded, avg_days_to_pass, annual_ev, created_at,
+               full_results
+        FROM   eval_campaigns
+        WHERE  campaign_id = ?
+        """
+        row = self._conn.execute(sql, (campaign_id,)).fetchone()
+        if row is None:
+            return None
+        return EvalCampaignRecord(
+            campaign_id=row["campaign_id"],
+            strategy_name=row["strategy_name"],
+            instrument=row["instrument"],
+            state_machine=bool(row["state_machine"]),
+            topstep_config=row["topstep_config"],
+            num_attempts=row["num_attempts"],
+            seed=row["seed"],
+            pass_rate=row["pass_rate"] or 0.0,
+            ev_per_attempt=row["ev_per_attempt"] or 0.0,
+            cost_to_funded=row["cost_to_funded"] or 0.0,
+            avg_days_to_pass=row["avg_days_to_pass"] or 0.0,
+            annual_ev=row["annual_ev"] or 0.0,
+            created_at=self._to_datetime(row["created_at"]),
+            full_results=row["full_results"] or "",
+        )
+
+    _VALID_EVAL_SORT_COLUMNS = frozenset({
+        "created_at", "pass_rate", "ev_per_attempt", "strategy_name", "annual_ev",
+    })
+
+    def list_eval_campaigns(
+        self,
+        sort: str = "created_at",
+        order: str = "desc",
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[EvalCampaignRecord]:
+        """Return eval campaign records with sorting and pagination.
+
+        Args:
+            sort: Column to sort by. Must be one of: created_at, pass_rate,
+                ev_per_attempt, strategy_name, annual_ev.
+            order: Sort direction, "asc" or "desc" (case-insensitive).
+            limit: Maximum number of records to return (default 50).
+            offset: Number of records to skip (default 0).
+
+        Raises:
+            ValueError: If *sort* is not a whitelisted column name.
+        """
+        if sort not in self._VALID_EVAL_SORT_COLUMNS:
+            raise ValueError(
+                f"Invalid sort column: {sort!r}. "
+                f"Must be one of {sorted(self._VALID_EVAL_SORT_COLUMNS)}"
+            )
+        order = "DESC" if order.lower() == "desc" else "ASC"
+
+        sql = """
+        SELECT campaign_id, strategy_name, instrument, state_machine,
+               topstep_config, num_attempts, seed, pass_rate, ev_per_attempt,
+               cost_to_funded, avg_days_to_pass, annual_ev, created_at,
+               full_results
+        FROM   eval_campaigns
+        """
+        # sort is validated against _VALID_EVAL_SORT_COLUMNS whitelist above
+        sql += f" ORDER BY {sort} {order}"
+        sql += " LIMIT ? OFFSET ?"
+        params: list = [limit, offset]
+
+        rows = self._conn.execute(sql, params).fetchall()
+        return [
+            EvalCampaignRecord(
+                campaign_id=row["campaign_id"],
+                strategy_name=row["strategy_name"],
+                instrument=row["instrument"],
+                state_machine=bool(row["state_machine"]),
+                topstep_config=row["topstep_config"],
+                num_attempts=row["num_attempts"],
+                seed=row["seed"],
+                pass_rate=row["pass_rate"] or 0.0,
+                ev_per_attempt=row["ev_per_attempt"] or 0.0,
+                cost_to_funded=row["cost_to_funded"] or 0.0,
+                avg_days_to_pass=row["avg_days_to_pass"] or 0.0,
+                annual_ev=row["annual_ev"] or 0.0,
+                created_at=self._to_datetime(row["created_at"]),
+                full_results=row["full_results"] or "",
+            )
+            for row in rows
+        ]
+
+    def delete_eval_campaign(self, campaign_id: str) -> None:
+        """Delete an eval campaign record."""
+        self._conn.execute(
+            "DELETE FROM eval_campaigns WHERE campaign_id = ?", (campaign_id,)
         )
         self._conn.commit()
 

@@ -719,3 +719,182 @@ class TestCancellationToken:
 
         assert strategy.bar_count == 0
         assert metrics["total_trades"] == 0
+
+
+# ---------------------------------------------------------------------------
+# Task 0.2: eval_campaigns
+# ---------------------------------------------------------------------------
+
+from datetime import timezone
+from data.storage.models import EvalCampaignRecord
+
+
+def _make_eval_campaign(
+    campaign_id: str = "camp-001",
+    strategy_name: str = "TopstepStrategy",
+    instrument: str = "MES",
+    state_machine: bool = True,
+    topstep_config: str = '{"account_size": 50000}',
+    num_attempts: int = 100,
+    seed: int = 42,
+    pass_rate: float = 0.65,
+    ev_per_attempt: float = 250.0,
+    cost_to_funded: float = 400.0,
+    avg_days_to_pass: float = 18.5,
+    annual_ev: float = 3200.0,
+    created_at=None,
+    full_results: str = '{"detail": "ok"}',
+) -> EvalCampaignRecord:
+    return EvalCampaignRecord(
+        campaign_id=campaign_id,
+        strategy_name=strategy_name,
+        instrument=instrument,
+        state_machine=state_machine,
+        topstep_config=topstep_config,
+        num_attempts=num_attempts,
+        seed=seed,
+        pass_rate=pass_rate,
+        ev_per_attempt=ev_per_attempt,
+        cost_to_funded=cost_to_funded,
+        avg_days_to_pass=avg_days_to_pass,
+        annual_ev=annual_ev,
+        created_at=created_at or datetime(2025, 6, 1, 12, 0, 0),
+        full_results=full_results,
+    )
+
+
+class TestEvalCampaigns:
+    def test_insert_and_get_eval_campaign(self, db):
+        """Round-trip insert and get returns the original record."""
+        record = _make_eval_campaign()
+        db.insert_eval_campaign(record)
+
+        result = db.get_eval_campaign("camp-001")
+        assert result is not None
+        assert result.campaign_id == "camp-001"
+        assert result.strategy_name == "TopstepStrategy"
+        assert result.instrument == "MES"
+        assert result.state_machine is True
+        assert result.topstep_config == '{"account_size": 50000}'
+        assert result.num_attempts == 100
+        assert result.seed == 42
+        assert result.pass_rate == pytest.approx(0.65)
+        assert result.ev_per_attempt == pytest.approx(250.0)
+        assert result.cost_to_funded == pytest.approx(400.0)
+        assert result.avg_days_to_pass == pytest.approx(18.5)
+        assert result.annual_ev == pytest.approx(3200.0)
+        assert result.created_at == datetime(2025, 6, 1, 12, 0, 0)
+        assert result.full_results == '{"detail": "ok"}'
+
+    def test_get_eval_campaign_not_found(self, db):
+        """get_eval_campaign returns None when the id does not exist."""
+        assert db.get_eval_campaign("nonexistent") is None
+
+    def test_insert_eval_campaign_replace(self, db):
+        """Inserting a record with the same campaign_id replaces the old one."""
+        db.insert_eval_campaign(_make_eval_campaign(pass_rate=0.5))
+        db.insert_eval_campaign(_make_eval_campaign(pass_rate=0.9))
+        result = db.get_eval_campaign("camp-001")
+        assert result.pass_rate == pytest.approx(0.9)
+
+    def test_list_eval_campaigns(self, db):
+        """list_eval_campaigns returns all records."""
+        db.insert_eval_campaign(_make_eval_campaign("camp-001", strategy_name="A",
+                                                    pass_rate=0.5, annual_ev=1000.0,
+                                                    created_at=datetime(2025, 1, 10)))
+        db.insert_eval_campaign(_make_eval_campaign("camp-002", strategy_name="B",
+                                                    pass_rate=0.7, annual_ev=3000.0,
+                                                    created_at=datetime(2025, 1, 20)))
+        db.insert_eval_campaign(_make_eval_campaign("camp-003", strategy_name="C",
+                                                    pass_rate=0.6, annual_ev=2000.0,
+                                                    created_at=datetime(2025, 1, 15)))
+
+        result = db.list_eval_campaigns()
+        assert len(result) == 3
+
+    def test_list_eval_campaigns_default_sort_created_at_desc(self, db):
+        """Default sort is created_at DESC."""
+        db.insert_eval_campaign(_make_eval_campaign("camp-001", created_at=datetime(2025, 1, 10)))
+        db.insert_eval_campaign(_make_eval_campaign("camp-002", created_at=datetime(2025, 1, 20)))
+        db.insert_eval_campaign(_make_eval_campaign("camp-003", created_at=datetime(2025, 1, 15)))
+
+        result = db.list_eval_campaigns()
+        assert result[0].campaign_id == "camp-002"  # most recent
+        assert result[-1].campaign_id == "camp-001"  # oldest
+
+    def test_list_eval_campaigns_sort_by_pass_rate_asc(self, db):
+        """Sort by pass_rate ascending."""
+        db.insert_eval_campaign(_make_eval_campaign("camp-001", pass_rate=0.5))
+        db.insert_eval_campaign(_make_eval_campaign("camp-002", pass_rate=0.7))
+        db.insert_eval_campaign(_make_eval_campaign("camp-003", pass_rate=0.6))
+
+        result = db.list_eval_campaigns(sort="pass_rate", order="asc")
+        rates = [r.pass_rate for r in result]
+        assert rates == sorted(rates)
+
+    def test_list_eval_campaigns_sort_by_annual_ev_desc(self, db):
+        """Sort by annual_ev descending."""
+        db.insert_eval_campaign(_make_eval_campaign("camp-001", annual_ev=1000.0))
+        db.insert_eval_campaign(_make_eval_campaign("camp-002", annual_ev=3000.0))
+        db.insert_eval_campaign(_make_eval_campaign("camp-003", annual_ev=2000.0))
+
+        result = db.list_eval_campaigns(sort="annual_ev", order="desc")
+        evs = [r.annual_ev for r in result]
+        assert evs == sorted(evs, reverse=True)
+
+    def test_list_eval_campaigns_pagination(self, db):
+        """limit and offset work for pagination."""
+        for i in range(5):
+            db.insert_eval_campaign(
+                _make_eval_campaign(f"camp-{i:03d}",
+                                    created_at=datetime(2025, 1, i + 1))
+            )
+
+        page1 = db.list_eval_campaigns(limit=2, offset=0)
+        page2 = db.list_eval_campaigns(limit=2, offset=2)
+        page3 = db.list_eval_campaigns(limit=2, offset=4)
+
+        assert len(page1) == 2
+        assert len(page2) == 2
+        assert len(page3) == 1
+
+        all_ids = [r.campaign_id for r in page1 + page2 + page3]
+        assert len(set(all_ids)) == 5
+
+    def test_list_eval_campaigns_invalid_sort_raises(self, db):
+        """Invalid sort column raises ValueError."""
+        with pytest.raises(ValueError, match="Invalid sort column"):
+            db.list_eval_campaigns(sort="DROP TABLE eval_campaigns; --")
+
+    def test_delete_eval_campaign(self, db):
+        """delete_eval_campaign removes the record."""
+        db.insert_eval_campaign(_make_eval_campaign())
+        db.delete_eval_campaign("camp-001")
+        assert db.get_eval_campaign("camp-001") is None
+
+    def test_delete_eval_campaign_does_not_affect_others(self, db):
+        """Deleting one campaign leaves others intact."""
+        db.insert_eval_campaign(_make_eval_campaign("camp-001"))
+        db.insert_eval_campaign(_make_eval_campaign("camp-002"))
+        db.delete_eval_campaign("camp-001")
+        assert db.get_eval_campaign("camp-001") is None
+        assert db.get_eval_campaign("camp-002") is not None
+
+    def test_delete_eval_campaign_nonexistent_is_noop(self, db):
+        """Deleting a nonexistent campaign should not raise."""
+        db.delete_eval_campaign("nonexistent")  # should not raise
+
+    def test_eval_campaigns_table_exists(self, db):
+        """The eval_campaigns table should exist after create_tables()."""
+        rows = db.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='eval_campaigns'", ()
+        ).fetchall()
+        assert len(rows) == 1
+
+    def test_eval_campaigns_index_exists(self, db):
+        """The strategy index on eval_campaigns should exist."""
+        rows = db.execute(
+            "SELECT name FROM sqlite_master WHERE type='index' "
+            "AND name='idx_eval_campaigns_strategy'", ()
+        ).fetchall()
+        assert len(rows) == 1

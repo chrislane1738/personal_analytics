@@ -109,3 +109,21 @@ class WalkForwardStudy:
     results: str = ""    # JSON
     monte_carlo: str = ""  # JSON
     created_at: Optional[datetime] = None
+
+
+@dataclass
+class EvalCampaignRecord:
+    campaign_id: str
+    strategy_name: str
+    instrument: str
+    state_machine: bool
+    topstep_config: str       # JSON
+    num_attempts: int
+    seed: int
+    pass_rate: float = 0.0
+    ev_per_attempt: float = 0.0
+    cost_to_funded: float = 0.0
+    avg_days_to_pass: float = 0.0
+    annual_ev: float = 0.0
+    created_at: Optional[datetime] = None
+    full_results: str = ""    # JSON blob
