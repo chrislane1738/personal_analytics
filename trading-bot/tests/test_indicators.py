@@ -5,7 +5,7 @@ All expected values are hand-calculated.
 import math
 import pytest
 
-from indicators.technical import SMA, EMA, RSI, MACD, BollingerBands
+from indicators.technical import SMA, EMA, RSI, MACD, BollingerBands, ATR
 
 
 # ---------------------------------------------------------------------------
@@ -331,3 +331,94 @@ class TestBollingerBands:
         width1 = bb1.upper - bb1.lower
         width2 = bb2.upper - bb2.lower
         assert width2 == pytest.approx(width1 * 2)
+
+
+# ---------------------------------------------------------------------------
+# ATR — Average True Range
+# ---------------------------------------------------------------------------
+
+class TestATR:
+    def test_warm_up_period(self):
+        atr = ATR(period=14)
+        assert atr.warm_up_period == 14
+
+    def test_warm_up_period_custom(self):
+        atr = ATR(period=3)
+        assert atr.warm_up_period == 3
+
+    def test_none_before_warm_up(self):
+        # ATR(3) needs 3 bars before producing a value
+        atr = ATR(period=3)
+        # After 1st bar: still None
+        atr.update(high=12.0, low=10.0, close=11.0)
+        assert atr.value is None
+        # After 2nd bar: still None
+        atr.update(high=13.0, low=10.5, close=12.0)
+        assert atr.value is None
+
+    def test_is_ready_false_before_warm_up(self):
+        atr = ATR(period=3)
+        atr.update(high=12.0, low=10.0, close=11.0)
+        assert atr.is_ready is False
+
+    def test_is_ready_true_after_warm_up(self):
+        atr = ATR(period=3)
+        atr.update(high=12.0, low=10.0, close=11.0)
+        atr.update(high=13.0, low=10.5, close=12.0)
+        atr.update(high=14.0, low=11.0, close=13.0)
+        assert atr.is_ready is True
+
+    def test_hand_calculated_atr3(self):
+        # ATR(3) with bars: H=12/L=10/C=11, H=13/L=10.5/C=12, H=14/L=11/C=13
+        #
+        # Bar 1 (no prev close): TR = H - L = 12 - 10 = 2.0
+        # Bar 2 (prev_close=11): TR = max(13-10.5, |13-11|, |10.5-11|)
+        #                            = max(2.5, 2.0, 0.5) = 2.5
+        # Bar 3 (prev_close=12): TR = max(14-11, |14-12|, |11-12|)
+        #                            = max(3.0, 2.0, 1.0) = 3.0
+        # Initial ATR = SMA of first 3 TRs = (2.0 + 2.5 + 3.0) / 3 = 2.5
+        atr = ATR(period=3)
+        atr.update(high=12.0, low=10.0, close=11.0)
+        atr.update(high=13.0, low=10.5, close=12.0)
+        atr.update(high=14.0, low=11.0, close=13.0)
+        assert atr.value == pytest.approx(2.5)
+
+    def test_wilder_smoothing(self):
+        # Continue from above: ATR after 3 bars = 2.5
+        # Bar 4 (prev_close=13): H=15/L=12/C=14
+        #   TR = max(15-12, |15-13|, |12-13|) = max(3.0, 2.0, 1.0) = 3.0
+        #   ATR = (2.5 * 2 + 3.0) / 3 = (5.0 + 3.0) / 3 = 8.0 / 3 ≈ 2.6667
+        atr = ATR(period=3)
+        atr.update(high=12.0, low=10.0, close=11.0)
+        atr.update(high=13.0, low=10.5, close=12.0)
+        atr.update(high=14.0, low=11.0, close=13.0)
+        atr.update(high=15.0, low=12.0, close=14.0)
+        assert atr.value == pytest.approx(8.0 / 3)
+
+    def test_invalid_period_raises(self):
+        with pytest.raises(ValueError):
+            ATR(period=0)
+
+    def test_invalid_period_negative_raises(self):
+        with pytest.raises(ValueError):
+            ATR(period=-5)
+
+    def test_period_1(self):
+        # ATR(1) should be ready after the first bar; TR = H - L (no prev close)
+        atr = ATR(period=1)
+        atr.update(high=10.0, low=8.0, close=9.0)
+        assert atr.value == pytest.approx(2.0)
+
+    def test_atr_always_non_negative(self):
+        atr = ATR(period=3)
+        bars = [
+            (12.0, 10.0, 11.0),
+            (13.0, 10.5, 12.0),
+            (14.0, 11.0, 13.0),
+            (11.0, 9.0, 10.0),   # price drops
+            (10.0, 8.0, 9.0),
+        ]
+        for h, l, c in bars:
+            atr.update(high=h, low=l, close=c)
+            if atr.value is not None:
+                assert atr.value >= 0.0

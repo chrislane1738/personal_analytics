@@ -277,3 +277,63 @@ class BollingerBands(Indicator):
     @property
     def warm_up_period(self) -> int:
         return self._period
+
+
+# ---------------------------------------------------------------------------
+# ATR — Average True Range (Wilder's method)
+# ---------------------------------------------------------------------------
+
+class ATR(Indicator):
+    """
+    Average True Range using Wilder's smoothing.
+
+    True Range = max(high - low, |high - prev_close|, |low - prev_close|)
+    For the first bar (no previous close), TR = high - low.
+
+    Seed: initial ATR = simple average of first `period` TRs.
+    Subsequent: ATR = (prev_ATR * (period - 1) + TR) / period
+
+    NOTE: update() accepts (high, low, close) rather than the single-price
+    signature of the base Indicator ABC. The base method is overridden with
+    an incompatible (but deliberate) signature to support OHLC data.
+    """
+
+    def __init__(self, period: int = 14) -> None:
+        if period < 1:
+            raise ValueError("period must be >= 1")
+        self._period = period
+        self._prev_close: float | None = None
+        self._seed_trs: list[float] = []
+        self._atr: float | None = None
+
+    # ------------------------------------------------------------------
+    def update(self, high: float, low: float, close: float) -> None:  # type: ignore[override]
+        """Feed a new OHLC bar."""
+        if self._prev_close is None:
+            # First bar: no previous close, TR = high - low
+            tr = high - low
+        else:
+            tr = max(
+                high - low,
+                abs(high - self._prev_close),
+                abs(low - self._prev_close),
+            )
+
+        self._prev_close = close
+
+        if self._atr is None:
+            # Collecting seed TRs for the initial SMA
+            self._seed_trs.append(tr)
+            if len(self._seed_trs) == self._period:
+                self._atr = sum(self._seed_trs) / self._period
+        else:
+            # Wilder's smoothing
+            self._atr = (self._atr * (self._period - 1) + tr) / self._period
+
+    @property
+    def value(self) -> float | None:
+        return self._atr
+
+    @property
+    def warm_up_period(self) -> int:
+        return self._period
