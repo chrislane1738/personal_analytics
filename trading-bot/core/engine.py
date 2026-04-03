@@ -58,6 +58,18 @@ class BacktestEngine:
         When ``True``, all open positions are force-closed at the end of
         each trading day.  Used for Topstep evaluations where overnight
         holding is prohibited.  Default ``False``.
+    daily_loss_limit:
+        Maximum allowed intra-day loss in dollars.  When the portfolio
+        equity drops this far below its start-of-day value, the
+        ``DailyLossLimitRule`` blocks further signals.  Default ``0``
+        (disabled).
+    use_signal_strength_sizing:
+        When ``True``, position size is scaled by the signal's
+        ``strength`` field (0.0–1.0).  Default ``False`` (backward
+        compatible — strength is ignored).
+    max_contracts:
+        Hard cap on the number of contracts/shares per order.  ``0``
+        means no cap (default).
     """
 
     def __init__(
@@ -80,6 +92,9 @@ class BacktestEngine:
         contract_multipliers: dict[str, float] | None = None,
         force_flat_daily: bool = False,
         timeframe: str = "1D",
+        daily_loss_limit: float = 0,
+        use_signal_strength_sizing: bool = False,
+        max_contracts: int = 0,
     ) -> None:
         self.strategy = strategy
         self.database = database
@@ -93,6 +108,9 @@ class BacktestEngine:
         self.quiet = quiet
         self.force_flat_daily = force_flat_daily
         self.timeframe = timeframe
+        self.daily_loss_limit = daily_loss_limit
+        self.use_signal_strength_sizing = use_signal_strength_sizing
+        self.max_contracts = max_contracts
 
         # --- Create components ---
         self.event_bus = EventBus()
@@ -104,8 +122,15 @@ class BacktestEngine:
         self.broker: Broker = broker or SimBroker(
             self.event_bus, slippage_pct, commission_per_share,
         )
+
+        # Inject DailyLossLimitRule when daily_loss_limit > 0
+        effective_rules = list(risk_rules or [])
+        if daily_loss_limit > 0:
+            from risk.rules import DailyLossLimitRule
+            effective_rules.append(DailyLossLimitRule(daily_loss_limit))
+
         self.risk_manager = RiskManager(
-            risk_rules or [], self.event_bus, sector_map or {}
+            effective_rules, self.event_bus, sector_map or {}
         )
         self.trade_log = TradeLog()
         self.benchmark = BenchmarkTracker(benchmark_symbol, initial_capital)
@@ -115,6 +140,10 @@ class BacktestEngine:
 
         # Current simulated date (set during main loop, used by _on_fill)
         self._current_date: date | None = None
+
+        # Daily loss limit tracking: equity at the start of each calendar day
+        self._day_start_equity: float | None = None
+        self._prev_cal_date: date | None = None
 
         # Pre-loaded bar data: symbol -> {date|datetime -> DailyBar|IntradayBar}
         self._bar_data: dict[str, dict] = {}
@@ -173,6 +202,11 @@ class BacktestEngine:
             cal_date = key.date() if isinstance(key, datetime) else key
             self._current_date = cal_date
 
+            # Reset day-start equity on new calendar day
+            if cal_date != self._prev_cal_date:
+                self._day_start_equity = self.portfolio.get_equity(current_prices)
+                self._prev_cal_date = cal_date
+
             # Collect bars for all symbols at this key
             bars: dict[str, BarEvent] = {}
             for symbol in self.universe:
@@ -224,6 +258,11 @@ class BacktestEngine:
                 for signal in signals:
                     equity = self.portfolio.get_equity(current_prices)
                     price = current_prices.get(signal.symbol, 1)
+                    day_pnl = (
+                        equity - self._day_start_equity
+                        if self._day_start_equity is not None
+                        else 0.0
+                    )
                     risk_context = {
                         "equity": equity,
                         "current_prices": current_prices,
@@ -233,6 +272,9 @@ class BacktestEngine:
                         )
                         if price > 0
                         else 0,
+                        "day_pnl": day_pnl,
+                        "use_signal_strength_sizing": self.use_signal_strength_sizing,
+                        "max_contracts": self.max_contracts,
                     }
                     order = self.risk_manager.evaluate_signal(
                         signal, self.portfolio, risk_context

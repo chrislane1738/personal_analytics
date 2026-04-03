@@ -198,3 +198,38 @@ class MaxOptionsNotionalRule(RiskRule):
             return True, ""  # Not an options trade — always pass
         # Placeholder: options notional tracking not yet implemented
         return True, ""
+
+
+class DailyLossLimitRule(RiskRule):
+    """Block all signals when the intra-day P&L breaches *daily_limit*.
+
+    The rule reads ``day_pnl`` from the risk *context* dict.  The engine
+    is responsible for computing this value as
+    ``current_equity - day_start_equity`` and passing it on each signal
+    evaluation.
+
+    Parameters
+    ----------
+    daily_limit:
+        Maximum allowed daily loss expressed as a positive dollar amount.
+        For example, ``daily_limit=2000`` means signals are blocked once
+        today's P&L drops to -$2 000 or worse.
+    """
+
+    def __init__(self, daily_limit: float) -> None:
+        self.daily_limit = daily_limit
+
+    def check(
+        self,
+        signal: SignalEvent,
+        portfolio: Portfolio,
+        context: dict,
+    ) -> tuple[bool, str]:
+        day_pnl = context.get("day_pnl", 0.0)
+        if day_pnl <= -self.daily_limit:
+            return (
+                False,
+                f"Daily loss limit -${self.daily_limit:,.0f} reached "
+                f"(day P&L: ${day_pnl:,.0f})",
+            )
+        return True, ""
