@@ -79,6 +79,7 @@ class BacktestEngine:
         broker: Broker | None = None,
         contract_multipliers: dict[str, float] | None = None,
         force_flat_daily: bool = False,
+        timeframe: str = "1D",
     ) -> None:
         self.strategy = strategy
         self.database = database
@@ -91,6 +92,13 @@ class BacktestEngine:
         self.cancel_event = cancel_event
         self.quiet = quiet
         self.force_flat_daily = force_flat_daily
+        self.timeframe = timeframe
+
+        if timeframe != "1D":
+            raise NotImplementedError(
+                f"Intraday timeframe '{timeframe}' not yet supported in "
+                "BacktestEngine. Coming soon -- requires intraday bar data."
+            )
 
         # --- Create components ---
         self.event_bus = EventBus()

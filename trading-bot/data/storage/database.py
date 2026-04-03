@@ -8,6 +8,7 @@ from data.storage.models import (
     DailyBar,
     EquityCurvePoint,
     EvalCampaignRecord,
+    IntradayBar,
     RunRecord,
     SymbolMetadata,
     TradeRecord,
@@ -195,6 +196,23 @@ class Database:
             created_at      TIMESTAMP
         );
 
+        CREATE TABLE IF NOT EXISTS intraday_bars (
+            symbol              TEXT      NOT NULL,
+            timestamp           TIMESTAMP NOT NULL,
+            timeframe           TEXT      NOT NULL,
+            open                REAL      NOT NULL,
+            high                REAL      NOT NULL,
+            low                 REAL      NOT NULL,
+            close               REAL      NOT NULL,
+            volume              INTEGER   NOT NULL,
+            vwap                REAL      NOT NULL DEFAULT 0.0,
+            data_quality_score  REAL      NOT NULL DEFAULT 1.0,
+            PRIMARY KEY (symbol, timestamp, timeframe)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_intraday_bars_symbol_tf
+            ON intraday_bars (symbol, timeframe);
+
         CREATE TABLE IF NOT EXISTS eval_campaigns (
             campaign_id      TEXT PRIMARY KEY,
             strategy_name    TEXT NOT NULL,
@@ -208,6 +226,7 @@ class Database:
             cost_to_funded   REAL,
             avg_days_to_pass REAL,
             annual_ev        REAL,
+            timeframe        TEXT NOT NULL DEFAULT '1D',
             created_at       TIMESTAMP,
             full_results     TEXT
         );
@@ -217,6 +236,17 @@ class Database:
         """
         self._conn.executescript(ddl)
         self._conn.commit()
+        self._migrate_eval_campaigns()
+
+    def _migrate_eval_campaigns(self) -> None:
+        """Add columns introduced after the initial eval_campaigns schema."""
+        cursor = self._conn.execute("PRAGMA table_info(eval_campaigns)")
+        columns = {row[1] for row in cursor.fetchall()}
+        if "timeframe" not in columns:
+            self._conn.execute(
+                "ALTER TABLE eval_campaigns ADD COLUMN timeframe TEXT NOT NULL DEFAULT '1D'"
+            )
+            self._conn.commit()
 
     # ------------------------------------------------------------------
     # Helpers
@@ -318,6 +348,88 @@ class Database:
         if row is None or row[0] is None:
             return (None, None)
         return (self._to_date(row[0]), self._to_date(row[1]))
+
+    # ------------------------------------------------------------------
+    # intraday_bars
+    # ------------------------------------------------------------------
+
+    def insert_intraday_bars(self, bars: list[IntradayBar]) -> None:
+        """Bulk INSERT OR REPLACE intraday bar records."""
+        sql = """
+        INSERT OR REPLACE INTO intraday_bars
+            (symbol, timestamp, timeframe, open, high, low, close, volume,
+             vwap, data_quality_score)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        params = [
+            (
+                b.symbol,
+                b.timestamp.isoformat(),
+                b.timeframe,
+                b.open,
+                b.high,
+                b.low,
+                b.close,
+                b.volume,
+                b.vwap,
+                b.data_quality_score,
+            )
+            for b in bars
+        ]
+        self._conn.executemany(sql, params)
+        self._conn.commit()
+
+    def get_intraday_bars(
+        self, symbol: str, start: datetime, end: datetime, timeframe: str
+    ) -> list[IntradayBar]:
+        """Return intraday bars for *symbol* between *start* and *end* inclusive.
+
+        Results are sorted by timestamp ascending.
+        """
+        sql = """
+        SELECT symbol, timestamp, timeframe, open, high, low, close, volume,
+               vwap, data_quality_score
+        FROM   intraday_bars
+        WHERE  symbol = ?
+          AND  timeframe = ?
+          AND  timestamp BETWEEN ? AND ?
+        ORDER  BY timestamp ASC
+        """
+        rows = self._conn.execute(
+            sql, (symbol, timeframe, start.isoformat(), end.isoformat())
+        ).fetchall()
+        return [
+            IntradayBar(
+                symbol=row["symbol"],
+                timestamp=self._to_datetime(row["timestamp"]),
+                timeframe=row["timeframe"],
+                open=row["open"],
+                high=row["high"],
+                low=row["low"],
+                close=row["close"],
+                volume=row["volume"],
+                vwap=row["vwap"],
+                data_quality_score=row["data_quality_score"],
+            )
+            for row in rows
+        ]
+
+    def get_intraday_cached_range(
+        self, symbol: str, timeframe: str
+    ) -> tuple[Optional[datetime], Optional[datetime]]:
+        """Return the (min, max) timestamps of cached intraday bars.
+
+        Returns (None, None) if no data is stored for the symbol/timeframe.
+        """
+        sql = """
+        SELECT MIN(timestamp), MAX(timestamp)
+        FROM   intraday_bars
+        WHERE  symbol = ? AND timeframe = ?
+        """
+        row = self._conn.execute(sql, (symbol, timeframe)).fetchone()
+        if row is None or row[0] is None:
+            return (None, None)
+        return (self._to_datetime(row[0]), self._to_datetime(row[1]))
 
     # ------------------------------------------------------------------
     # runs
@@ -781,9 +893,9 @@ class Database:
         INSERT OR REPLACE INTO eval_campaigns
             (campaign_id, strategy_name, instrument, state_machine,
              topstep_config, num_attempts, seed, pass_rate, ev_per_attempt,
-             cost_to_funded, avg_days_to_pass, annual_ev, created_at,
-             full_results)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             cost_to_funded, avg_days_to_pass, annual_ev, timeframe,
+             created_at, full_results)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
         self._conn.execute(
             sql,
@@ -800,6 +912,7 @@ class Database:
                 record.cost_to_funded,
                 record.avg_days_to_pass,
                 record.annual_ev,
+                record.timeframe,
                 record.created_at.isoformat() if record.created_at else None,
                 record.full_results,
             ),
@@ -811,8 +924,8 @@ class Database:
         sql = """
         SELECT campaign_id, strategy_name, instrument, state_machine,
                topstep_config, num_attempts, seed, pass_rate, ev_per_attempt,
-               cost_to_funded, avg_days_to_pass, annual_ev, created_at,
-               full_results
+               cost_to_funded, avg_days_to_pass, annual_ev, timeframe,
+               created_at, full_results
         FROM   eval_campaigns
         WHERE  campaign_id = ?
         """
@@ -832,6 +945,7 @@ class Database:
             cost_to_funded=row["cost_to_funded"] or 0.0,
             avg_days_to_pass=row["avg_days_to_pass"] or 0.0,
             annual_ev=row["annual_ev"] or 0.0,
+            timeframe=row["timeframe"] or "1D",
             created_at=self._to_datetime(row["created_at"]),
             full_results=row["full_results"] or "",
         )
@@ -869,8 +983,8 @@ class Database:
         sql = """
         SELECT campaign_id, strategy_name, instrument, state_machine,
                topstep_config, num_attempts, seed, pass_rate, ev_per_attempt,
-               cost_to_funded, avg_days_to_pass, annual_ev, created_at,
-               full_results
+               cost_to_funded, avg_days_to_pass, annual_ev, timeframe,
+               created_at, full_results
         FROM   eval_campaigns
         """
         # sort is validated against _VALID_EVAL_SORT_COLUMNS whitelist above
@@ -893,6 +1007,7 @@ class Database:
                 cost_to_funded=row["cost_to_funded"] or 0.0,
                 avg_days_to_pass=row["avg_days_to_pass"] or 0.0,
                 annual_ev=row["annual_ev"] or 0.0,
+                timeframe=row["timeframe"] or "1D",
                 created_at=self._to_datetime(row["created_at"]),
                 full_results=row["full_results"] or "",
             )

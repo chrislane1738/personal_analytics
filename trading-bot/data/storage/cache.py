@@ -17,7 +17,7 @@ from typing import Sequence
 
 from data.feeds.base import DataFeed
 from data.storage.database import Database
-from data.storage.models import DailyBar
+from data.storage.models import DailyBar, IntradayBar
 
 
 class DataCache:
@@ -127,3 +127,99 @@ class DataCache:
         bars = self._feed.get_daily_bars(symbol, start, end)
         if bars:
             self._db.insert_daily_bars(bars)
+
+
+class IntradayCache:
+    """Smart cache for intraday bars -- checks DB before fetching from feed.
+
+    The feed must expose a ``get_intraday_bars(symbol, timeframe, start, end)``
+    method (e.g. :class:`~data.feeds.databento_feed.DatabentFeed`).
+
+    Parameters
+    ----------
+    database:
+        Open :class:`~data.storage.database.Database` instance.
+    feed:
+        A feed object with a ``get_intraday_bars`` method.
+    """
+
+    def __init__(self, database: Database, feed) -> None:
+        self._db = database
+        self._feed = feed
+
+    # ------------------------------------------------------------------
+    # Primary public API
+    # ------------------------------------------------------------------
+
+    def get_intraday_bars(
+        self, symbol: str, timeframe: str, start: date, end: date
+    ) -> list[IntradayBar]:
+        """Return intraday bars for *symbol* over [*start*, *end*], using cache.
+
+        Missing datetime ranges are fetched from the underlying feed, stored
+        in the database, and then the complete set is returned from the DB.
+
+        Parameters
+        ----------
+        symbol:
+            Instrument symbol (e.g. ``'ES'``).
+        timeframe:
+            Bar interval (e.g. ``'1m'``, ``'5m'``).
+        start:
+            First date of the range, inclusive.
+        end:
+            Last date of the range, inclusive.
+        """
+        from datetime import datetime as dt, timedelta, timezone
+
+        start_dt = dt.combine(start, dt.min.time(), tzinfo=timezone.utc)
+        end_dt = dt.combine(end, dt.max.time().replace(microsecond=0), tzinfo=timezone.utc)
+
+        cached_min, cached_max = self._db.get_intraday_cached_range(
+            symbol, timeframe
+        )
+
+        if cached_min is None:
+            # Nothing cached -- fetch full range
+            self._fetch_and_store(symbol, timeframe, start, end)
+        else:
+            # Compare on date granularity because the feed fetches by date.
+            cached_min_date = cached_min.date() if isinstance(cached_min, dt) else cached_min
+            cached_max_date = cached_max.date() if isinstance(cached_max, dt) else cached_max
+
+            # Fetch any missing prefix (data before the earliest cached date)
+            if start < cached_min_date:
+                prefix_end = cached_min_date - timedelta(days=1)
+                if start <= prefix_end:
+                    self._fetch_and_store(symbol, timeframe, start, prefix_end)
+
+            # Fetch any missing suffix (data after the latest cached date)
+            if end > cached_max_date:
+                suffix_start = cached_max_date + timedelta(days=1)
+                if suffix_start <= end:
+                    self._fetch_and_store(symbol, timeframe, suffix_start, end)
+
+        return self._db.get_intraday_bars(symbol, start_dt, end_dt, timeframe)
+
+    def ensure_cached(
+        self,
+        symbols: Sequence[str],
+        timeframe: str,
+        start: date,
+        end: date,
+    ) -> None:
+        """Pre-fetch and cache *symbols* for the given date range."""
+        for symbol in symbols:
+            self.get_intraday_bars(symbol, timeframe, start, end)
+
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+
+    def _fetch_and_store(
+        self, symbol: str, timeframe: str, start: date, end: date
+    ) -> None:
+        """Fetch intraday bars from the feed and insert them into the DB."""
+        bars = self._feed.get_intraday_bars(symbol, timeframe, start, end)
+        if bars:
+            self._db.insert_intraday_bars(bars)

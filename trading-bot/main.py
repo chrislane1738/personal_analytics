@@ -185,6 +185,66 @@ def data_fetch(
     )
 
 
+@data_app.command("fetch-intraday")
+def data_fetch_intraday(
+    symbol: str = typer.Argument(..., help="Futures symbol, e.g. ES"),
+    timeframe: str = typer.Option("1m", help="Bar timeframe: 1m, 5m"),
+    start: str = typer.Option(..., help="Start date YYYY-MM-DD"),
+    end: Optional[str] = typer.Option(None, help="End date YYYY-MM-DD (default: today)"),
+    log_level: str = typer.Option("INFO", "--log-level", help="Logging level"),
+) -> None:
+    """Download intraday futures bars from Databento and cache them locally."""
+    setup_logging(log_level)
+
+    from data.feeds.databento_feed import DatabentFeed
+    from data.storage.cache import IntradayCache
+
+    start_date = _parse_date(start)
+    end_date = _parse_date(end, fallback=date.today())
+
+    if start_date is None:
+        typer.echo("Error: --start is required", err=True)
+        raise typer.Exit(1)
+
+    settings = get_settings()
+    if not settings.databento_api_key:
+        typer.echo(
+            "Error: DATABENTO_API_KEY not set. "
+            "Add it to your .env file or set the environment variable.",
+            err=True,
+        )
+        raise typer.Exit(1)
+
+    typer.echo(
+        f"Fetching {symbol.upper()} {timeframe} bars "
+        f"from {start_date} to {end_date} via Databento ..."
+    )
+
+    try:
+        db = _make_database()
+        feed = DatabentFeed(api_key=settings.databento_api_key)
+        cache = IntradayCache(db, feed)
+        bars = cache.get_intraday_bars(
+            symbol.upper(), timeframe, start_date, end_date
+        )
+    except ImportError as exc:
+        typer.echo(f"Error: {exc}", err=True)
+        raise typer.Exit(1) from exc
+    except Exception as exc:
+        typer.echo(f"Error fetching intraday data: {exc}", err=True)
+        logger.exception("intraday data fetch failed")
+        raise typer.Exit(1) from exc
+
+    if not bars:
+        typer.echo("No bars returned -- check symbol, timeframe, and date range.")
+        raise typer.Exit(0)
+
+    typer.echo(
+        f"Cached {len(bars)} {timeframe} bars for {symbol.upper()}  "
+        f"({bars[0].timestamp} -> {bars[-1].timestamp})"
+    )
+
+
 @data_app.command("validate")
 def data_validate(
     symbol: Optional[str] = typer.Option(None, help="Single symbol to validate"),

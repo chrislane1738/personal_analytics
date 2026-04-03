@@ -112,6 +112,22 @@ class WalkForwardStudy:
 
 
 @dataclass
+class IntradayBar:
+    """A single intraday OHLCV bar for futures or other instruments."""
+
+    symbol: str
+    timestamp: datetime  # Full datetime (not just date)
+    timeframe: str       # "1m", "5m"
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: int
+    vwap: float = 0.0
+    data_quality_score: float = 1.0
+
+
+@dataclass
 class EvalCampaignRecord:
     campaign_id: str
     strategy_name: str
@@ -125,5 +141,6 @@ class EvalCampaignRecord:
     cost_to_funded: float = 0.0
     avg_days_to_pass: float = 0.0
     annual_ev: float = 0.0
+    timeframe: str = "1D"     # Bar timeframe: "1D", "5m", "1m", etc.
     created_at: Optional[datetime] = None
     full_results: str = ""    # JSON blob

@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     fmp_base_url: str = "https://financialmodelingprep.com"
     fmp_rate_limit: int = 700  # req/min, headroom below 750
 
+    # Databento (futures intraday data)
+    databento_api_key: str = ""
+
     # Database
     db_path: str = "db/trading_bot.db"
 
