@@ -1,12 +1,14 @@
 """Execution layer: broker interface, SimBroker, order types, and options pricing."""
 
 from execution.broker import Broker
+from execution.futures_sim_broker import FuturesSimBroker
 from execution.options_pricing import black_scholes_greeks, black_scholes_price
 from execution.order_types import OrderAction, OrderType
 from execution.sim_broker import SimBroker
 
 __all__ = [
     "Broker",
+    "FuturesSimBroker",
     "OrderAction",
     "OrderType",
     "SimBroker",

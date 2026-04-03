@@ -21,6 +21,7 @@ from analytics.trade_log import TradeLog
 from core.event_bus import EventBus
 from core.events import BarEvent, EventType, FillEvent, SignalEvent
 from data.storage.models import EquityCurvePoint, RunRecord, TradeRecord
+from execution.broker import Broker
 from execution.sim_broker import SimBroker
 from portfolio.benchmark import BenchmarkTracker
 from portfolio.portfolio import Portfolio
@@ -71,6 +72,8 @@ class BacktestEngine:
         position_size_pct: float = 0.06,
         cancel_event: threading.Event | None = None,
         quiet: bool = False,
+        broker: Broker | None = None,
+        contract_multipliers: dict[str, float] | None = None,
     ) -> None:
         self.strategy = strategy
         self.database = database
@@ -85,8 +88,14 @@ class BacktestEngine:
 
         # --- Create components ---
         self.event_bus = EventBus()
-        self.portfolio = Portfolio(initial_capital, self.event_bus)
-        self.broker = SimBroker(self.event_bus, slippage_pct, commission_per_share)
+        self.portfolio = Portfolio(
+            initial_capital, self.event_bus,
+            contract_multipliers=contract_multipliers,
+        )
+        # Use injected broker if provided; otherwise default to SimBroker.
+        self.broker: Broker = broker or SimBroker(
+            self.event_bus, slippage_pct, commission_per_share,
+        )
         self.risk_manager = RiskManager(
             risk_rules or [], self.event_bus, sector_map or {}
         )
@@ -348,8 +357,8 @@ class BacktestEngine:
             "universe": list(self.universe),
             "benchmark_symbol": self.benchmark_symbol,
             "position_size_pct": self.position_size_pct,
-            "slippage_pct": self.broker.slippage_pct,
-            "commission_per_share": self.broker.commission_per_share,
+            "slippage_pct": getattr(self.broker, "slippage_pct", None),
+            "commission_per_share": getattr(self.broker, "commission_per_share", None),
         })
 
         run = RunRecord(

@@ -4,8 +4,11 @@ import threading
 from datetime import date, timedelta
 
 from core.engine import BacktestEngine
+from core.event_bus import EventBus
+from execution.futures_sim_broker import FuturesSimBroker
 from topstep.attempt_tracker import AttemptTracker, AttemptStatus
 from topstep.config import TopstepConfig
+from topstep.futures_specs import FUTURES_SPECS
 
 
 class TopstepEvalSimulator:
@@ -61,6 +64,23 @@ class TopstepEvalSimulator:
         """
         end_date = start_date + timedelta(days=self.config.max_attempt_days * 2)
 
+        # Look up futures contract spec (if available) and create a
+        # futures-aware broker + multiplier map for the portfolio.
+        spec = FUTURES_SPECS.get(self.instrument)
+
+        # Temporary bus for broker construction; replaced with engine's bus below.
+        futures_bus = EventBus()
+
+        broker = None
+        contract_multipliers: dict[str, float] | None = None
+        if spec is not None:
+            broker = FuturesSimBroker(
+                event_bus=futures_bus,
+                contract_spec=spec,
+                slippage_pct=0.0001,
+            )
+            contract_multipliers = {self.instrument: spec.multiplier}
+
         engine = BacktestEngine(
             strategy=self.strategy,
             database=self.database,
@@ -71,10 +91,17 @@ class TopstepEvalSimulator:
             benchmark_symbol=self.instrument,
             slippage_pct=0.0001,
             commission_per_share=0.005,
-            position_size_pct=0.15,  # Higher than equity default to ensure >= 1 contract for futures
+            position_size_pct=0.25,  # Higher than equity default to ensure >= 1 contract for futures
             cancel_event=self._cancel,
             quiet=True,
+            broker=broker,
+            contract_multipliers=contract_multipliers,
         )
+
+        # If a futures broker was injected, point its event bus at the
+        # engine's bus so fills reach the portfolio and trade log.
+        if broker is not None:
+            broker.event_bus = engine.event_bus
 
         engine.run()
 

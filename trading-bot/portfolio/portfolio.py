@@ -48,13 +48,23 @@ _SELL_ACTIONS = {"SELL", "STC", "STO"}  # actions that reduce / close long
 class Portfolio:
     """Tracks cash, positions, equity curve, and high-water-mark drawdown."""
 
-    def __init__(self, initial_capital: float, event_bus: EventBus) -> None:
+    def __init__(
+        self,
+        initial_capital: float,
+        event_bus: EventBus,
+        contract_multipliers: dict[str, float] | None = None,
+    ) -> None:
         self.cash: float = initial_capital
         self.initial_capital: float = initial_capital
         self.positions: dict[str, Position] = {}
         self.event_bus: EventBus = event_bus
         self.high_water_mark: float = initial_capital
         self.equity_curve: list[tuple[date, float]] = []
+
+        # Optional futures multipliers: symbol -> point multiplier.
+        # When provided, buy/sell cash flows are replaced with P&L-only
+        # accounting and get_equity uses multiplier-based valuation.
+        self.contract_multipliers: dict[str, float] = contract_multipliers or {}
 
         # Running totals kept here so PortfolioUpdateEvent can include them
         self._realized_pnl: float = 0.0
@@ -98,12 +108,19 @@ class Portfolio:
         self.event_bus.emit(event)
 
     def _process_buy(self, fill: FillEvent, total_cost: float) -> None:
-        self.cash -= total_cost
         sym = fill.symbol
+        if sym in self.contract_multipliers:
+            # Futures: no notional cash outlay — only deduct commission.
+            self.cash -= fill.commission
+        else:
+            self.cash -= total_cost
+
         if sym in self.positions:
             pos = self.positions[sym]
             # Weighted-average cost
             total_qty = pos.quantity + fill.quantity
+            if total_qty == 0:
+                return
             pos.avg_cost = (
                 (pos.avg_cost * pos.quantity + fill.fill_price * fill.quantity)
                 / total_qty
@@ -118,34 +135,75 @@ class Portfolio:
 
     def _process_sell(self, fill: FillEvent) -> None:
         sym = fill.symbol
-        proceeds = fill.fill_price * fill.quantity - fill.commission
-        self.cash += proceeds
+        multiplier = self.contract_multipliers.get(sym)
 
-        if sym in self.positions:
-            pos = self.positions[sym]
-            realized = (fill.fill_price - pos.avg_cost) * fill.quantity - fill.commission
-            self._realized_pnl += realized
-            pos.quantity -= fill.quantity
-            if pos.quantity <= 0:
-                del self.positions[sym]
+        if multiplier is not None:
+            # Futures: credit realised P&L (multiplied) minus commission.
+            if sym in self.positions:
+                pos = self.positions[sym]
+                realized = (
+                    (fill.fill_price - pos.avg_cost)
+                    * fill.quantity
+                    * multiplier
+                    - fill.commission
+                )
+                self._realized_pnl += realized
+                self.cash += realized
+                pos.quantity -= fill.quantity
+                if pos.quantity <= 0:
+                    del self.positions[sym]
+            else:
+                # Short sale — create negative-quantity position; deduct commission only.
+                self.cash -= fill.commission
+                self.positions[sym] = Position(
+                    symbol=sym,
+                    quantity=-fill.quantity,
+                    avg_cost=fill.fill_price,
+                )
         else:
-            # Short sale — create negative-quantity position
-            self.positions[sym] = Position(
-                symbol=sym,
-                quantity=-fill.quantity,
-                avg_cost=fill.fill_price,
-            )
+            # Equity path (unchanged).
+            proceeds = fill.fill_price * fill.quantity - fill.commission
+            self.cash += proceeds
+
+            if sym in self.positions:
+                pos = self.positions[sym]
+                realized = (fill.fill_price - pos.avg_cost) * fill.quantity - fill.commission
+                self._realized_pnl += realized
+                pos.quantity -= fill.quantity
+                if pos.quantity <= 0:
+                    del self.positions[sym]
+            else:
+                # Short sale — create negative-quantity position
+                self.positions[sym] = Position(
+                    symbol=sym,
+                    quantity=-fill.quantity,
+                    avg_cost=fill.fill_price,
+                )
 
     # ------------------------------------------------------------------
     # Queries
     # ------------------------------------------------------------------
 
     def get_equity(self, current_prices: dict[str, float]) -> float:
-        """Total equity = cash + sum of all position values at current prices."""
+        """Total equity = cash + sum of all position values at current prices.
+
+        For futures symbols (those with a contract multiplier), position
+        value is the unrealised P&L:
+        ``(price - avg_cost) * quantity * multiplier``.
+
+        For equity symbols the original formula is used:
+        ``price * quantity``.
+        """
         position_value = 0.0
         for sym, pos in self.positions.items():
             price = current_prices.get(sym, pos.avg_cost)
-            position_value += price * pos.quantity
+            multiplier = self.contract_multipliers.get(sym)
+            if multiplier is not None:
+                # Futures: unrealised P&L
+                position_value += (price - pos.avg_cost) * pos.quantity * multiplier
+            else:
+                # Equity: full market value
+                position_value += price * pos.quantity
         return self.cash + position_value
 
     def has_position(self, symbol: str) -> bool:
