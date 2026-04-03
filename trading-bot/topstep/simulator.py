@@ -32,6 +32,9 @@ class TopstepEvalSimulator:
     state_machine_enabled:
         Whether the AttemptTracker should use the state machine for
         position/stop multipliers.
+    timeframe:
+        Bar timeframe for the BacktestEngine (``"1D"`` for daily,
+        ``"5m"`` / ``"1m"`` for intraday).
     """
 
     def __init__(
@@ -41,11 +44,13 @@ class TopstepEvalSimulator:
         instrument: str,
         config: TopstepConfig,
         state_machine_enabled: bool = True,
+        timeframe: str = "1D",
     ) -> None:
         self.strategy = strategy
         self.database = database
         self.instrument = instrument
         self.config = config
+        self.timeframe = timeframe
         self.tracker = AttemptTracker(config, state_machine_enabled=state_machine_enabled)
         self._cancel = threading.Event()
 
@@ -104,6 +109,7 @@ class TopstepEvalSimulator:
             broker=broker,
             contract_multipliers=contract_multipliers,
             force_flat_daily=self.config.force_flat_daily,
+            timeframe=self.timeframe,
         )
 
         # If a futures broker was injected, point its event bus at the

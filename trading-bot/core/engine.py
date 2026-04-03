@@ -94,12 +94,6 @@ class BacktestEngine:
         self.force_flat_daily = force_flat_daily
         self.timeframe = timeframe
 
-        if timeframe != "1D":
-            raise NotImplementedError(
-                f"Intraday timeframe '{timeframe}' not yet supported in "
-                "BacktestEngine. Coming soon -- requires intraday bar data."
-            )
-
         # --- Create components ---
         self.event_bus = EventBus()
         self.portfolio = Portfolio(
@@ -122,8 +116,8 @@ class BacktestEngine:
         # Current simulated date (set during main loop, used by _on_fill)
         self._current_date: date | None = None
 
-        # Pre-loaded bar data: symbol -> {date -> DailyBar}
-        self._bar_data: dict[str, dict[date, object]] = {}
+        # Pre-loaded bar data: symbol -> {date|datetime -> DailyBar|IntradayBar}
+        self._bar_data: dict[str, dict] = {}
 
     # ------------------------------------------------------------------
     # Public API
@@ -136,15 +130,24 @@ class BacktestEngine:
         # Load data from database
         self._load_data()
 
-        # Build sorted date list from available data
-        all_dates: set[date] = set()
+        # Build sorted key list from available data.
+        # For daily: keys are date objects; for intraday: keys are datetime objects.
+        all_keys: set = set()
         for symbol_bars in self._bar_data.values():
-            all_dates.update(symbol_bars.keys())
-        sorted_dates = sorted(
-            d for d in all_dates if self.start_date <= d <= self.end_date
-        )
+            all_keys.update(symbol_bars.keys())
 
-        if not sorted_dates:
+        if self.timeframe == "1D":
+            sorted_keys = sorted(
+                d for d in all_keys if self.start_date <= d <= self.end_date
+            )
+        else:
+            # Intraday: keys are datetimes, filter by date range
+            sorted_keys = sorted(
+                ts for ts in all_keys
+                if self.start_date <= (ts.date() if isinstance(ts, datetime) else ts) <= self.end_date
+            )
+
+        if not sorted_keys:
             # No data — return empty metrics gracefully
             return self._empty_metrics(run_id)
 
@@ -162,27 +165,29 @@ class BacktestEngine:
         current_prices: dict[str, float] = {}
 
         # ---- Main simulation loop ----
-        for i, current_date in enumerate(sorted_dates):
+        for i, key in enumerate(sorted_keys):
             if self.cancel_event and self.cancel_event.is_set():
                 break
 
-            self._current_date = current_date
+            # For intraday, key is datetime; for daily, key is date
+            cal_date = key.date() if isinstance(key, datetime) else key
+            self._current_date = cal_date
 
-            # Collect bars for all symbols on this date
+            # Collect bars for all symbols at this key
             bars: dict[str, BarEvent] = {}
             for symbol in self.universe:
-                bar_data = self._bar_data.get(symbol, {}).get(current_date)
+                bar_data = self._bar_data.get(symbol, {}).get(key)
                 if bar_data:
                     bar_event = BarEvent(
                         symbol=symbol,
-                        date=current_date,
+                        date=cal_date,
                         open=bar_data.open,
                         high=bar_data.high,
                         low=bar_data.low,
                         close=bar_data.close,
-                        adj_close=bar_data.adj_close,
+                        adj_close=getattr(bar_data, 'adj_close', bar_data.close),
                         volume=bar_data.volume,
-                        vwap=bar_data.vwap,
+                        vwap=getattr(bar_data, 'vwap', None),
                     )
                     bars[symbol] = bar_event
                     current_prices[symbol] = bar_data.close
@@ -200,9 +205,9 @@ class BacktestEngine:
             # Update benchmark
             benchmark_bar = self._bar_data.get(
                 self.benchmark_symbol, {}
-            ).get(current_date)
+            ).get(key)
             if benchmark_bar:
-                self.benchmark.update(current_date, benchmark_bar.close)
+                self.benchmark.update(cal_date, benchmark_bar.close)
 
             # Warm-up period: feed bars to strategy (for indicator priming)
             # but do NOT generate actionable signals
@@ -235,15 +240,28 @@ class BacktestEngine:
                     if order:
                         self.broker.submit_order(order)
 
-            # Record daily equity snapshot
-            self.portfolio.record_equity(current_date, current_prices)
+            # Determine if this is the last bar of the calendar day.
+            # For daily timeframe, every bar is the last bar of the day.
+            if self.timeframe == "1D":
+                is_last_bar_of_day = True
+            else:
+                if i + 1 >= len(sorted_keys):
+                    is_last_bar_of_day = True
+                else:
+                    next_key = sorted_keys[i + 1]
+                    next_cal_date = next_key.date() if isinstance(next_key, datetime) else next_key
+                    is_last_bar_of_day = next_cal_date != cal_date
 
-            # Force-close all positions at end of day when required (e.g.
-            # Topstep evaluation — must be flat overnight).  Closing orders
-            # are submitted and immediately processed against the bar's
-            # close price so the portfolio is flat before the next day.
-            if self.force_flat_daily:
-                self._force_close_all_positions(current_date, current_prices)
+            # Record equity snapshot and force-flat only at end of day
+            if is_last_bar_of_day:
+                self.portfolio.record_equity(cal_date, current_prices)
+
+                # Force-close all positions at end of day when required (e.g.
+                # Topstep evaluation — must be flat overnight).  Closing orders
+                # are submitted and immediately processed against the bar's
+                # close price so the portfolio is flat before the next day.
+                if self.force_flat_daily:
+                    self._force_close_all_positions(cal_date, current_prices)
 
         # ---- End of backtest ----
         self.strategy.on_end(self.portfolio)
@@ -251,9 +269,11 @@ class BacktestEngine:
         # Close any remaining open trades in the trade log
         for symbol in list(self.trade_log._open_trades.keys()):
             last_price = current_prices.get(symbol, 0)
+            last_key = sorted_keys[-1] if sorted_keys else self.end_date
+            last_date = last_key.date() if isinstance(last_key, datetime) else last_key
             self.trade_log.close_trade(
                 symbol,
-                sorted_dates[-1] if sorted_dates else self.end_date,
+                last_date,
                 last_price,
                 "End of backtest",
             )
@@ -339,6 +359,10 @@ class BacktestEngine:
 
     def _load_data(self) -> None:
         """Load all bar data from the database into memory."""
+        if self.timeframe != "1D":
+            self._load_intraday_data()
+            return
+
         symbols = list(self.universe)
         if self.benchmark_symbol not in symbols:
             symbols.append(self.benchmark_symbol)
@@ -348,6 +372,28 @@ class BacktestEngine:
                 symbol, self.start_date, self.end_date
             )
             self._bar_data[symbol] = {bar.date: bar for bar in bars}
+
+    def _load_intraday_data(self) -> None:
+        """Load intraday bar data from the database into memory."""
+        from datetime import time as dt_time
+
+        start_dt = datetime.combine(
+            self.start_date, dt_time.min, tzinfo=timezone.utc,
+        )
+        end_dt = datetime.combine(
+            self.end_date, dt_time(23, 59, 59), tzinfo=timezone.utc,
+        )
+
+        symbols = list(self.universe)
+        if self.benchmark_symbol not in symbols:
+            symbols.append(self.benchmark_symbol)
+
+        for symbol in symbols:
+            bars = self.database.get_intraday_bars(
+                symbol, start_dt, end_dt, self.timeframe,
+            )
+            # Key by timestamp (datetime) instead of date
+            self._bar_data[symbol] = {bar.timestamp: bar for bar in bars}
 
     def _on_fill(self, fill: FillEvent) -> None:
         """Handle fill events: update portfolio and trade log."""

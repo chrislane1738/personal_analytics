@@ -16,6 +16,7 @@ class CampaignResult:
     campaign_id: str
     strategy_name: str
     instrument: str
+    timeframe: str
     state_machine_enabled: bool
     num_attempts: int
     seed: int
@@ -71,6 +72,7 @@ class CampaignRunner:
         state_machine_enabled: bool = True,
         num_attempts: int = 1000,
         seed: int = 42,
+        timeframe: str = "1D",
     ) -> None:
         self.strategy_class = strategy_class
         self.instrument = instrument
@@ -79,16 +81,28 @@ class CampaignRunner:
         self.state_machine_enabled = state_machine_enabled
         self.num_attempts = num_attempts
         self.seed = seed
+        self.timeframe = timeframe
 
     def run(self) -> CampaignResult:
         """Execute all attempts and return aggregated results."""
         rng = random.Random(self.seed)
 
-        # Get available date range
-        date_range = self.database.get_cached_date_range(self.instrument)
-        if date_range == (None, None):
-            raise ValueError(f"No data for {self.instrument}")
-        min_date, max_date = date_range
+        # Get available date range — use the correct table for the timeframe
+        if self.timeframe == "1D":
+            date_range = self.database.get_cached_date_range(self.instrument)
+            if date_range == (None, None):
+                raise ValueError(f"No data for {self.instrument}")
+            min_date, max_date = date_range
+        else:
+            dt_range = self.database.get_intraday_cached_range(
+                self.instrument, self.timeframe,
+            )
+            if dt_range == (None, None):
+                raise ValueError(
+                    f"No intraday {self.timeframe} data for {self.instrument}"
+                )
+            min_date = dt_range[0].date()
+            max_date = dt_range[1].date()
 
         # Leave enough headroom so each attempt has data to run to completion
         headroom = timedelta(days=self.config.max_attempt_days * 2)
@@ -114,6 +128,7 @@ class CampaignRunner:
                 instrument=self.instrument,
                 config=self.config,
                 state_machine_enabled=self.state_machine_enabled,
+                timeframe=self.timeframe,
             )
             result = sim.run_attempt(start_date=start)
             outcomes.append(result)
@@ -161,6 +176,7 @@ class CampaignRunner:
             campaign_id=str(uuid.uuid4())[:8],
             strategy_name=self.strategy_class.__name__,
             instrument=self.instrument,
+            timeframe=self.timeframe,
             state_machine_enabled=self.state_machine_enabled,
             num_attempts=len(outcomes),
             seed=self.seed,
