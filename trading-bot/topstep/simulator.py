@@ -74,10 +74,17 @@ class TopstepEvalSimulator:
         broker = None
         contract_multipliers: dict[str, float] | None = None
         if spec is not None:
+            # Choose the correct position limit based on contract type.
+            if spec.contract_type == "micro":
+                max_pos = self.config.max_position_micros
+            else:
+                max_pos = self.config.max_position_minis
+
             broker = FuturesSimBroker(
                 event_bus=futures_bus,
                 contract_spec=spec,
                 slippage_pct=0.0001,
+                max_position=max_pos,
             )
             contract_multipliers = {self.instrument: spec.multiplier}
 

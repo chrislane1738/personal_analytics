@@ -28,6 +28,9 @@ class FuturesContractSpec:
         Approximate initial margin requirement per contract.
     commission:
         Per-contract, per-side commission (charged on each fill).
+    contract_type:
+        ``"mini"`` for E-mini contracts (ES, NQ) or ``"micro"`` for
+        Micro E-mini contracts (MES, MNQ).
     """
 
     symbol: str
@@ -36,6 +39,7 @@ class FuturesContractSpec:
     multiplier: float
     margin: float
     commission: float
+    contract_type: str = "mini"
 
 
 # Pre-built specs for commonly traded Topstep instruments.
@@ -47,6 +51,7 @@ FUTURES_SPECS: dict[str, FuturesContractSpec] = {
         multiplier=50.0,
         margin=12_980.0,
         commission=1.25,
+        contract_type="mini",
     ),
     "MES": FuturesContractSpec(
         symbol="MES",
@@ -55,6 +60,7 @@ FUTURES_SPECS: dict[str, FuturesContractSpec] = {
         multiplier=5.0,
         margin=1_298.0,
         commission=0.62,
+        contract_type="micro",
     ),
     "NQ": FuturesContractSpec(
         symbol="NQ",
@@ -63,6 +69,7 @@ FUTURES_SPECS: dict[str, FuturesContractSpec] = {
         multiplier=20.0,
         margin=18_700.0,
         commission=1.25,
+        contract_type="mini",
     ),
     "MNQ": FuturesContractSpec(
         symbol="MNQ",
@@ -71,5 +78,6 @@ FUTURES_SPECS: dict[str, FuturesContractSpec] = {
         multiplier=2.0,
         margin=1_870.0,
         commission=0.62,
+        contract_type="micro",
     ),
 }
