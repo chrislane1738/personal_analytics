@@ -103,6 +103,7 @@ class TopstepEvalSimulator:
             quiet=True,
             broker=broker,
             contract_multipliers=contract_multipliers,
+            force_flat_daily=self.config.force_flat_daily,
         )
 
         # If a futures broker was injected, point its event bus at the

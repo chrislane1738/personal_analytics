@@ -19,7 +19,7 @@ from analytics.metrics import compute_all_metrics
 from analytics.reports import ReportGenerator
 from analytics.trade_log import TradeLog
 from core.event_bus import EventBus
-from core.events import BarEvent, EventType, FillEvent, SignalEvent
+from core.events import BarEvent, EventType, FillEvent, OrderEvent, SignalEvent
 from data.storage.models import EquityCurvePoint, RunRecord, TradeRecord
 from execution.broker import Broker
 from execution.sim_broker import SimBroker
@@ -54,6 +54,10 @@ class BacktestEngine:
         Execution-cost parameters forwarded to the SimBroker.
     position_size_pct:
         Fraction of equity allocated per position.
+    force_flat_daily:
+        When ``True``, all open positions are force-closed at the end of
+        each trading day.  Used for Topstep evaluations where overnight
+        holding is prohibited.  Default ``False``.
     """
 
     def __init__(
@@ -74,6 +78,7 @@ class BacktestEngine:
         quiet: bool = False,
         broker: Broker | None = None,
         contract_multipliers: dict[str, float] | None = None,
+        force_flat_daily: bool = False,
     ) -> None:
         self.strategy = strategy
         self.database = database
@@ -85,6 +90,7 @@ class BacktestEngine:
         self.position_size_pct = position_size_pct
         self.cancel_event = cancel_event
         self.quiet = quiet
+        self.force_flat_daily = force_flat_daily
 
         # --- Create components ---
         self.event_bus = EventBus()
@@ -224,6 +230,13 @@ class BacktestEngine:
             # Record daily equity snapshot
             self.portfolio.record_equity(current_date, current_prices)
 
+            # Force-close all positions at end of day when required (e.g.
+            # Topstep evaluation — must be flat overnight).  Closing orders
+            # are submitted and immediately processed against the bar's
+            # close price so the portfolio is flat before the next day.
+            if self.force_flat_daily:
+                self._force_close_all_positions(current_date, current_prices)
+
         # ---- End of backtest ----
         self.strategy.on_end(self.portfolio)
 
@@ -271,6 +284,50 @@ class BacktestEngine:
     # ------------------------------------------------------------------
     # Private helpers
     # ------------------------------------------------------------------
+
+    def _force_close_all_positions(
+        self, current_date: date, current_prices: dict[str, float],
+    ) -> None:
+        """Force-close every open position at the bar's close price.
+
+        For each position held in the portfolio a market order is created
+        to fully flatten the position (SELL for longs, BUY for shorts).
+        The order is submitted to the broker and then immediately
+        processed against a synthetic bar where open=high=low=close so
+        the fill occurs at exactly the close price (plus any broker
+        slippage/commission).
+        """
+        positions = self.portfolio.get_positions()
+        if not positions:
+            return
+
+        for symbol, pos in positions.items():
+            qty = abs(pos.quantity)
+            if qty == 0:
+                continue
+
+            # Determine the correct closing action.
+            if pos.quantity > 0:
+                action = "SELL"
+            else:
+                action = "BUY"
+
+            order = OrderEvent(
+                symbol=symbol,
+                action=action,
+                order_type="market",
+                quantity=qty,
+            )
+            self.broker.submit_order(order)
+
+            # Process immediately against the close price.  Using a
+            # flat OHLC bar (open=high=low=close) ensures no extra
+            # slippage from bar range — only the broker's configured
+            # slippage applies.
+            close_price = current_prices.get(symbol, pos.avg_cost)
+            self.broker.process_bar(
+                symbol, close_price, close_price, close_price, close_price, 0,
+            )
 
     def _load_data(self) -> None:
         """Load all bar data from the database into memory."""

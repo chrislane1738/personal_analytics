@@ -32,6 +32,9 @@ class TopstepConfig:
     max_position_minis: int = 5
     max_position_micros: int = 50
     max_attempt_days: int = 60
+    flat_by_time: str = "15:10"       # CT (Central Time) — Topstep's deadline
+    session_close: str = "16:00"      # ET (Eastern Time) — market close
+    force_flat_daily: bool = True     # Force flat at end of each daily bar
 
 
 # Tier presets for common Topstep account sizes
