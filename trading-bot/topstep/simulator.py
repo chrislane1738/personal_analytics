@@ -1,13 +1,18 @@
 """Topstep evaluation simulator — wraps BacktestEngine to run a single attempt."""
 
 import threading
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from core.engine import BacktestEngine
 from core.event_bus import EventBus
 from execution.futures_sim_broker import FuturesSimBroker
-from topstep.attempt_tracker import AttemptTracker, AttemptStatus
-from topstep.config import TopstepConfig
+from topstep.attempt_tracker import (
+    AttemptTracker,
+    AttemptStatus,
+    FundedAttemptTracker,
+    FundedAttemptStatus,
+)
+from topstep.config import TopstepConfig, TradingMode
 from topstep.futures_specs import FUTURES_SPECS
 
 
@@ -51,10 +56,23 @@ class TopstepEvalSimulator:
         self.instrument = instrument
         self.config = config
         self.timeframe = timeframe
-        self.tracker = AttemptTracker(config, state_machine_enabled=state_machine_enabled)
+        self.state_machine_enabled = state_machine_enabled
         self._cancel = threading.Event()
 
     def run_attempt(self, start_date: date) -> dict:
+        """Execute a single attempt and return the tracker result.
+
+        Dispatches to the correct internal method based on ``config.mode``.
+        """
+        if self.config.mode == TradingMode.FUNDED:
+            return self._run_funded_attempt(start_date)
+        return self._run_eval_attempt(start_date)
+
+    # ------------------------------------------------------------------
+    # Eval-mode attempt (original logic, unchanged behaviour)
+    # ------------------------------------------------------------------
+
+    def _run_eval_attempt(self, start_date: date) -> dict:
         """Execute a single evaluation attempt and return the tracker result.
 
         The engine runs from ``start_date`` through a generous end date
@@ -67,19 +85,94 @@ class TopstepEvalSimulator:
         dict
             Serialised tracker state from ``AttemptTracker.to_dict()``.
         """
+        tracker = AttemptTracker(
+            self.config, state_machine_enabled=self.state_machine_enabled,
+        )
         end_date = start_date + timedelta(days=self.config.max_attempt_days * 2)
 
-        # Look up futures contract spec (if available) and create a
-        # futures-aware broker + multiplier map for the portfolio.
+        engine = self._build_engine(start_date, end_date)
+        engine.run()
+
+        equity_curve = engine.portfolio.equity_curve
+        if equity_curve:
+            prev_equity = self.config.account_size
+            for eq_date, equity in equity_curve:
+                day_pnl = equity - prev_equity
+                status = tracker.record_day(pnl=day_pnl, eod_balance=equity)
+                prev_equity = equity
+                if status != AttemptStatus.ACTIVE:
+                    break
+
+        return tracker.to_dict()
+
+    # ------------------------------------------------------------------
+    # Funded-mode attempt
+    # ------------------------------------------------------------------
+
+    def _run_funded_attempt(self, start_date: date) -> dict:
+        """Execute a single funded-mode attempt and return the tracker result.
+
+        Uses ``config.funded_sim_days`` to determine the simulation window,
+        funded-specific position sizing (``position_size_pct``,
+        ``max_contracts``), signal-strength sizing, and the daily-loss-limit
+        rule when configured.
+        """
+        tracker = FundedAttemptTracker(
+            self.config, state_machine_enabled=self.state_machine_enabled,
+        )
+        end_date = start_date + timedelta(days=int(self.config.funded_sim_days * 1.5))
+
+        engine = self._build_engine(
+            start_date,
+            end_date,
+            position_size_pct=self.config.position_size_pct,
+            daily_loss_limit=self.config.daily_loss_limit,
+            use_signal_strength_sizing=True,
+            max_contracts=self.config.max_contracts,
+        )
+        engine.run()
+
+        equity_curve = engine.portfolio.equity_curve
+        if equity_curve:
+            prev_equity = self.config.account_size
+            for eq_date, equity in equity_curve:
+                # Resolve calendar date for monthly bucketing
+                if isinstance(eq_date, datetime):
+                    cal_date = eq_date.date()
+                else:
+                    cal_date = eq_date
+
+                day_pnl = equity - prev_equity
+                status = tracker.record_day(
+                    pnl=day_pnl, eod_balance=equity, cal_date=cal_date,
+                )
+                prev_equity = equity
+                if status != FundedAttemptStatus.ACTIVE:
+                    break
+
+        return tracker.to_dict()
+
+    # ------------------------------------------------------------------
+    # Shared engine builder
+    # ------------------------------------------------------------------
+
+    def _build_engine(
+        self,
+        start_date: date,
+        end_date: date,
+        position_size_pct: float = 0.25,
+        daily_loss_limit: float = 0,
+        use_signal_strength_sizing: bool = False,
+        max_contracts: int = 0,
+    ) -> BacktestEngine:
+        """Construct a BacktestEngine with a futures broker when applicable."""
         spec = FUTURES_SPECS.get(self.instrument)
 
-        # Temporary bus for broker construction; replaced with engine's bus below.
         futures_bus = EventBus()
-
         broker = None
         contract_multipliers: dict[str, float] | None = None
+
         if spec is not None:
-            # Choose the correct position limit based on contract type.
             if spec.contract_type == "micro":
                 max_pos = self.config.max_position_micros
             else:
@@ -103,34 +196,19 @@ class TopstepEvalSimulator:
             benchmark_symbol=self.instrument,
             slippage_pct=0.0001,
             commission_per_share=0.005,
-            position_size_pct=0.25,  # Higher than equity default to ensure >= 1 contract for futures
+            position_size_pct=position_size_pct,
             cancel_event=self._cancel,
             quiet=True,
             broker=broker,
             contract_multipliers=contract_multipliers,
             force_flat_daily=self.config.force_flat_daily,
             timeframe=self.timeframe,
+            daily_loss_limit=daily_loss_limit,
+            use_signal_strength_sizing=use_signal_strength_sizing,
+            max_contracts=max_contracts,
         )
 
-        # If a futures broker was injected, point its event bus at the
-        # engine's bus so fills reach the portfolio and trade log.
         if broker is not None:
             broker.event_bus = engine.event_bus
 
-        engine.run()
-
-        # Process equity curve into daily P&L.
-        # engine.portfolio.equity_curve is a list of (date, equity) tuples
-        # recorded at the end of each trading day by the engine.
-        equity_curve = engine.portfolio.equity_curve
-
-        if equity_curve:
-            prev_equity = self.config.account_size
-            for eq_date, equity in equity_curve:
-                day_pnl = equity - prev_equity
-                status = self.tracker.record_day(pnl=day_pnl, eod_balance=equity)
-                prev_equity = equity
-                if status != AttemptStatus.ACTIVE:
-                    break
-
-        return self.tracker.to_dict()
+        return engine

@@ -1,12 +1,13 @@
 """Campaign runner — executes N independent evaluation attempts with random start dates."""
 
+import math
 import random
 import uuid
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 
 from data.storage.database import Database
-from topstep.config import TopstepConfig
+from topstep.config import TopstepConfig, TradingMode
 from topstep.simulator import TopstepEvalSimulator
 from topstep.state_manager import StateManager
 
@@ -36,6 +37,36 @@ class CampaignResult:
     days_distribution: list[int] = field(default_factory=list)
     state_usage: dict[str, float] = field(default_factory=dict)
     pass_by_regime: dict[str, float] = field(default_factory=dict)
+
+
+@dataclass
+class FundedCampaignResult:
+    """Aggregated metrics for a funded-mode simulation campaign."""
+
+    campaign_id: str
+    strategy_name: str
+    instrument: str
+    timeframe: str
+    state_machine_enabled: bool
+    num_attempts: int
+    seed: int
+    sim_months: int = 12
+
+    # Survival / income metrics
+    survival_rate: float = 0.0
+    avg_monthly_pnl: float = 0.0
+    median_monthly_pnl: float = 0.0
+    sharpe_ratio: float = 0.0
+    max_drawdown_median: float = 0.0
+    max_drawdown_95th: float = 0.0
+    avg_monthly_withdrawal: float = 0.0
+    expected_account_lifetime_months: float = 0.0
+    annual_expected_income: float = 0.0
+
+    # Distribution data
+    attempt_outcomes: list[dict] = field(default_factory=list)
+    monthly_pnl_distribution: list[float] = field(default_factory=list)
+    survival_curve: list[float] = field(default_factory=list)
 
 
 class CampaignRunner:
@@ -83,7 +114,7 @@ class CampaignRunner:
         self.seed = seed
         self.timeframe = timeframe
 
-    def run(self) -> CampaignResult:
+    def run(self) -> CampaignResult | FundedCampaignResult:
         """Execute all attempts and return aggregated results."""
         rng = random.Random(self.seed)
 
@@ -105,7 +136,11 @@ class CampaignRunner:
             max_date = dt_range[1].date()
 
         # Leave enough headroom so each attempt has data to run to completion
-        headroom = timedelta(days=self.config.max_attempt_days * 2)
+        if self.config.mode == TradingMode.FUNDED:
+            headroom_days = int(self.config.funded_sim_days * 1.5)
+        else:
+            headroom_days = self.config.max_attempt_days * 2
+        headroom = timedelta(days=headroom_days)
         latest_start = max_date - headroom
         if latest_start <= min_date:
             raise ValueError("Not enough data")
@@ -120,7 +155,9 @@ class CampaignRunner:
         for start in start_dates:
             strategy = self.strategy_class()
             if self.state_machine_enabled and hasattr(strategy, "_state_manager"):
-                strategy._state_manager = StateManager(enabled=True)
+                strategy._state_manager = StateManager(
+                    enabled=True, mode=self.config.mode,
+                )
 
             sim = TopstepEvalSimulator(
                 strategy=strategy,
@@ -133,6 +170,8 @@ class CampaignRunner:
             result = sim.run_attempt(start_date=start)
             outcomes.append(result)
 
+        if self.config.mode == TradingMode.FUNDED:
+            return self._aggregate_funded(outcomes)
         return self._aggregate(outcomes)
 
     def _aggregate(self, outcomes: list[dict]) -> CampaignResult:
@@ -192,4 +231,118 @@ class CampaignRunner:
             days_distribution=[o["days_traded"] for o in outcomes],
             state_usage=state_usage,
             pass_by_regime={},
+        )
+
+    def _aggregate_funded(self, outcomes: list[dict]) -> FundedCampaignResult:
+        """Aggregate raw funded-attempt outcomes into a FundedCampaignResult."""
+        if not outcomes:
+            return FundedCampaignResult(
+                campaign_id=str(uuid.uuid4())[:8],
+                strategy_name=self.strategy_class.__name__,
+                instrument=self.instrument,
+                timeframe=self.timeframe,
+                state_machine_enabled=self.state_machine_enabled,
+                num_attempts=0,
+                seed=self.seed,
+            )
+
+        survivors = [o for o in outcomes if o["status"] == "active"]
+        survival_rate = len(survivors) / len(outcomes)
+
+        # Collect all monthly PnLs across survivors
+        all_monthly: list[float] = []
+        for o in survivors:
+            all_monthly.extend(o.get("monthly_pnls", {}).values())
+
+        avg_monthly_pnl = (
+            sum(all_monthly) / len(all_monthly) if all_monthly else 0.0
+        )
+
+        # Median monthly PnL
+        if all_monthly:
+            sorted_monthly = sorted(all_monthly)
+            mid = len(sorted_monthly) // 2
+            if len(sorted_monthly) % 2 == 0:
+                median_monthly_pnl = (
+                    sorted_monthly[mid - 1] + sorted_monthly[mid]
+                ) / 2
+            else:
+                median_monthly_pnl = sorted_monthly[mid]
+        else:
+            median_monthly_pnl = 0.0
+
+        # Sharpe ratio (annualised from monthly)
+        if len(all_monthly) >= 2:
+            mean_m = sum(all_monthly) / len(all_monthly)
+            var_m = sum((x - mean_m) ** 2 for x in all_monthly) / (
+                len(all_monthly) - 1
+            )
+            std_m = math.sqrt(var_m) if var_m > 0 else 0.0
+            sharpe_ratio = (
+                (mean_m / std_m * math.sqrt(12)) if std_m > 0 else 0.0
+            )
+        else:
+            sharpe_ratio = 0.0
+
+        # Peak drawdown stats
+        drawdowns = [abs(o.get("peak_drawdown", 0.0)) for o in outcomes]
+        sorted_dd = sorted(drawdowns)
+        mid = len(sorted_dd) // 2
+        max_drawdown_median = sorted_dd[mid] if sorted_dd else 0.0
+        idx_95 = min(int(len(sorted_dd) * 0.95), len(sorted_dd) - 1)
+        max_drawdown_95th = sorted_dd[idx_95] if sorted_dd else 0.0
+
+        # Expected account lifetime (trading days -> months)
+        trading_days_per_month = 21.7
+        days_survived_list = [o.get("days_traded", 0) for o in outcomes]
+        expected_lifetime = (
+            sum(days_survived_list) / len(days_survived_list) / trading_days_per_month
+            if days_survived_list
+            else 0.0
+        )
+
+        # Monthly withdrawal = avg_monthly_pnl * payout_split (for survivors)
+        avg_monthly_withdrawal = avg_monthly_pnl * self.config.payout_split
+
+        # Annual expected income = avg_monthly_pnl * payout_split * 12 * survival_rate
+        annual_expected_income = (
+            avg_monthly_pnl * self.config.payout_split * 12 * survival_rate
+        )
+
+        # Survival curve: for each month 1..sim_months, fraction still alive
+        sim_months = self.config.funded_sim_days // 22 or 12
+        survival_curve: list[float] = []
+        for month in range(1, sim_months + 1):
+            min_days = int(month * trading_days_per_month)
+            alive = sum(
+                1 for o in outcomes if o.get("days_traded", 0) >= min_days
+            )
+            survival_curve.append(alive / len(outcomes))
+
+        # Monthly PnL distribution (all monthly values across all attempts)
+        all_monthly_all = []
+        for o in outcomes:
+            all_monthly_all.extend(o.get("monthly_pnls", {}).values())
+
+        return FundedCampaignResult(
+            campaign_id=str(uuid.uuid4())[:8],
+            strategy_name=self.strategy_class.__name__,
+            instrument=self.instrument,
+            timeframe=self.timeframe,
+            state_machine_enabled=self.state_machine_enabled,
+            num_attempts=len(outcomes),
+            seed=self.seed,
+            sim_months=sim_months,
+            survival_rate=survival_rate,
+            avg_monthly_pnl=avg_monthly_pnl,
+            median_monthly_pnl=median_monthly_pnl,
+            sharpe_ratio=sharpe_ratio,
+            max_drawdown_median=max_drawdown_median,
+            max_drawdown_95th=max_drawdown_95th,
+            avg_monthly_withdrawal=avg_monthly_withdrawal,
+            expected_account_lifetime_months=expected_lifetime,
+            annual_expected_income=annual_expected_income,
+            attempt_outcomes=outcomes,
+            monthly_pnl_distribution=all_monthly_all,
+            survival_curve=survival_curve,
         )
