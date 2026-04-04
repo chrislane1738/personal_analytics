@@ -228,7 +228,14 @@ class Database:
             annual_ev        REAL,
             timeframe        TEXT NOT NULL DEFAULT '1D',
             created_at       TIMESTAMP,
-            full_results     TEXT
+            full_results     TEXT,
+            mode             TEXT NOT NULL DEFAULT 'eval',
+            survival_rate    REAL,
+            avg_monthly_pnl  REAL,
+            sharpe_ratio     REAL,
+            max_drawdown_median REAL,
+            avg_monthly_withdrawal REAL,
+            annual_expected_income REAL
         );
 
         CREATE INDEX IF NOT EXISTS idx_eval_campaigns_strategy
@@ -247,6 +254,22 @@ class Database:
                 "ALTER TABLE eval_campaigns ADD COLUMN timeframe TEXT NOT NULL DEFAULT '1D'"
             )
             self._conn.commit()
+        # Funded-mode columns (Phase 9)
+        _funded_columns = {
+            "mode": "TEXT NOT NULL DEFAULT 'eval'",
+            "survival_rate": "REAL",
+            "avg_monthly_pnl": "REAL",
+            "sharpe_ratio": "REAL",
+            "max_drawdown_median": "REAL",
+            "avg_monthly_withdrawal": "REAL",
+            "annual_expected_income": "REAL",
+        }
+        for col_name, col_type in _funded_columns.items():
+            if col_name not in columns:
+                self._conn.execute(
+                    f"ALTER TABLE eval_campaigns ADD COLUMN {col_name} {col_type}"
+                )
+        self._conn.commit()
 
     # ------------------------------------------------------------------
     # Helpers
@@ -894,8 +917,10 @@ class Database:
             (campaign_id, strategy_name, instrument, state_machine,
              topstep_config, num_attempts, seed, pass_rate, ev_per_attempt,
              cost_to_funded, avg_days_to_pass, annual_ev, timeframe,
-             created_at, full_results)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             created_at, full_results, mode, survival_rate, avg_monthly_pnl,
+             sharpe_ratio, max_drawdown_median, avg_monthly_withdrawal,
+             annual_expected_income)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
         self._conn.execute(
             sql,
@@ -915,6 +940,13 @@ class Database:
                 record.timeframe,
                 record.created_at.isoformat() if record.created_at else None,
                 record.full_results,
+                record.mode,
+                record.survival_rate,
+                record.avg_monthly_pnl,
+                record.sharpe_ratio,
+                record.max_drawdown_median,
+                record.avg_monthly_withdrawal,
+                record.annual_expected_income,
             ),
         )
         self._conn.commit()
@@ -925,7 +957,9 @@ class Database:
         SELECT campaign_id, strategy_name, instrument, state_machine,
                topstep_config, num_attempts, seed, pass_rate, ev_per_attempt,
                cost_to_funded, avg_days_to_pass, annual_ev, timeframe,
-               created_at, full_results
+               created_at, full_results, mode, survival_rate, avg_monthly_pnl,
+               sharpe_ratio, max_drawdown_median, avg_monthly_withdrawal,
+               annual_expected_income
         FROM   eval_campaigns
         WHERE  campaign_id = ?
         """
@@ -948,6 +982,13 @@ class Database:
             timeframe=row["timeframe"] or "1D",
             created_at=self._to_datetime(row["created_at"]),
             full_results=row["full_results"] or "",
+            mode=row["mode"] or "eval",
+            survival_rate=row["survival_rate"],
+            avg_monthly_pnl=row["avg_monthly_pnl"],
+            sharpe_ratio=row["sharpe_ratio"],
+            max_drawdown_median=row["max_drawdown_median"],
+            avg_monthly_withdrawal=row["avg_monthly_withdrawal"],
+            annual_expected_income=row["annual_expected_income"],
         )
 
     _VALID_EVAL_SORT_COLUMNS = frozenset({
@@ -984,7 +1025,9 @@ class Database:
         SELECT campaign_id, strategy_name, instrument, state_machine,
                topstep_config, num_attempts, seed, pass_rate, ev_per_attempt,
                cost_to_funded, avg_days_to_pass, annual_ev, timeframe,
-               created_at, full_results
+               created_at, full_results, mode, survival_rate, avg_monthly_pnl,
+               sharpe_ratio, max_drawdown_median, avg_monthly_withdrawal,
+               annual_expected_income
         FROM   eval_campaigns
         """
         # sort is validated against _VALID_EVAL_SORT_COLUMNS whitelist above
@@ -1010,6 +1053,13 @@ class Database:
                 timeframe=row["timeframe"] or "1D",
                 created_at=self._to_datetime(row["created_at"]),
                 full_results=row["full_results"] or "",
+                mode=row["mode"] or "eval",
+                survival_rate=row["survival_rate"],
+                avg_monthly_pnl=row["avg_monthly_pnl"],
+                sharpe_ratio=row["sharpe_ratio"],
+                max_drawdown_median=row["max_drawdown_median"],
+                avg_monthly_withdrawal=row["avg_monthly_withdrawal"],
+                annual_expected_income=row["annual_expected_income"],
             )
             for row in rows
         ]

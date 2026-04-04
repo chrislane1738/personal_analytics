@@ -203,6 +203,7 @@ export interface Campaign {
   campaign_id: string;
   strategy_name: string;
   instrument: string;
+  timeframe: string;
   state_machine: boolean;
   num_attempts: number;
   pass_rate: number;
@@ -211,6 +212,13 @@ export interface Campaign {
   avg_days_to_pass: number;
   annual_ev: number;
   created_at: string | null;
+  mode: string;
+  survival_rate?: number | null;
+  avg_monthly_pnl?: number | null;
+  sharpe_ratio?: number | null;
+  max_drawdown_median?: number | null;
+  avg_monthly_withdrawal?: number | null;
+  annual_expected_income?: number | null;
 }
 
 /** Eval campaign detail with full results */
@@ -240,10 +248,12 @@ export interface CampaignListResponse {
 export interface CampaignRunRequest {
   strategy: string;
   instrument: string;
+  timeframe: string;
   state_machine_enabled: boolean;
   account_tier: string;
   num_attempts: number;
   seed: number;
+  mode: string;
 }
 
 /** Campaign run status response */

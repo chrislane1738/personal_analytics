@@ -307,6 +307,7 @@ class CampaignResponse(BaseModel):
     campaign_id: str
     strategy_name: str
     instrument: str
+    timeframe: str = "1D"
     state_machine: bool
     num_attempts: int
     pass_rate: float
@@ -315,6 +316,13 @@ class CampaignResponse(BaseModel):
     avg_days_to_pass: float
     annual_ev: float
     created_at: Optional[datetime] = None
+    mode: str = "eval"
+    survival_rate: Optional[float] = None
+    avg_monthly_pnl: Optional[float] = None
+    sharpe_ratio: Optional[float] = None
+    max_drawdown_median: Optional[float] = None
+    avg_monthly_withdrawal: Optional[float] = None
+    annual_expected_income: Optional[float] = None
 
 class CampaignListResponse(BaseModel):
     campaigns: list[CampaignResponse]
@@ -326,10 +334,12 @@ class CampaignDetailResponse(CampaignResponse):
 class CampaignRunRequest(BaseModel):
     strategy: str = "orb"
     instrument: str = "ES"
+    timeframe: str = "1D"
     state_machine_enabled: bool = True
     account_tier: str = "50k"
     num_attempts: int = 1000
     seed: int = 42
+    mode: str = "eval"
 
 class CampaignRunResponse(BaseModel):
     campaign_id: str

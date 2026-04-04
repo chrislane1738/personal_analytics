@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useCampaigns, useDeleteCampaign } from "@/hooks/use-eval";
 import { CampaignsTable } from "@/components/tables/campaigns-table";
 import { MetricsStrip } from "@/components/metrics-strip";
@@ -48,7 +48,7 @@ function passRateColorClass(value: number): string {
   return "text-[#ef4444]";
 }
 
-function buildKpiMetrics(campaigns: Campaign[]) {
+function buildEvalKpiMetrics(campaigns: Campaign[]) {
   if (campaigns.length === 0) return [];
 
   const bestPassRate = Math.max(...campaigns.map((c) => c.pass_rate));
@@ -91,13 +91,82 @@ function buildKpiMetrics(campaigns: Campaign[]) {
   ];
 }
 
+function buildFundedKpiMetrics(campaigns: Campaign[]) {
+  if (campaigns.length === 0) return [];
+
+  const bestSurvival = Math.max(
+    ...campaigns.map((c) => c.survival_rate ?? 0)
+  );
+  const bestMonthlyIncome = Math.max(
+    ...campaigns.map((c) => c.avg_monthly_pnl ?? 0)
+  );
+  const bestSharpe = Math.max(
+    ...campaigns.map((c) => c.sharpe_ratio ?? 0)
+  );
+  const avgDrawdown =
+    campaigns.reduce((sum, c) => sum + (c.max_drawdown_median ?? 0), 0) /
+    campaigns.length;
+  const bestAnnualIncome = Math.max(
+    ...campaigns.map((c) => c.annual_expected_income ?? 0)
+  );
+
+  return [
+    {
+      label: "Best Survival Rate",
+      value: `${(bestSurvival * 100).toFixed(1)}%`,
+      colorClass: passRateColorClass(bestSurvival),
+    },
+    {
+      label: "Best Monthly Income",
+      value: formatCurrency(bestMonthlyIncome),
+      colorClass: pnlColor(bestMonthlyIncome),
+    },
+    {
+      label: "Best Sharpe",
+      value: bestSharpe.toFixed(2),
+      colorClass: bestSharpe > 1 ? "text-[#22c55e]" : bestSharpe > 0.5 ? "text-[#eab308]" : "text-[#ef4444]",
+    },
+    {
+      label: "Avg Drawdown",
+      value: formatCurrency(avgDrawdown),
+    },
+    {
+      label: "Best Annual Income",
+      value: formatCurrency(bestAnnualIncome),
+      colorClass: pnlColor(bestAnnualIncome),
+    },
+    {
+      label: "Campaigns Run",
+      value: String(campaigns.length),
+    },
+  ];
+}
+
+type TabMode = "eval" | "funded";
+
 export default function EvalPage() {
+  const [activeTab, setActiveTab] = useState<TabMode>("eval");
   const { data, isLoading, error } = useCampaigns();
   const deleteCampaign = useDeleteCampaign();
 
-  const kpiMetrics = useMemo(
-    () => buildKpiMetrics(data?.campaigns ?? []),
+  const evalCampaigns = useMemo(
+    () => (data?.campaigns ?? []).filter((c) => (c.mode ?? "eval") === "eval"),
     [data]
+  );
+
+  const fundedCampaigns = useMemo(
+    () => (data?.campaigns ?? []).filter((c) => c.mode === "funded"),
+    [data]
+  );
+
+  const activeCampaigns = activeTab === "eval" ? evalCampaigns : fundedCampaigns;
+
+  const kpiMetrics = useMemo(
+    () =>
+      activeTab === "eval"
+        ? buildEvalKpiMetrics(activeCampaigns)
+        : buildFundedKpiMetrics(activeCampaigns),
+    [activeTab, activeCampaigns]
   );
 
   return (
@@ -108,13 +177,39 @@ export default function EvalPage() {
         </h1>
         {data && (
           <span className="text-sm text-zinc-500">
-            {data.total} {data.total === 1 ? "campaign" : "campaigns"}
+            {activeCampaigns.length} {activeCampaigns.length === 1 ? "campaign" : "campaigns"}
           </span>
         )}
       </div>
 
+      {/* Tabs */}
+      <div className="mb-4 flex gap-1 rounded-lg border border-zinc-800 bg-[#09090b] p-1 w-fit">
+        <button
+          type="button"
+          onClick={() => setActiveTab("eval")}
+          className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+            activeTab === "eval"
+              ? "bg-zinc-800 text-[#fafafa]"
+              : "text-zinc-500 hover:text-zinc-300"
+          }`}
+        >
+          Evaluation
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("funded")}
+          className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+            activeTab === "funded"
+              ? "bg-zinc-800 text-[#fafafa]"
+              : "text-zinc-500 hover:text-zinc-300"
+          }`}
+        >
+          Funded
+        </button>
+      </div>
+
       {/* KPI Metrics Strip */}
-      {data && data.campaigns.length > 0 && (
+      {activeCampaigns.length > 0 && (
         <div className="mb-4">
           <MetricsStrip metrics={kpiMetrics} />
         </div>
@@ -128,9 +223,20 @@ export default function EvalPage() {
         </p>
       )}
 
-      {data && (
+      {!isLoading && !error && activeCampaigns.length === 0 && (
+        <div className="flex h-40 items-center justify-center rounded-lg border border-[#1a1a1a] bg-[#0f0f0f]">
+          <p className="text-sm text-zinc-500">
+            {activeTab === "funded"
+              ? "No funded campaigns yet. Run a funded simulation to see results here."
+              : "No evaluation campaigns yet."}
+          </p>
+        </div>
+      )}
+
+      {activeCampaigns.length > 0 && (
         <CampaignsTable
-          data={data.campaigns}
+          data={activeCampaigns}
+          mode={activeTab}
           onDelete={(campaignId) => deleteCampaign.mutate(campaignId)}
         />
       )}

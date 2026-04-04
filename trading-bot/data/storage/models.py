@@ -144,3 +144,11 @@ class EvalCampaignRecord:
     timeframe: str = "1D"     # Bar timeframe: "1D", "5m", "1m", etc.
     created_at: Optional[datetime] = None
     full_results: str = ""    # JSON blob
+    # Funded-mode fields (default values preserve backward compat)
+    mode: str = "eval"
+    survival_rate: Optional[float] = None
+    avg_monthly_pnl: Optional[float] = None
+    sharpe_ratio: Optional[float] = None
+    max_drawdown_median: Optional[float] = None
+    avg_monthly_withdrawal: Optional[float] = None
+    annual_expected_income: Optional[float] = None
