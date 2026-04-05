@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
 import yfinance as yf
+import time
 from datetime import datetime, timedelta
 
 st.set_page_config(page_title="Portfolio Builder", layout="wide")
@@ -12,27 +13,72 @@ PORTFOLIO_VALUE = 100_000
 
 # --- Data Fetching (cached) ---
 
-@st.cache_data(ttl=3600)
-def fetch_ticker_info(ticker):
-    """Fetch live fundamental data for a single ticker."""
+def _resolve_price(tkr, info):
+    """Try multiple sources to get a price. Returns None only if all fail."""
+    price = info.get("regularMarketPrice") or info.get("previousClose")
+    if price:
+        return price
+    # Fallback 1: fast_info (separate Yahoo endpoint, often succeeds when .info is flaky)
     try:
-        t = yf.Ticker(ticker)
-        info = t.info
-        return {
-            "ticker": ticker,
-            "name": info.get("shortName") or info.get("longName") or ticker,
-            "price": info.get("regularMarketPrice") or info.get("previousClose"),
-            "pe": info.get("trailingPE"),
-            "forward_pe": info.get("forwardPE"),
-            "beta": info.get("beta"),
-            "div_yield": info.get("dividendYield"),
-            "debt_equity": info.get("debtToEquity"),
-            "sector": info.get("sector") or "N/A",
-            "country": info.get("country") or "Unknown",
-            "market_cap": info.get("marketCap") or 0,
-        }
+        fi = tkr.fast_info
+        price = fi.get("lastPrice") or fi.get("last_price") or fi.get("previousClose") or fi.get("previous_close")
+        if price:
+            return float(price)
     except Exception:
-        return None
+        pass
+    # Fallback 2: latest close from history
+    try:
+        hist = tkr.history(period="5d")
+        if not hist.empty:
+            return float(hist["Close"].iloc[-1])
+    except Exception:
+        pass
+    return None
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def fetch_ticker_info(ticker):
+    """Fetch live fundamental data for a single ticker.
+
+    Retries on transient failures. Raises on permanent failure so Streamlit
+    does NOT cache the failure (caching None would keep the ticker broken
+    for the full TTL window).
+    """
+    last_err = None
+    for attempt in range(3):
+        try:
+            t = yf.Ticker(ticker)
+            info = t.info or {}
+            price = _resolve_price(t, info)
+            if not price:
+                raise ValueError(f"no price data returned for {ticker}")
+            # Fallback for market cap via fast_info if .info didn't supply it
+            market_cap = info.get("marketCap") or 0
+            if not market_cap:
+                try:
+                    market_cap = t.fast_info.get("marketCap") or 0
+                except Exception:
+                    market_cap = 0
+            return {
+                "ticker": ticker,
+                "name": info.get("shortName") or info.get("longName") or ticker,
+                "price": price,
+                "pe": info.get("trailingPE"),
+                "forward_pe": info.get("forwardPE"),
+                "beta": info.get("beta"),
+                "div_yield": info.get("dividendYield"),
+                "debt_equity": info.get("debtToEquity"),
+                "sector": info.get("sector") or "N/A",
+                "country": info.get("country") or "Unknown",
+                "market_cap": market_cap,
+            }
+        except Exception as e:
+            last_err = e
+            # Exponential backoff: 0.5s, 1.0s between retries
+            if attempt < 2:
+                time.sleep(0.5 * (attempt + 1))
+    # All retries exhausted — raise so Streamlit does NOT cache this failure
+    raise RuntimeError(f"Failed to fetch {ticker} after 3 attempts: {last_err}")
 
 
 @st.cache_data(ttl=3600)
@@ -146,10 +192,14 @@ for i, holding in enumerate(st.session_state.holdings):
             st.session_state.holdings.pop(i)
             st.rerun()
 
-col_add, col_spacer = st.columns([1, 4])
+col_add, col_refresh, col_spacer = st.columns([1, 1, 3])
 with col_add:
     if st.button("+ Add Holding", use_container_width=True):
         st.session_state.holdings.append({"ticker": "", "weight": 0.0})
+        st.rerun()
+with col_refresh:
+    if st.button("Refresh Data", use_container_width=True, help="Clear cached market data and re-fetch"):
+        st.cache_data.clear()
         st.rerun()
 
 # Weight validation
@@ -172,18 +222,27 @@ if weights_valid and (valid_tickers or st.session_state.cash_weight > 0):
     ticker_data = {}
     errors = []
     for h in valid_tickers:
-        info = fetch_ticker_info(h["ticker"])
-        if info and info["price"]:
-            ticker_data[h["ticker"]] = info
-        else:
+        try:
+            info = fetch_ticker_info(h["ticker"])
+            if info and info["price"]:
+                ticker_data[h["ticker"]] = info
+            else:
+                errors.append(h["ticker"])
+        except Exception:
+            # Failure was NOT cached (exception escaped @st.cache_data),
+            # so a rerun will retry this ticker fresh.
             errors.append(h["ticker"])
 
     # Add cash if allocated
     if st.session_state.cash_weight > 0:
         ticker_data["CASH"] = CASH_INFO
 
-    for err in errors:
-        st.error(f"Could not fetch data for **{err}** — skipping.")
+    if errors:
+        err_list = ", ".join(f"**{e}**" for e in errors)
+        st.error(
+            f"Could not fetch data for {err_list}. "
+            "Yahoo Finance may be rate-limiting — click **Refresh Data** above to retry."
+        )
 
     if ticker_data:
         # Build weights map (only valid tickers)
