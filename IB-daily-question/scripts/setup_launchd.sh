@@ -11,9 +11,9 @@ for name in com.chrislane.ib-daily.send com.chrislane.ib-daily.listener; do
     sed "s#__REPO__#$REPO#g" "$SRC" > "$DST"
     echo "Installed $DST"
 
-    # Unload if loaded, then load
-    launchctl unload "$DST" 2>/dev/null || true
-    launchctl load "$DST"
+    # Unload if loaded, then load (modern bootstrap/bootout commands)
+    launchctl bootout "gui/$UID" "$DST" 2>/dev/null || true
+    launchctl bootstrap "gui/$UID" "$DST"
     echo "Loaded $name"
 done
 
@@ -22,5 +22,6 @@ echo "Both jobs installed. Verify with:"
 echo "  launchctl list | grep ib-daily"
 echo
 echo "To uninstall later:"
-echo "  launchctl unload $TARGET_DIR/com.chrislane.ib-daily.*.plist"
+echo "  launchctl bootout gui/\$UID $TARGET_DIR/com.chrislane.ib-daily.send.plist"
+echo "  launchctl bootout gui/\$UID $TARGET_DIR/com.chrislane.ib-daily.listener.plist"
 echo "  rm $TARGET_DIR/com.chrislane.ib-daily.*.plist"
