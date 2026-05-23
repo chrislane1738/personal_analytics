@@ -53,7 +53,7 @@ def handle_update(cfg, update: dict) -> None:
     except Exception:
         telegram_client.send_message(
             cfg.telegram_bot_token, cfg.telegram_chat_id,
-            "Grader hiccup — your transcript was saved. Please resend the voice in a minute.",
+            "Grader hiccup — please resend the voice in a minute.",
         )
         return
 
