@@ -1,19 +1,72 @@
 # IB Daily Question
 
-Daily Telegram bot that asks an investment banking interview question, transcribes your voice reply (Whisper), and grades it against a rubric (Claude Haiku).
+Daily Telegram bot that asks an investment banking interview question, transcribes your voice reply with OpenAI Whisper, and grades it against a per-question rubric with Claude Haiku.
 
-## Setup
+## How it works
 
-1. `python3.12 -m venv .venv && source .venv/bin/activate`
-2. `pip install -r requirements.txt`
-3. Copy `.env.example` to `.env` and fill in keys.
-4. `python -m scripts.bootstrap_rubrics` (one-time, ~5 min, generates `data/questions.json`).
-5. `./scripts/setup_launchd.sh` (installs both jobs).
+- **10:00 AM PT every day** — `launchd` triggers `send_question.py`, which picks a question (avoiding any asked in the last 30 days, rotating categories), and DMs it to you on Telegram.
+- **Anytime you reply with a voice message** — a 24/7 daemon (`listener.py`) downloads the audio, transcribes it with Whisper, grades it with Haiku against the question's rubric, and replies with a score (0–100), letter grade, what you nailed, what you missed, and overall feedback.
 
-## Manual test
+## One-time setup
 
-`python -m scripts.smoke_test`
+### 1. Create a Telegram bot
+1. Open Telegram, message [@BotFather](https://t.me/BotFather), send `/newbot`, follow prompts.
+2. Save the bot token.
+3. Search for your bot in Telegram and send it any message (e.g., `hi`) so it knows your chat.
+
+### 2. Get API keys
+- **OpenAI:** https://platform.openai.com/api-keys (for Whisper, ~$0.006/min)
+- **Anthropic:** https://console.anthropic.com/settings/keys (Haiku grader is cents/day; one-time Sonnet rubric bootstrap is ~$0.50)
+
+### 3. Install
+```bash
+cd IB-daily-question
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+# Edit .env: paste TELEGRAM_BOT_TOKEN, OPENAI_API_KEY, ANTHROPIC_API_KEY
+python -m scripts.get_chat_id     # prints your TELEGRAM_CHAT_ID — paste into .env
+```
+
+### 4. Generate the rubric bank (one-time, ~5 min)
+```bash
+python -m scripts.bootstrap_rubrics
+```
+Produces `data/questions.json` with rubrics for all ~60 questions from the source doc.
+
+### 5. Smoke test before scheduling
+```bash
+python -m scripts.smoke_test
+```
+Sends a question to your Telegram, waits for your voice reply, runs the full pipeline once, and prints the trace.
+
+### 6. Schedule with launchd
+```bash
+./scripts/setup_launchd.sh
+```
+Installs two jobs: a 10 AM daily sender and a 24/7 listener that auto-restarts on crash.
+
+Verify:
+```bash
+launchctl list | grep ib-daily
+```
+
+## Daily use
+
+Just answer the question in Telegram with a voice memo. You'll get graded within ~15 seconds.
+
+To re-answer the same question before the next morning, just send another voice message — the new grade overwrites the prior one.
+
+## Troubleshooting
+
+- **No question at 10 AM** — check `data/logs/send.err`. Most likely the laptop was asleep; macOS launchd does not fire missed `StartCalendarInterval` events on wake. Workaround: `caffeinate -i` overnight, or move the time to when the laptop is definitely awake.
+- **Voice reply not graded** — check `data/logs/listener.err`. Could be expired API key or network. The listener auto-restarts on crash; if it's stuck, `launchctl kickstart -k gui/$UID/com.chrislane.ib-daily.listener`.
+- **Want to skip today's question** — just don't reply. Tomorrow's will replace it.
 
 ## Files
 
-See `docs/superpowers/specs/2026-05-23-ib-daily-question-design.md`.
+- Spec: `docs/superpowers/specs/2026-05-23-ib-daily-question-design.md`
+- Plan: `docs/superpowers/plans/2026-05-23-ib-daily-question-plan.md`
+- Question bank: `data/questions.json` (committed)
+- State + history: `data/state.json` (gitignored — contains transcripts)
