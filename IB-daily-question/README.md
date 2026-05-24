@@ -64,7 +64,7 @@ To re-answer the same question before the next morning, just send another voice 
 
 ## Troubleshooting
 
-- **No question at 10 AM** — check `data/logs/send.err`. Most likely the laptop was asleep; macOS launchd does not fire missed `StartCalendarInterval` events on wake. Workaround: `caffeinate -i` overnight, or move the time to when the laptop is definitely awake.
+- **No question at 10 AM** — the laptop was probably asleep or off. The send job has catch-up ticks every hour from 10 AM to 8 PM local time, and `send_question.py` is idempotent (only the first tick of the day actually sends), so opening the laptop any time in that window will trigger today's question on the next hourly tick. If you missed the whole window, tomorrow's 10 AM tick fires fresh. Check `data/logs/send.err` if something else looks wrong.
 - **Voice reply not graded** — check `data/logs/listener.err`. Could be expired API key or network. The listener auto-restarts on crash; if it's stuck, `launchctl kickstart -k gui/$UID/com.chrislane.ib-daily.listener`.
 - **Want to skip today's question** — just don't reply. Tomorrow's will replace it.
 
@@ -77,5 +77,5 @@ To re-answer the same question before the next morning, just send another voice 
 
 ## Notes & limitations
 
-- **Send time is in your Mac's local timezone.** The launchd plist uses `Hour: 10, Minute: 0` against `StartCalendarInterval`, which fires in the system clock's timezone. If your Mac isn't set to PT, either change the system timezone or edit `Hour` in `launchd/com.chrislane.ib-daily.send.plist` and re-run `./scripts/setup_launchd.sh`.
+- **Send times are in your Mac's local timezone.** The launchd plist fires hourly from 10 AM to 8 PM against `StartCalendarInterval`, which fires in the system clock's timezone. The `IB_DAILY_TZ` env var in `.env` controls what "today" means for the idempotency check — set it to your local timezone if your Mac is set to anything other than `America/Los_Angeles`. To change the send window itself, edit the hours in `launchd/com.chrislane.ib-daily.send.plist` and re-run `./scripts/setup_launchd.sh`.
 - **On grader failure, your transcript is not persisted.** If Whisper or Claude fails mid-pipeline, you'll be asked to resend the voice message. The pending question stays open until a successful grade.

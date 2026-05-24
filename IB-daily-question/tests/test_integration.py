@@ -27,6 +27,7 @@ def _cfg(tmp_path: Path):
     cfg.anthropic_api_key  = "sk-ant-1"
     cfg.questions_path     = qp
     cfg.state_path         = sp
+    cfg.tz                 = "America/Los_Angeles"
     return cfg
 
 
