@@ -22,6 +22,8 @@ def test_config_loads_paths_and_models(monkeypatch, tmp_path):
 
 
 def test_config_raises_on_missing_required(monkeypatch):
+    # Bypass real .env file — it would otherwise repopulate the deleted var
+    monkeypatch.setattr("src.config.load_dotenv", lambda *a, **kw: None)
     monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
     from src import config
     import pytest
