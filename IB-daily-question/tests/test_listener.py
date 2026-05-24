@@ -166,9 +166,8 @@ def test_regrade_with_no_pending_marks_history_question_pending(
     })
 
     sent_text = mock_send.call_args[0][2]
-    assert "Regrading" in sent_text
-    assert "72/100" in sent_text  # prior grade surfaced
     assert "Walk through a DCF." in sent_text
+    assert "72/100" not in sent_text  # prior grade must NOT leak into regrade message
 
     s = state.load(sp)
     assert s["pending"]["question_id"] == "q1"
@@ -193,7 +192,7 @@ def test_regrade_with_pending_re_presents_without_state_change(
     })
 
     sent_text = mock_send.call_args[0][2]
-    assert "Re-presenting" in sent_text
+    assert "Walk through a DCF." in sent_text
 
     pending_after = state.load(sp)["pending"]
     assert pending_before == pending_after  # unchanged

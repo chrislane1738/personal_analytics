@@ -13,7 +13,7 @@ def handle_regrade(cfg) -> None:
     if pending is not None:
         telegram_client.send_message(
             cfg.telegram_bot_token, cfg.telegram_chat_id,
-            format_message.format_represent(pending),
+            format_message.format_question(pending),
         )
         return
 
@@ -27,7 +27,7 @@ def handle_regrade(cfg) -> None:
 
     msg_id = telegram_client.send_message(
         cfg.telegram_bot_token, cfg.telegram_chat_id,
-        format_message.format_regrade(prev),
+        format_message.format_question(prev),
     )
     bank.mark_pending(
         cfg.state_path,

@@ -12,27 +12,6 @@ def _bullets(items: list[str], empty_text: str) -> str:
     return "\n".join(f"  • {x}" for x in items)
 
 
-def format_regrade(prev: dict) -> str:
-    prior = prev.get("prior_grade") or {}
-    score, letter = prior.get("score"), prior.get("letter")
-    header = "*Regrading — let's try again*"
-    if score is not None and letter:
-        header += f" _(previous: {letter} {score}/100)_"
-    return (
-        f"{header} — _{prev['category']}_\n\n"
-        f"{prev['question']}\n\n"
-        f"_Reply with a voice message._"
-    )
-
-
-def format_represent(q: dict) -> str:
-    return (
-        f"*Re-presenting your current question* — _{q['category']}_\n\n"
-        f"{q['question']}\n\n"
-        f"_Reply with a voice message._"
-    )
-
-
 def format_result(grade: dict) -> str:
     return (
         f"*Grade: {grade['letter']} ({grade['score']}/100)*\n\n"
