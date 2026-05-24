@@ -38,3 +38,30 @@ def test_format_escapes_markdown_special_chars_in_transcript_safe_fields():
              "nailed": [], "missed": [], "feedback": "Mentioned * and _ and [link]"}
     out = fm.format_result(grade)
     assert "Mentioned" in out
+
+
+def test_format_regrade_includes_prior_score():
+    prev = {
+        "category": "DCF",
+        "question": "How do you calc WACC?",
+        "prior_grade": {"score": 72, "letter": "C-"},
+    }
+    out = fm.format_regrade(prev)
+    assert "Regrading" in out
+    assert "72/100" in out
+    assert "C-" in out
+    assert "How do you calc WACC?" in out
+
+
+def test_format_regrade_without_prior_grade():
+    prev = {"category": "DCF", "question": "Q?", "prior_grade": None}
+    out = fm.format_regrade(prev)
+    assert "Regrading" in out
+    assert "Q?" in out
+
+
+def test_format_represent_includes_question():
+    q = {"category": "DCF", "question": "Walk me through a DCF."}
+    out = fm.format_represent(q)
+    assert "Re-presenting" in out
+    assert "Walk me through a DCF." in out

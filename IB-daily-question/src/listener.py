@@ -5,15 +5,51 @@ import traceback
 from src import bank, config, format_message, grade, state, telegram_client, transcribe
 
 
+REGRADE_TRIGGERS = {"regrade", "/regrade"}
+
+
+def handle_regrade(cfg) -> None:
+    pending = bank.current_pending(cfg.questions_path, cfg.state_path)
+    if pending is not None:
+        telegram_client.send_message(
+            cfg.telegram_bot_token, cfg.telegram_chat_id,
+            format_message.format_represent(pending),
+        )
+        return
+
+    prev = bank.previous_answered(cfg.questions_path, cfg.state_path)
+    if prev is None:
+        telegram_client.send_message(
+            cfg.telegram_bot_token, cfg.telegram_chat_id,
+            "No previous question to regrade. Tomorrow's question drops at 10 AM.",
+        )
+        return
+
+    msg_id = telegram_client.send_message(
+        cfg.telegram_bot_token, cfg.telegram_chat_id,
+        format_message.format_regrade(prev),
+    )
+    bank.mark_pending(
+        cfg.state_path,
+        question_id=prev["question_id"],
+        telegram_message_id=msg_id,
+    )
+
+
 def handle_update(cfg, update: dict) -> None:
     msg = update.get("message") or {}
     voice = msg.get("voice")
 
     if voice is None:
+        text = (msg.get("text") or "").strip().lower()
+        if text in REGRADE_TRIGGERS:
+            handle_regrade(cfg)
+            return
         if "text" in msg:
             telegram_client.send_message(
                 cfg.telegram_bot_token, cfg.telegram_chat_id,
-                "Please answer with a voice message — record like you're talking to an interviewer.",
+                "Please answer with a voice message — record like you're talking to an interviewer.\n\n"
+                "_(Or send `regrade` to retry the previous question.)_",
             )
         return
 

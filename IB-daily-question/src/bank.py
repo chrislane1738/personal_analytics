@@ -84,6 +84,27 @@ def current_pending(questions_path: Path, state_path: Path) -> Optional[dict]:
     }
 
 
+def previous_answered(questions_path: Path, state_path: Path) -> Optional[dict]:
+    """Return the most recent answered question with its rubric and the prior grade.
+    None if history is empty or the question no longer exists in the bank."""
+    s = state.load(state_path)
+    history = s.get("history") or []
+    if not history:
+        return None
+    last = history[-1]
+    questions = _load_questions(questions_path)
+    q = next((q for q in questions if q["id"] == last["question_id"]), None)
+    if q is None:
+        return None
+    return {
+        "question_id": q["id"],
+        "question": q["question"],
+        "category": q["category"],
+        "rubric": q["rubric"],
+        "prior_grade": last.get("grade"),
+    }
+
+
 def record_response(state_path: Path, transcript: str, grade: dict) -> None:
     with state.mutate(state_path) as s:
         if not s.get("pending"):

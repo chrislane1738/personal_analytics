@@ -98,3 +98,26 @@ def test_record_response_clears_pending_and_appends_history(tmp_path):
     assert s["history"][0]["question_id"] == "q1"
     assert s["history"][0]["transcript"] == "hello"
     assert s["history"][0]["grade"] == grade
+
+
+def test_previous_answered_none_when_history_empty(tmp_path):
+    qp = make_questions(tmp_path)
+    sp = tmp_path / "state.json"
+    assert bank.previous_answered(qp, sp) is None
+
+
+def test_previous_answered_returns_last_with_prior_grade(tmp_path):
+    qp = make_questions(tmp_path)
+    sp = tmp_path / "state.json"
+    grade1 = {"score": 70, "letter": "C-", "nailed": [], "missed": [], "feedback": "x"}
+    grade2 = {"score": 88, "letter": "B+", "nailed": [], "missed": [], "feedback": "y"}
+    bank.mark_pending(sp, question_id="q1", telegram_message_id=1)
+    bank.record_response(sp, transcript="t1", grade=grade1)
+    bank.mark_pending(sp, question_id="q2", telegram_message_id=2)
+    bank.record_response(sp, transcript="t2", grade=grade2)
+
+    prev = bank.previous_answered(qp, sp)
+    assert prev["question_id"] == "q2"
+    assert prev["question"] == "How do you calc WACC?"
+    assert prev["prior_grade"] == grade2
+    assert "rubric" in prev

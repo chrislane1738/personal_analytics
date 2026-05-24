@@ -58,6 +58,10 @@ Just answer the question in Telegram with a voice memo. You'll get graded within
 
 To re-answer the same question before the next morning, just send another voice message — the new grade overwrites the prior one.
 
+**Regrade:** send the text `regrade` (or `/regrade`) at any time:
+- If a question is currently pending, the bot re-presents it (no state change).
+- If no pending question, the bot re-opens your most recent answered question — your reply appends a new graded entry to history so you can compare attempts.
+
 ## Troubleshooting
 
 - **No question at 10 AM** — check `data/logs/send.err`. Most likely the laptop was asleep; macOS launchd does not fire missed `StartCalendarInterval` events on wake. Workaround: `caffeinate -i` overnight, or move the time to when the laptop is definitely awake.
