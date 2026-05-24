@@ -1,0 +1,1576 @@
+[
+  {
+    "id": "q-56d963df",
+    "category": "The Absolute Fundamentals (Accounting & Enterprise Value)",
+    "difficulty": "fundamental",
+    "question": "How do the three major financial statements link together?",
+    "rubric": {
+      "must_hit": [
+        "Net income from the Income Statement flows into Retained Earnings on the Balance Sheet (via the equity section) and is the starting point for the Cash Flow Statement under the indirect method",
+        "Depreciation & Amortization is added back on the Cash Flow Statement (non-cash charge) and reduces PP&E on the Balance Sheet",
+        "Capital expenditures on the Cash Flow Statement (investing activities) increase PP&E on the Balance Sheet",
+        "The ending cash balance on the Cash Flow Statement equals the cash line on the Balance Sheet for the same period",
+        "Debt issuances/repayments on the Cash Flow Statement (financing activities) flow to the debt balance on the Balance Sheet"
+      ],
+      "good_to_hit": [
+        "Changes in working capital accounts (e.g., accounts receivable, inventory, accounts payable) link the Income Statement to the Balance Sheet and are captured in operating cash flows on the CFS",
+        "Dividends paid reduce Retained Earnings on the Balance Sheet and appear as a financing outflow on the Cash Flow Statement, demonstrating the equity reconciliation loop",
+        "The Balance Sheet must balance (Assets = Liabilities + Equity) after all linkages are applied, and the candidate explicitly checks this as a model integrity test",
+        "Interest expense on the Income Statement ties to the debt balance on the Balance Sheet, illustrating the circular linkage in a fully integrated model"
+      ],
+      "common_pitfalls": [
+        "Stating net income 'goes to' the Balance Sheet without specifying it flows through Retained Earnings within the Shareholders' Equity section",
+        "Forgetting that D&A must be added back on the CFS because it is a non-cash expense already deducted in arriving at net income",
+        "Confusing the direction of working capital changes (e.g., an increase in accounts receivable is a use of cash, not a source)",
+        "Describing the linkages only in one direction or missing that the Cash Flow Statement acts as the bridge that reconciles the Income Statement to the Balance Sheet"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-d6bbba5e",
+    "category": "The Absolute Fundamentals (Accounting & Enterprise Value)",
+    "difficulty": "fundamental",
+    "question": "Walk me through how a $10 increase in depreciation flows through the three financial statements.",
+    "rubric": {
+      "must_hit": [
+        "Income Statement: Depreciation expense increases by $10, reducing Pre-Tax Income (EBIT) by $10",
+        "Income Statement: Tax expense decreases by $10 \u00d7 tax rate (e.g., $3 at 30% rate), so Net Income falls by only $7 (after-tax impact)",
+        "Cash Flow Statement: Net Income is down $7, but depreciation is added back as a non-cash charge (+$10), resulting in net Cash from Operations increasing by $3",
+        "Balance Sheet: PP&E decreases by $10 (accumulated depreciation), and Cash increases by $3 (from tax shield), with Retained Earnings down $7, keeping the balance sheet balanced (Assets: net -$7 = Liabilities + Equity: -$7)"
+      ],
+      "good_to_hit": [
+        "Explicitly states depreciation is a non-cash charge, which is why it is added back on the CFS and why cash actually increases (tax shield benefit)",
+        "Notes the balance sheet must balance: Assets change by net -$7 (PP&E -$10, Cash +$3) equals Equity change of -$7 (Retained Earnings down $7)",
+        "Mentions that the exact after-tax figures depend on the assumed tax rate and offers to use a specific rate (e.g., 25% or 30%) for precision",
+        "Connects the concept to valuation: higher depreciation lowers taxable income but boosts FCF, which is why D&A is added back in DCF"
+      ],
+      "common_pitfalls": [
+        "Forgetting to apply the tax shield and saying Net Income falls by the full $10 rather than $7 (at 30% tax rate)",
+        "Saying Cash decreases because depreciation is an 'expense,' failing to recognize it as a non-cash item that is added back on the CFS",
+        "Incorrectly stating PP&E increases rather than decreases, or confusing accumulated depreciation with capital expenditures",
+        "Not walking through all three statements in a logical, sequential order (IS \u2192 CFS \u2192 BS), making the answer disorganized or incomplete"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-236b1631",
+    "category": "The Absolute Fundamentals (Accounting & Enterprise Value)",
+    "difficulty": "fundamental",
+    "question": "If you could only choose one financial statement to evaluate a company's financial health, which would it be and why?",
+    "rubric": {
+      "must_hit": [
+        "Candidate commits to a single financial statement with a clear, defensible choice (cash flow statement is the most defensible answer)",
+        "Explains that cash flow statement shows actual liquidity and cash generation, which cannot be manipulated by accrual accounting assumptions unlike net income on the income statement",
+        "Articulates why cash is the ultimate measure of financial health \u2014 a company can be profitable on paper but still go bankrupt if it cannot generate real cash",
+        "Identifies the three sections of the cash flow statement (operating, investing, financing) and notes operating cash flow as the core signal of business health"
+      ],
+      "good_to_hit": [
+        "Acknowledges the limitations of their chosen statement and briefly concedes what is missed (e.g., cash flow statement lacks profitability margins and balance sheet solvency context), showing intellectual honesty",
+        "Distinguishes between cash flow from operations and net income, specifically citing non-cash charges (depreciation, amortization, stock-based compensation) as a reason income statement can be misleading",
+        "Mentions that the balance sheet could be a strong alternative choice because it shows solvency, leverage, and liquidity (current ratio, debt levels) at a point in time, demonstrating awareness of other perspectives",
+        "References a real-world scenario where cash flow analysis is critical, e.g., distressed company analysis or early-stage companies burning cash"
+      ],
+      "common_pitfalls": [
+        "Choosing the income statement without adequately addressing how accrual accounting and non-cash items distort reported earnings relative to true cash generation",
+        "Giving a vague or wishy-washy answer such as 'it depends' or trying to hedge between all three statements without committing to and defending a single choice",
+        "Failing to explain the mechanism \u2014 i.e., saying 'cash flow statement is best' without explaining why cash beats accrual earnings as a health indicator",
+        "Confusing free cash flow (FCF = CFO minus capex) with total cash flow from operations, or misidentifying which section of the cash flow statement is most relevant"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-3514d940",
+    "category": "The Absolute Fundamentals (Accounting & Enterprise Value)",
+    "difficulty": "fundamental",
+    "question": "If you could choose two financial statements, which would they be and why?",
+    "rubric": {
+      "must_hit": [
+        "Selects Income Statement and Cash Flow Statement as the two chosen statements (or provides a defensible alternative pairing with clear rationale)",
+        "Explains that the Income Statement shows profitability and revenue generation over a period (top-line growth, margins, EBIT/EBITDA)",
+        "Explains that the Cash Flow Statement shows actual cash generation, distinguishing between accounting profit and real cash (e.g., removes non-cash charges like D&A, captures working capital changes and capex)",
+        "Articulates why the Balance Sheet is less critical if forced to choose two \u2014 it is a point-in-time snapshot and can be partially reconstructed from the other two statements"
+      ],
+      "good_to_hit": [
+        "Notes that Net Income from the Income Statement is the starting point for the Cash Flow Statement, demonstrating understanding of how the three statements link together",
+        "Mentions that Free Cash Flow (Operating Cash Flow minus Capex) is the primary driver of valuation in DCF analysis, reinforcing why the Cash Flow Statement is indispensable",
+        "Acknowledges the Balance Sheet can be partially derived by rolling forward beginning balances using the Income Statement and Cash Flow Statement, strengthening the case for omitting it"
+      ],
+      "common_pitfalls": [
+        "Choosing Income Statement and Balance Sheet without adequately explaining why cash flow visibility is less important \u2014 ignoring that earnings can be manipulated via accruals while cash is harder to fake",
+        "Failing to articulate any coherent reason for excluding the third statement, simply listing features of the two chosen statements without comparative logic",
+        "Confusing the Cash Flow Statement with a simple cash balance (i.e., treating it as a snapshot rather than a period-based operating/investing/financing activity breakdown)",
+        "Giving an overly generic answer (e.g., 'they show how the company is doing') without referencing specific line items or analytical use cases like margins, EBITDA, or FCF"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-79f85ea7",
+    "category": "The Absolute Fundamentals (Accounting & Enterprise Value)",
+    "difficulty": "fundamental",
+    "question": "What is the difference between Enterprise Value and Equity Value?",
+    "rubric": {
+      "must_hit": [
+        "Enterprise Value represents the total value of the firm available to ALL capital providers (debt holders, equity holders, preferred stockholders, minority interest, etc.), while Equity Value represents only the residual value belonging to common equity shareholders",
+        "Bridge formula: Equity Value = Enterprise Value \u2212 Net Debt (where Net Debt = Total Debt + Preferred Stock + Minority Interest \u2212 Cash & Cash Equivalents)",
+        "Enterprise Value is capital-structure neutral (unaffected by how a company finances itself), making it useful for comparing companies with different leverage profiles",
+        "Equity Value is the market capitalization for public companies (share price \u00d7 diluted shares outstanding)"
+      ],
+      "good_to_hit": [
+        "Explain which metrics pair with each value: EV-based multiples use EBIT, EBITDA, Revenue (pre-debt metrics); Equity Value multiples use Net Income, EPS (post-debt, post-interest metrics) \u2014 mixing them creates an apples-to-oranges error",
+        "Clarify why cash is subtracted in the EV bridge: an acquirer gains the target's cash, effectively reducing the true net cost of acquisition",
+        "Mention that in an M&A context, Enterprise Value approximates the total acquisition cost (purchase price of equity + assumed net debt), which is why it is the standard deal metric"
+      ],
+      "common_pitfalls": [
+        "Forgetting to include non-debt claims such as Preferred Stock, Minority Interest, or capital lease obligations when building Enterprise Value from Equity Value",
+        "Confusing which multiples pair with EV vs. Equity Value (e.g., EV/Net Income or Price/EBITDA are conceptually incorrect because the numerator and denominator belong to different stakeholder groups)",
+        "Stating that Enterprise Value is simply 'market cap plus debt' without subtracting cash, or omitting that it is net debt",
+        "Treating Enterprise Value and Equity Value as interchangeable or failing to articulate why EV is preferred for cross-company comparisons when capital structures differ"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-18a8ac76",
+    "category": "The Absolute Fundamentals (Accounting & Enterprise Value)",
+    "difficulty": "fundamental",
+    "question": "What is the formula for Enterprise Value?",
+    "rubric": {
+      "must_hit": [
+        "States core formula: EV = Market Capitalization + Total Debt \u2212 Cash & Cash Equivalents",
+        "Explains that EV represents the total value of the firm available to ALL capital providers (debt and equity holders)",
+        "Explains why cash is subtracted: an acquirer receives the target's cash, effectively reducing the net cost of acquisition",
+        "Explains why debt is added: an acquirer assumes the target's debt, increasing the true cost of acquisition"
+      ],
+      "good_to_hit": [
+        "Mentions additional components that refine the formula: preferred stock added, minority interest added, and operating leases potentially included depending on context",
+        "Contrasts EV (capital-structure-neutral) with equity value (market cap), noting EV is used with unlevered metrics like EBITDA and EBIT while equity value pairs with levered metrics like net income and EPS",
+        "Notes that 'cash' typically means excess/non-operating cash, and that restricted cash or cash needed for operations may not be subtracted",
+        "Mentions that EV is the theoretical takeover price in an M&A context \u2014 the price a buyer would pay to acquire 100% of the business on a debt-free, cash-free basis"
+      ],
+      "common_pitfalls": [
+        "Forgetting to subtract cash (stating EV = Market Cap + Debt only), or not being able to explain the economic rationale for subtracting cash",
+        "Omitting preferred stock and minority interest from the formula when pressed for a complete version",
+        "Confusing equity value with enterprise value and using them interchangeably without acknowledging the distinction",
+        "Inability to explain why EV is useful \u2014 e.g., why EBITDA multiples use EV rather than market cap"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-c281904c",
+    "category": "The Absolute Fundamentals (Accounting & Enterprise Value)",
+    "difficulty": "fundamental",
+    "question": "How do you calculate fully diluted shares outstanding?",
+    "rubric": {
+      "must_hit": [
+        "Start with basic shares outstanding (common shares currently issued)",
+        "Add in-the-money options and warrants using the Treasury Stock Method (TSM): proceeds received (strike price \u00d7 options) divided by current share price to determine shares repurchased, then net the dilutive shares added",
+        "Add convertible securities (convertible debt and convertible preferred) if they are in-the-money, converting them at their stated conversion ratio",
+        "Only include dilutive instruments (those that increase share count), exclude anti-dilutive ones (out-of-the-money options/warrants where strike > current price)"
+      ],
+      "good_to_hit": [
+        "Explain TSM mechanics precisely: dilutive shares added = total options granted minus (strike price \u00d7 options / current share price), effectively netting out shares the company could repurchase with option proceeds",
+        "Mention restricted stock units (RSUs) and unvested restricted shares \u2014 typically added at face value (no strike price, so no TSM adjustment needed)",
+        "Note that in an M&A context the current share price used is typically the offer price, not the market price, which can change which instruments are in-the-money"
+      ],
+      "common_pitfalls": [
+        "Forgetting TSM and simply adding all options/warrants outstanding without netting out shares repurchasable with proceeds",
+        "Including out-of-the-money options or warrants (anti-dilutive securities) that should be excluded",
+        "Conflating basic shares outstanding with fully diluted shares, or forgetting convertible instruments entirely",
+        "Applying TSM to RSUs/restricted stock \u2014 these have no strike price and should be added at full face value, not netted"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-56285a35",
+    "category": "The Absolute Fundamentals (Accounting & Enterprise Value)",
+    "difficulty": "fundamental",
+    "question": "Why do we look at both Enterprise Value and Equity Value?",
+    "rubric": {
+      "must_hit": [
+        "Enterprise Value represents the value of the entire business to ALL capital providers (debt holders, equity holders, preferred stockholders, minority interest), while Equity Value represents only the residual value belonging to common shareholders",
+        "EV is capital-structure-neutral and allows apples-to-apples comparison across companies with different debt levels, whereas Equity Value is affected by leverage",
+        "EV is used with unlevered/pre-debt metrics like EBIT, EBITDA, and Revenue (EV/EBITDA, EV/EBIT, EV/Revenue), while Equity Value is used with post-debt, equity-level metrics like Net Income and EPS (P/E ratio)",
+        "The two serve different analytical purposes: EV is used to value the operating business and facilitate M&A deal pricing, while Equity Value is used to assess what shareholders own and determine share price"
+      ],
+      "good_to_hit": [
+        "Concrete bridge formula: Equity Value = Enterprise Value \u2212 Total Debt \u2212 Preferred Stock \u2212 Minority Interest + Cash, demonstrating the mechanical link between the two",
+        "In an M&A context, an acquirer pays Enterprise Value (assumes the debt and buys the equity), making EV the operative transaction metric, while Equity Value determines the purchase price paid to shareholders",
+        "Mentions that looking at both allows a fuller picture \u2014 EV for operational performance comparison and Equity Value for per-share intrinsic value and equity return analysis"
+      ],
+      "common_pitfalls": [
+        "Confusing which metrics pair with each value \u2014 e.g., incorrectly using P/E with Enterprise Value or EV/EBITDA with Equity Value",
+        "Defining Equity Value simply as 'market cap' without explaining why it differs from EV or what it represents economically (residual claim after debt)",
+        "Failing to mention that EV neutralizes capital structure differences, which is the core reason it enables cross-company comparisons",
+        "Treating the two concepts as interchangeable or as if one is just a 'more complete' version of the other, rather than explaining they answer different analytical questions"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-7e465e6d",
+    "category": "The Absolute Fundamentals (Accounting & Enterprise Value)",
+    "difficulty": "fundamental",
+    "question": "Can a company have a negative Enterprise Value? What would that mean?",
+    "rubric": {
+      "must_hit": [
+        "Enterprise Value formula: EV = Market Cap + Total Debt + Preferred Stock + Minority Interest \u2013 Cash & Cash Equivalents",
+        "Negative EV occurs when cash & equivalents exceed market cap plus all debt and debt-like items (i.e., the cash subtraction dominates)",
+        "Practical interpretation: the market is implying you could theoretically buy the entire company and still net cash after paying off all obligations \u2014 you are being 'paid to own' the business",
+        "Negative EV signals severe market skepticism about future cash flows, potential hidden liabilities, distress risk, or structural cash burn that erodes the cash hoard"
+      ],
+      "good_to_hit": [
+        "Real-world examples or sectors where this appears: deep-value/net-net stocks, Japanese small-caps holding excess cash, distressed micro-caps, or shell companies post-liquidation",
+        "Distinction between a technically negative EV and a *meaningfully* negative EV \u2014 small negative values may reflect measurement noise, stale prices, or off-balance-sheet liabilities not captured in the formula",
+        "Negative EV makes standard EV/EBITDA and EV/EBIT multiples meaningless or negative, complicating relative valuation",
+        "Connection to Benjamin Graham's 'net-net' concept where NCAV (net current asset value) exceeds market cap as a related but distinct screen"
+      ],
+      "common_pitfalls": [
+        "Forgetting that cash is subtracted in the EV bridge and instead treating negative EV as simply a 'low market cap' situation",
+        "Concluding negative EV is always a buying opportunity without acknowledging why the market may be right (e.g., ongoing cash burn, litigation, fraud risk)",
+        "Confusing negative book value (negative equity) with negative enterprise value \u2014 these are entirely different concepts",
+        "Omitting debt-like items (preferred stock, minority interest, operating lease obligations) from the EV build, leading to an incomplete answer"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-c718977b",
+    "category": "The Absolute Fundamentals (Accounting & Enterprise Value)",
+    "difficulty": "fundamental",
+    "question": "What happens to Enterprise Value if a company issues $100 in debt to buy $100 in cash?",
+    "rubric": {
+      "must_hit": [
+        "Enterprise Value remains unchanged (EV stays the same)",
+        "EV = Equity Value + Debt + Preferred + Minority Interest \u2013 Cash; the +$100 in debt and +$100 in cash offset exactly, netting to zero change",
+        "Cash is subtracted in the EV formula because it is a non-operating asset that could theoretically be used to pay down debt or return to equity holders, making it a liability-like offset"
+      ],
+      "good_to_hit": [
+        "Clarifies that EV represents the value of the core operating business, so purely financial/balance sheet transactions that don't affect operations leave EV unchanged",
+        "Extends the intuition: if the cash were deployed into an operating asset (e.g., capex or an acquisition), EV could change because operating assets are not subtracted in the EV bridge",
+        "Mentions that immediately after issuance, Equity Value is also unchanged because the increase in assets ($100 cash) is exactly offset by the increase in liabilities ($100 debt), leaving book equity and market cap unaffected"
+      ],
+      "common_pitfalls": [
+        "Saying EV increases by $100 because debt increased, while forgetting to subtract the equal increase in cash",
+        "Confusing the direction of cash in the EV formula \u2014 treating cash as added to EV rather than subtracted",
+        "Conflating Equity Value with Enterprise Value and claiming equity value changes when it does not in this transaction",
+        "Failing to articulate why cash is subtracted in the EV formula, showing a rote rather than conceptual understanding"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-cec44912",
+    "category": "Core Valuation & DCF",
+    "difficulty": "fundamental",
+    "question": "Walk me through a Discounted Cash Flow (DCF) model.",
+    "rubric": {
+      "must_hit": [
+        "Project unlevered free cash flows (EBIT \u00d7 (1\u2212t) + D&A \u2212 CapEx \u2212 \u0394NWC) over a discrete forecast period, typically 5\u201310 years",
+        "Calculate terminal value using either Gordon Growth Model (FCF_{n+1} / (WACC \u2212 g)) or an exit multiple (EV/EBITDA \u00d7 terminal year EBITDA), and justify the choice",
+        "Discount all cash flows and terminal value back to present using WACC as the discount rate, applying the formula: PV = CF / (1 + WACC)^t",
+        "Derive WACC as the weighted blend of cost of equity (via CAPM: Rf + \u03b2 \u00d7 ERP) and after-tax cost of debt: (E/V)\u00b7Re + (D/V)\u00b7Rd\u00b7(1\u2212t), using market-value weights",
+        "Bridge from Enterprise Value to Equity Value by subtracting net debt (total debt minus cash), then divide by diluted shares outstanding to get implied share price"
+      ],
+      "good_to_hit": [
+        "Note that the terminal value typically represents 60\u201380% of total DCF value, so TV assumptions (growth rate vs. WACC spread, exit multiple selection) are the most sensitive inputs",
+        "Mention sensitivity/scenario analysis on key drivers such as WACC (\u00b150\u2013100 bps) and terminal growth rate (\u00b10.5%) to stress-test the implied valuation range",
+        "Distinguish between unlevered FCF (used with WACC to get EV) and levered FCF (used with cost of equity to get equity value directly), and explain why unlevered is standard",
+        "Address mid-year convention as a refinement: discounting as if cash flows arrive mid-period rather than year-end, which increases PV modestly and is more realistic"
+      ],
+      "common_pitfalls": [
+        "Confusing levered and unlevered free cash flow \u2014 adding back interest expense or including debt repayments in the FCF build when projecting unlevered FCFs",
+        "Using cost of equity instead of WACC as the discount rate for unlevered FCFs, or applying WACC to levered FCFs \u2014 mixing up the capital structure treatment",
+        "Assuming a terminal growth rate at or above the long-run GDP/inflation rate without justification, or setting g \u2265 WACC, which produces a nonsensical or negative terminal value",
+        "Forgetting to add back non-cash charges (D&A) or neglecting the change in net working capital, resulting in an incorrect free cash flow figure"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-2c190627",
+    "category": "Core Valuation & DCF",
+    "difficulty": "fundamental",
+    "question": "What are the three main valuation methodologies?",
+    "rubric": {
+      "must_hit": [
+        "Names all three methodologies: Comparable Company Analysis (Public Comps / Trading Comps), Precedent Transaction Analysis (Deal Comps), and Discounted Cash Flow (DCF)",
+        "Correctly describes DCF as an intrinsic/fundamental valuation based on projecting future free cash flows and discounting them back at WACC (or appropriate discount rate)",
+        "Correctly describes Comparable Company Analysis as a market-based relative valuation using trading multiples (e.g., EV/EBITDA, P/E) of publicly traded peers",
+        "Correctly describes Precedent Transaction Analysis as a relative valuation using multiples paid in prior M&A transactions for similar companies, which typically includes a control premium"
+      ],
+      "good_to_hit": [
+        "Explains that precedent transactions typically yield higher multiples than trading comps due to the control premium embedded in M&A deal prices",
+        "Mentions the concept of a 'football field' chart to present the valuation ranges from all three methodologies side by side",
+        "Notes that DCF is most sensitive to assumptions (terminal growth rate, WACC) and can be disconnected from current market sentiment, making it both a strength and a weakness",
+        "Identifies that trading comps reflect minority, non-control interest pricing while precedent transactions reflect a control value"
+      ],
+      "common_pitfalls": [
+        "Confusing Precedent Transactions with Trading Comps \u2014 failing to distinguish that precedent transactions use M&A deal multiples (with control premium) vs. current public market trading multiples",
+        "Describing DCF without mentioning discounting cash flows back to present value or omitting the role of WACC as the discount rate",
+        "Listing only two of the three methodologies or substituting an alternative method (e.g., LBO analysis) as one of the 'three main' methodologies",
+        "Giving only names without any description of the underlying mechanics or logic of each methodology"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-2c578515",
+    "category": "Core Valuation & DCF",
+    "difficulty": "fundamental",
+    "question": "Rank the three main valuation methodologies from highest to lowest expected value, and explain your reasoning.",
+    "rubric": {
+      "must_hit": [
+        "Identifies the three main methodologies as DCF, Comparable Company Analysis (Comps/Trading Multiples), and Precedent Transactions (Deal Multiples)",
+        "States the standard ranking: Precedent Transactions highest, DCF middle, Comparable Companies lowest \u2014 OR acknowledges this is the most common ordering with clear justification",
+        "Explains that Precedent Transactions include a control premium (typically 20-40%) paid by acquirers, which inflates transaction multiples above trading multiples",
+        "Explains that Comparable Companies reflect minority, liquid market pricing with no control premium, anchoring the lower end of the range",
+        "Explains that DCF is intrinsic/standalone value and falls in the middle because it captures future cash flow potential without a control premium but is sensitive to assumptions"
+      ],
+      "good_to_hit": [
+        "Notes that the ranking can vary by market conditions (e.g., bull markets may push trading comps above DCF; sparse M&A data may make precedent transactions unreliable)",
+        "Mentions that DCF can produce the highest value if aggressive growth assumptions are used, and lowest if conservative \u2014 highlighting its assumption-sensitivity as a double-edged trait",
+        "References the football field chart as the standard visual output that captures the overlapping ranges of all three methodologies",
+        "Distinguishes between minority discount in public comps vs. control premium in precedents, using the terms precisely"
+      ],
+      "common_pitfalls": [
+        "Stating the ranking as absolute fact without acknowledging context-dependency or that ranges from each method often overlap",
+        "Confusing which methodology includes the control premium \u2014 e.g., incorrectly attributing the control premium to DCF or stating comps already include it",
+        "Failing to explain the 'why' behind the ranking and only reciting the order without the underlying economic reasoning",
+        "Omitting DCF entirely or conflating it with one of the market-based approaches rather than identifying it as the intrinsic value methodology"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-b30101f1",
+    "category": "Core Valuation & DCF",
+    "difficulty": "fundamental",
+    "question": "What are the pros and cons of using a DCF versus relative valuation (multiples)?",
+    "rubric": {
+      "must_hit": [
+        "DCF is intrinsic/fundamental valuation based on projected free cash flows and a discount rate (WACC or cost of equity), making it independent of market pricing",
+        "Multiples-based (relative) valuation anchors to current market prices of comparable companies or transactions, so it inherently reflects prevailing market sentiment and conditions",
+        "Key DCF con: highly sensitive to assumptions \u2014 small changes in terminal growth rate, WACC, or FCF projections can dramatically swing the implied value (garbage-in, garbage-out)",
+        "Key multiples con: requires truly comparable peers; distorted if comps are mispriced, in different growth stages, or have different capital structures/accounting treatments",
+        "DCF pro: not anchored to potentially overvalued or undervalued market; useful when markets are broadly mispriced or for companies with no direct comps",
+        "Multiples pro: quick, market-grounded, and easy to communicate to clients; reflects what an actual buyer would pay in the current market"
+      ],
+      "good_to_hit": [
+        "Distinguishes between trading comps (public market multiples like EV/EBITDA, P/E) and transaction comps (precedent deal multiples including control premium) as two flavors of relative valuation",
+        "Notes that in practice bankers use a 'football field' valuation range combining DCF, trading comps, and transaction comps to triangulate value rather than relying on any single method",
+        "DCF is particularly suited for companies with stable, predictable cash flows (utilities, mature industrials) and less reliable for early-stage, high-growth, or unprofitable companies",
+        "Mentions that terminal value often represents 60\u201380%+ of DCF value, which concentrates model risk in the most speculative component"
+      ],
+      "common_pitfalls": [
+        "Stating DCF is 'more accurate' or 'better' without nuance \u2014 both methods have material limitations and neither is universally superior",
+        "Failing to mention the sensitivity/assumption-dependence of DCF, which is the central weakness interviewers expect candidates to flag",
+        "Conflating trading comps and precedent transaction comps, or omitting that transaction multiples typically include a control premium making them higher than trading comps",
+        "Giving a one-sided answer (only pros of DCF or only cons of multiples) without providing a balanced comparison of both methodologies"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-d3e6fd28",
+    "category": "Core Valuation & DCF",
+    "difficulty": "fundamental",
+    "question": "How do you calculate Unlevered Free Cash Flow (Free Cash Flow to Firm)?",
+    "rubric": {
+      "must_hit": [
+        "Start from EBIT (or EBITDA) and apply tax at the marginal/effective rate to get NOPAT (EBIT \u00d7 (1 \u2212 t)), NOT net income, to strip out the effect of interest tax shield",
+        "Add back D&A (non-cash charge) to NOPAT",
+        "Subtract capital expenditures (CapEx) as a cash outflow",
+        "Subtract (or add) changes in net working capital (\u0394NWC), with an increase in NWC being a cash outflow and decrease being a cash inflow",
+        "Articulate that the result is 'unlevered' because it excludes interest expense and financing effects, representing cash flows available to ALL capital providers (debt and equity)"
+      ],
+      "good_to_hit": [
+        "Mention that the formula can also be derived starting from net income by adding back after-tax interest expense [Net Income + D&A \u2212 CapEx \u2212 \u0394NWC + Interest \u00d7 (1 \u2212 t)], and explain why the adjustment is needed to unlever",
+        "Distinguish UFCF from Levered Free Cash Flow (FCFE), noting FCFE subtracts after-tax interest and debt repayments, representing only equity holders' cash flows",
+        "Note that UFCF is the cash flow figure discounted at WACC in a DCF, whereas FCFE is discounted at the cost of equity (Ke)",
+        "Flag that non-cash charges beyond D&A (e.g., stock-based compensation, amortization of intangibles) may also need to be added back depending on treatment assumptions"
+      ],
+      "common_pitfalls": [
+        "Starting from net income without adding back after-tax interest, leaving the cash flow levered and inconsistent with discounting at WACC",
+        "Forgetting to tax-effect EBIT before adding back D&A (i.e., computing EBIT + D&A \u2212 CapEx \u2212 \u0394NWC without applying (1 \u2212 t), overstating UFCF)",
+        "Getting the sign of \u0394NWC wrong \u2014 stating an increase in NWC is a cash inflow rather than a cash outflow",
+        "Confusing gross CapEx with net CapEx (CapEx minus asset disposals) without clarifying the distinction or context"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-82802897",
+    "category": "Core Valuation & DCF",
+    "difficulty": "fundamental",
+    "question": "What is the difference between Unlevered Free Cash Flow and Levered Free Cash Flow?",
+    "rubric": {
+      "must_hit": [
+        "UFCF is cash flow available to ALL capital providers (both debt and equity holders), while LFCF is cash flow available ONLY to equity holders after debt obligations are met",
+        "UFCF formula: EBIT(1-t) + D&A - \u0394Working Capital - CapEx (excludes interest expense and debt cash flows)",
+        "LFCF formula: Net Income + D&A - \u0394Working Capital - CapEx + Net Borrowing (or subtract net debt repayment), i.e., starts below interest expense line",
+        "UFCF is used in a DCF discounted at WACC to arrive at Enterprise Value, whereas LFCF is discounted at cost of equity (Ke) to arrive directly at Equity Value",
+        "Key distinction: UFCF excludes the tax shield benefit embedded in interest expense (treats firm as if unlevered), while LFCF reflects actual capital structure including interest payments"
+      ],
+      "good_to_hit": [
+        "UFCF is more commonly used in IB DCF analysis because capital structure can vary across buyers/scenarios and WACC normalizes for this, making UFCF more versatile for M&A and LBO contexts",
+        "Mention that starting from EBIT(1-t) in UFCF is equivalent to applying taxes as if there were no interest deduction, removing the financing effect entirely",
+        "LFCF can be negative even when UFCF is positive if the company has heavy debt service obligations, illustrating the leverage risk",
+        "In an LBO or highly leveraged company, LFCF is especially meaningful for assessing whether the company can service its debt and return cash to equity sponsors"
+      ],
+      "common_pitfalls": [
+        "Confusing which discount rate pairs with each cash flow type \u2014 discounting UFCF at cost of equity or LFCF at WACC is a fundamental error",
+        "Incorrectly including interest expense (net of tax) in the UFCF formula, which would make it no longer 'unlevered'",
+        "Forgetting that LFCF includes net borrowing/repayment of debt principal, not just the after-tax interest expense line",
+        "Stating UFCF and LFCF are the same for an all-equity firm without explaining WHY (no debt means no divergence between the two)"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-66c818fa",
+    "category": "Core Valuation & DCF",
+    "difficulty": "fundamental",
+    "question": "How do you calculate the Weighted Average Cost of Capital (WACC)?",
+    "rubric": {
+      "must_hit": [
+        "State the full WACC formula: WACC = (E/V)\u00b7Re + (D/V)\u00b7Rd\u00b7(1\u2212t), where E = market value of equity, D = market value of debt, V = E+D, Re = cost of equity, Rd = cost of debt, t = tax rate",
+        "Explain that debt is tax-effected via (1\u2212t) because interest expense is tax-deductible, creating a tax shield",
+        "Describe cost of equity (Re) using CAPM: Re = Rf + \u03b2\u00b7(Rm \u2212 Rf), identifying risk-free rate, beta, and equity risk premium",
+        "Specify that weights should use market values (not book values) for both equity and debt",
+        "State that cost of debt (Rd) is the pre-tax yield to maturity on the company's debt, not the coupon rate"
+      ],
+      "good_to_hit": [
+        "Mention that beta should be unlevered from comparable companies and re-levered to the target's capital structure (Hamada equation) when the subject company is private or lacks reliable beta",
+        "Note that preferred stock, if present, is added as a separate component: (P/V)\u00b7Rp, where Rp is the preferred dividend yield",
+        "Acknowledge that WACC represents the blended required return of all capital providers and is used as the discount rate in a DCF to value the entire enterprise (not just equity)",
+        "Point out that WACC should reflect the target/normalized long-run capital structure, not a temporary or distorted current structure"
+      ],
+      "common_pitfalls": [
+        "Using book value of equity (i.e., shareholders' equity from the balance sheet) instead of market capitalization as the equity weight",
+        "Forgetting to tax-effect the cost of debt, thereby overstating WACC",
+        "Conflating cost of equity with cost of debt, or stating cost of equity is 'the dividend yield' rather than applying CAPM",
+        "Applying WACC to equity cash flows (levered FCF) instead of unlevered free cash flows to the firm"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-94adb9bd",
+    "category": "Core Valuation & DCF",
+    "difficulty": "fundamental",
+    "question": "How do you calculate the Cost of Equity?",
+    "rubric": {
+      "must_hit": [
+        "Identify CAPM as the primary method: Cost of Equity = Risk-Free Rate + Beta \u00d7 Equity Risk Premium (Re = Rf + \u03b2 \u00d7 ERP)",
+        "Define the risk-free rate as yield on long-term government bonds (e.g., 10-year U.S. Treasury)",
+        "Define Beta as a measure of systematic/market risk relative to the overall market, typically sourced from comparable public companies or regression analysis",
+        "Define Equity Risk Premium (ERP) as the excess return investors demand over the risk-free rate for holding equities (typically ~4\u20136% in the U.S.)",
+        "Explain that Cost of Equity represents the return required by equity holders and is unobservable (unlike cost of debt), hence the need for a model"
+      ],
+      "good_to_hit": [
+        "Mention relevering/unlevering beta when using comparable companies: unlever peers' betas to remove capital structure effects, then relever using the subject company's target capital structure",
+        "Note alternative methods such as Dividend Discount Model (Re = D1/P0 + g) or Build-Up Method (adding size premium, industry risk premium) as cross-checks",
+        "Discuss that a size premium (e.g., Duff & Phelps) is often added for small-cap companies to capture additional risk not captured by beta alone",
+        "Acknowledge that ERP is forward-looking and debated; analysts often use Damodaran's implied ERP or historical Ibbotson data"
+      ],
+      "common_pitfalls": [
+        "Confusing Cost of Equity with WACC \u2014 Cost of Equity is only the equity component; WACC blends equity and debt costs weighted by capital structure",
+        "Using short-term Treasury bill yield as the risk-free rate instead of the long-term (10-year) government bond yield",
+        "Failing to mention that beta must be relevered to the subject company's capital structure when derived from comparable companies",
+        "Stating beta or ERP as fixed constants without acknowledging they are estimates subject to judgment and vary by source/methodology"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-2ed8d57d",
+    "category": "Core Valuation & DCF",
+    "difficulty": "fundamental",
+    "question": "What is Beta, and how do you unlever and relever it?",
+    "rubric": {
+      "must_hit": [
+        "Define Beta as a measure of a stock's systematic (market) risk relative to the overall market, where Beta = 1 means moves in line with market, >1 more volatile, <1 less volatile",
+        "Explain that observed/levered Beta reflects both business risk and financial (leverage) risk of the comparable company",
+        "Unlever Beta using Hamada formula: \u03b2Unlevered = \u03b2Levered / [1 + (1 \u2212 t) \u00d7 (D/E)], stripping out the capital structure effect of the comparable",
+        "Relever Beta using the inverse Hamada formula: \u03b2Relevered = \u03b2Unlevered \u00d7 [1 + (1 \u2212 t) \u00d7 (D/E)], applying the target company's own capital structure",
+        "State the purpose: to isolate pure business/asset risk when using comparable companies whose capital structures differ from the target's"
+      ],
+      "good_to_hit": [
+        "Mention that unlevering/relevering is a core step in building up WACC via the CAPM: Re = Rf + \u03b2Relevered \u00d7 (Rm \u2212 Rf), and that a misstated Beta directly distorts cost of equity",
+        "Note that if a comparable has zero debt, its levered Beta equals its unlevered Beta, so no adjustment is needed",
+        "Discuss limitations: Hamada assumes constant D/E ratio and that debt is risk-free; alternative formulas (e.g., Fernandez/Miles-Ezzell) exist for different leverage assumptions",
+        "Mention that Beta is typically estimated via regression of stock returns against a market index (e.g., S&P 500) over a trailing period (commonly 2\u20135 years, weekly or monthly returns)"
+      ],
+      "common_pitfalls": [
+        "Confusing levered and unlevered Beta direction \u2014 candidates sometimes say unlevering increases Beta or mix up which formula strips out leverage vs. adds it back",
+        "Forgetting to use each comparable's own D/E and tax rate when unlevering, then the target's D/E and tax rate when relevering (mixing up which company's metrics apply at each step)",
+        "Omitting the (1 \u2212 t) tax shield term in the Hamada formula, resulting in an incorrect adjustment that ignores the tax benefit of debt",
+        "Treating Beta as a measure of total risk rather than systematic (non-diversifiable) risk, conflating it with standard deviation or volatility"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-6f9b9231",
+    "category": "Core Valuation & DCF",
+    "difficulty": "fundamental",
+    "question": "Why do you need to unlever and relever Beta when calculating the Cost of Equity?",
+    "rubric": {
+      "must_hit": [
+        "Explains that observed/levered beta from comparable companies reflects both business risk AND financial risk (leverage), so it must be unlevered to isolate pure operating/asset risk",
+        "States the Hamada equation (or equivalent): \u03b2Unlevered = \u03b2Levered / [1 + (1 \u2212 t) \u00d7 (D/E)] to strip out the capital structure effect",
+        "Explains that after unlevering, the asset beta is relevered using the target company's own D/E ratio: \u03b2Relevered = \u03b2Unlevered \u00d7 [1 + (1 \u2212 t) \u00d7 (D/E)target]",
+        "Articulates why this matters: comparable companies have different capital structures, so using their raw levered betas would embed the wrong amount of financial risk into the target's cost of equity",
+        "Connects relevered beta to CAPM: Re = Rf + \u03b2Relevered \u00d7 (ERP), noting that the final output feeds directly into the cost of equity"
+      ],
+      "good_to_hit": [
+        "Notes that when unlevering a peer set, you typically average or median the unlevered betas across comparables to arrive at a representative asset beta before relevering",
+        "Mentions that the Hamada equation assumes debt is risk-free and tax shields are discounted at the cost of debt (Miles-Ezzell vs. Modigliani-Miller assumptions), and that alternative unlevering formulas exist (e.g., Fernandez)",
+        "Distinguishes between financial risk (leverage magnifies equity volatility) and business/operating risk (industry-specific revenue and cost variability), articulating that unlevering isolates the latter",
+        "Points out that if the target company is private or lacks a reliable beta, this unlever/relever process using public comps is the standard workaround"
+      ],
+      "common_pitfalls": [
+        "Skipping or conflating the unlever step \u2014 just averaging raw levered betas from comps and applying directly to the target without adjusting for capital structure differences",
+        "Confusing levered vs. unlevered beta direction (e.g., stating unlevered beta is always higher than levered beta, ignoring that leverage increases equity beta)",
+        "Inability to state or derive the Hamada equation, or misremembering it (e.g., omitting the tax shield term (1\u2212t) or inverting the D/E relationship)",
+        "Failing to explain WHY different capital structures matter \u2014 giving a mechanical answer without explaining the underlying logic that financial leverage amplifies equity risk"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-e81f35d6",
+    "category": "Core Valuation & DCF",
+    "difficulty": "fundamental",
+    "question": "How do you calculate the Terminal Value in a DCF?",
+    "rubric": {
+      "must_hit": [
+        "Identify the two primary methods: Gordon Growth Model (GGM) / perpetuity growth method and Exit Multiple method",
+        "State the GGM formula correctly as TV = FCF_(n+1) / (WACC \u2212 g), where FCF_(n+1) is next-period free cash flow and g is the perpetuity growth rate",
+        "Explain that the Exit Multiple method applies an industry-relevant EV multiple (e.g., EV/EBITDA) to the terminal-year metric to estimate value at the end of the projection period",
+        "Note that Terminal Value must be discounted back to present value using the discount factor 1/(1+WACC)^n before being added to the PV of projected FCFs",
+        "Acknowledge that TV often represents 60\u201380%+ of total DCF value, making assumption sensitivity (g or exit multiple) critically important"
+      ],
+      "good_to_hit": [
+        "Explain the constraint that g in the GGM should not exceed long-run nominal GDP growth (~2\u20133%) to remain economically reasonable, since a firm cannot grow faster than the economy forever",
+        "Discuss the implicit relationship between GGM and Exit Multiple methods \u2014 backing out the implied growth rate from an exit multiple (or vice versa) as a cross-check for reasonableness",
+        "Mention the less common third method \u2014 Liquidation Value \u2014 used in distressed or asset-heavy contexts where the business is wound down rather than operated in perpetuity",
+        "Note that GGM uses Unlevered FCF (FCFF) when discounting at WACC in an enterprise-value DCF, ensuring consistency between numerator cash flows and denominator discount rate"
+      ],
+      "common_pitfalls": [
+        "Using the current-year FCF rather than next-year FCF (FCF_(n+1)) in the GGM numerator, understating Terminal Value",
+        "Failing to discount the Terminal Value back to present value and simply adding the undiscounted TV to the PV of FCFs",
+        "Setting the perpetuity growth rate equal to or higher than WACC, which produces a nonsensical negative or infinite Terminal Value",
+        "Conflating Equity Value multiples (P/E) with Enterprise Value multiples (EV/EBITDA) when applying the Exit Multiple method in an unlevered DCF"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-49934efa",
+    "category": "Core Valuation & DCF",
+    "difficulty": "fundamental",
+    "question": "When would you use the Gordon Growth Method versus the Exit Multiple Method for Terminal Value?",
+    "rubric": {
+      "must_hit": [
+        "Gordon Growth Model formula: TV = FCF \u00d7 (1+g) / (WACC \u2212 g), where g is the perpetuity growth rate, and the condition WACC > g must hold",
+        "Exit Multiple Method applies a market-derived multiple (e.g., EV/EBITDA) to the terminal year metric to estimate TV, anchoring value to current market comparables",
+        "Gordon Growth Model is preferred when the business has stable, predictable long-term cash flows and a defensible perpetuity growth rate (typically GDP-linked, ~2\u20133%)",
+        "Exit Multiple Method is preferred when reliable comparable company or transaction multiples exist and the analyst wants to stay consistent with a market-based valuation framework",
+        "The two methods should be used as cross-checks on each other; material divergence signals a questionable assumption in one or both approaches"
+      ],
+      "good_to_hit": [
+        "Gordon Growth Model is theoretically purer (intrinsic value) but highly sensitive to small changes in g or WACC \u2014 e.g., changing g from 2% to 3% with a 10% WACC increases TV by ~14%, illustrating the sensitivity risk",
+        "Exit Multiple Method embeds circular reasoning risk because it relies on current market multiples that may themselves be derived from DCF analysis, conflating intrinsic and relative value",
+        "For high-growth or cyclical companies, Gordon Growth Model is problematic because terminal-year FCF may not yet represent steady-state, making the perpetuity assumption unreliable",
+        "In LBO or M&A contexts, Exit Multiple Method is more commonly used because it directly maps to the assumed sale price at exit, aligning with the investment thesis"
+      ],
+      "common_pitfalls": [
+        "Setting g equal to or greater than WACC, which produces a nonsensical negative or infinite terminal value",
+        "Treating the two methods as interchangeable rather than explaining the specific business or situational characteristics that favor one over the other",
+        "Applying an exit multiple from current market conditions without adjusting for where the company or cycle is likely to be at the terminal year, producing a misleading TV",
+        "Ignoring that terminal value often represents 60\u201380% of total DCF value, failing to acknowledge how critically assumptions in either method drive overall valuation"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-d81abc11",
+    "category": "Core Valuation & DCF",
+    "difficulty": "fundamental",
+    "question": "If a company's Beta increases, how does that affect its DCF valuation?",
+    "rubric": {
+      "must_hit": [
+        "Higher Beta increases the cost of equity via CAPM: Re = Rf + \u03b2\u00b7(Rm \u2212 Rf), so a larger \u03b2 raises Re directly",
+        "Higher cost of equity raises WACC (assuming equity component E/V > 0), since WACC = (E/V)\u00b7Re + (D/V)\u00b7Rd\u00b7(1\u2212t)",
+        "Higher WACC increases the discount rate applied to free cash flows, reducing the present value of each cash flow period",
+        "Higher WACC also compresses the terminal value by increasing (WACC \u2212 g) in the Gordon Growth Model: TV = FCF\u00b7(1+g)/(WACC\u2212g), so DCF valuation decreases overall"
+      ],
+      "good_to_hit": [
+        "Distinguishes that Beta affects only the equity cost of capital, so the magnitude of WACC impact depends on the firm's capital structure (high-leverage firms see a smaller proportional WACC increase)",
+        "Notes that levered Beta reflects both business risk and financial risk (Hamada equation: \u03b2L = \u03b2U\u00b7[1 + (1\u2212t)\u00b7(D/E)]), so an increase could signal rising leverage or operating risk",
+        "Mentions that terminal value is typically 60\u201380% of total DCF value, so the WACC increase disproportionately destroys value through the terminal value denominator",
+        "Acknowledges that if Beta increases due to higher growth prospects (e.g., pivot to riskier high-growth strategy), FCF projections might also rise, partially offsetting the discount rate effect"
+      ],
+      "common_pitfalls": [
+        "Stopping at 'WACC goes up, valuation goes down' without tracing the mechanism through CAPM and the DCF formula",
+        "Ignoring the amplified impact on terminal value and only discussing near-term cash flow discounting",
+        "Confusing Beta with the risk-free rate or conflating a change in Beta with a change in the equity risk premium",
+        "Assuming Beta directly changes the cost of debt or that Rd is affected by Beta, without noting debt is typically priced off credit spreads, not CAPM Beta"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-9bda3454",
+    "category": "Core Valuation & DCF",
+    "difficulty": "fundamental",
+    "question": "How do you select Comparable Public Companies and Precedent Transactions?",
+    "rubric": {
+      "must_hit": [
+        "Identify comparable public companies based on industry/sector classification (SIC codes, GICS, or analyst coverage groupings) combined with business model similarity (products, services, end markets)",
+        "Screen for financial profile comparability: revenue size (typically within 0.5x\u20132x of target), growth rate, and margin profile (EBITDA margin, gross margin) as key filters",
+        "For precedent transactions, specify that the search focuses on M&A deals involving targets in the same sector with similar size/business characteristics, typically pulling from databases like Bloomberg, Capital IQ, or Mergermarket",
+        "Articulate that precedent transactions carry a control premium (typically 20\u201340%) versus public comps, making them a separate and generally higher valuation benchmark",
+        "Explain that both sets require 'scrubbing' \u2014 adjusting for one-time items, non-recurring charges, or stub periods \u2014 to ensure apples-to-apples comparison of multiples (EV/EBITDA, EV/Revenue, P/E)"
+      ],
+      "good_to_hit": [
+        "Note that precedent transactions should be filtered by recency and market cycle (e.g., pre-2008 crisis deals may reflect structurally different credit conditions and buyer appetite) and that strategic vs. financial buyer deals yield different premium levels",
+        "Mention that a final comp set typically includes 5\u201310 public companies and 5\u201310 transactions after qualitative judgment cuts outliers (e.g., distressed comps, one-off anomalies)",
+        "Distinguish between 'pure play' comparables (preferred) versus diversified conglomerates that may distort multiples, and explain how to isolate relevant segments",
+        "Reference the use of forward vs. trailing multiples and why forward EV/EBITDA (NTM) is generally preferred over LTM for public comps to capture growth expectations"
+      ],
+      "common_pitfalls": [
+        "Focusing solely on industry match without addressing financial profile comparability (size, growth, margins), leading to a superficially similar but economically incomparable set",
+        "Failing to acknowledge the control premium embedded in precedent transactions, incorrectly treating them as interchangeable with public company multiples",
+        "Neglecting to mention data sources or screening criteria, making the selection process sound arbitrary rather than systematic and defensible",
+        "Confusing LTM and NTM multiples or applying them inconsistently across the comp set without explaining the rationale for the chosen time period"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-69c58dc2",
+    "category": "Core Valuation & DCF",
+    "difficulty": "fundamental",
+    "question": "Why would a company with similar growth and profitability trade at a different multiple than its direct peers?",
+    "rubric": {
+      "must_hit": [
+        "Capital structure differences: higher leverage increases financial risk and can compress or inflate equity multiples (e.g., EV/EBITDA neutralizes debt while P/E does not)",
+        "Quality and sustainability of earnings: recurring vs. one-time revenue, revenue visibility/backlog, or accounting policy differences (e.g., revenue recognition, D&A treatment) can justify multiple divergence",
+        "Return on invested capital (ROIC) relative to cost of capital (WACC): a company with ROIC > WACC deserves a premium because growth is value-creating, even at identical headline growth rates",
+        "Liquidity and float: smaller public float, lower trading volume, or concentrated ownership leads to a liquidity discount in the multiple",
+        "Geographic or end-market mix: exposure to higher-risk or lower-growth regions/segments (e.g., emerging markets, cyclical vs. secular end markets) can cause multiple discounts even with similar consolidated metrics"
+      ],
+      "good_to_hit": [
+        "Management quality and corporate governance: track record of capital allocation, insider ownership alignment, or ESG considerations can command a premium beyond what financials capture",
+        "Optionality and strategic value: pipeline assets, real options (e.g., unmonetized IP, undeveloped reserves), or M&A target scarcity premium not reflected in current earnings",
+        "Customer concentration and contract structure: a company with 80% revenue from one customer at similar growth will trade at a discount due to binary risk, distinguishable from a diversified peer",
+        "Tax rate and NOL carryforwards: a structurally lower effective tax rate or large deferred tax assets can boost after-tax cash flows and justify a higher earnings multiple"
+      ],
+      "common_pitfalls": [
+        "Attributing multiple differences solely to 'market sentiment' or 'investor perception' without identifying a specific fundamental driver",
+        "Conflating growth rate with quality of growth \u2014 failing to mention that value-destructive growth (ROIC < WACC) should result in a lower multiple despite identical top-line growth",
+        "Ignoring the specific multiple being compared: treating EV/EBITDA and P/E interchangeably without noting that leverage differentials affect equity multiples far more than enterprise value multiples",
+        "Listing factors without explaining the directional impact (i.e., stating 'leverage is different' without explaining whether that compresses or expands the relevant multiple and why)"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-e19ddd33",
+    "category": "Core Valuation & DCF",
+    "difficulty": "fundamental",
+    "question": "What are the most common valuation multiples used in the industry?",
+    "rubric": {
+      "must_hit": [
+        "EV/EBITDA as a primary enterprise value multiple, used because it is capital-structure neutral and a proxy for operating cash flow",
+        "P/E (Price-to-Earnings) as a common equity value multiple representing price paid per dollar of net income",
+        "EV/Revenue as a multiple used for early-stage, negative-EBITDA, or high-growth companies where profitability metrics are unavailable",
+        "Distinction between enterprise value multiples (EV/EBITDA, EV/EBIT, EV/Revenue) vs. equity value multiples (P/E, P/BV, Price/FCF)"
+      ],
+      "good_to_hit": [
+        "Industry-specific multiples such as EV/EBITDAR for airlines/retail with heavy leases, EV/Reserves or EV/Production for O&G, Price/Book for financials, or EV/Beds for healthcare",
+        "EV/EBIT as a refinement over EV/EBITDA when D&A is economically meaningful (e.g., capital-intensive industries) and depreciation approximates true asset consumption",
+        "P/BV (Price-to-Book Value) for financial institutions where book value is the most meaningful asset measure and ROE drives equity value",
+        "Mention of forward vs. trailing multiples (NTM vs. LTM) and why forward multiples are generally preferred as they reflect growth expectations"
+      ],
+      "common_pitfalls": [
+        "Confusing enterprise value multiples with equity value multiples (e.g., applying EV/EBITDA to equity value or using P/E with EBITDA in the denominator)",
+        "Listing multiples without explaining why each is used or what business/financial characteristic makes it relevant",
+        "Failing to acknowledge that different industries use different primary multiples and treating EV/EBITDA as universally applicable to all sectors",
+        "Omitting the distinction that revenue multiples are most useful when earnings/EBITDA are negative or highly distorted"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-26001de9",
+    "category": "Core Valuation & DCF",
+    "difficulty": "fundamental",
+    "question": "Why is it flawed to use an EV/Earnings or Price/EBITDA multiple?",
+    "rubric": {
+      "must_hit": [
+        "EV/Earnings is flawed because EV is a capital-structure-neutral (pre-debt) metric while Earnings (Net Income) is a post-interest, post-tax figure belonging only to equity holders \u2014 mixing numerator and denominator from different capital structure levels creates an apples-to-oranges comparison",
+        "Price/EBITDA is flawed because Price is an equity-only value (post-debt) while EBITDA is a pre-debt, pre-interest metric available to all capital providers \u2014 the numerator and denominator are again mismatched across the capital structure",
+        "The correct pairings are: equity-level numerators (Price/Market Cap) with equity-level denominators (Net Income, EPS, Book Equity) and EV with pre-debt denominators (EBITDA, EBIT, Revenue, NOPAT)",
+        "Mismatched multiples distort comparisons across companies with different leverage levels \u2014 a highly levered firm would appear artificially cheap on EV/Earnings or expensive on Price/EBITDA relative to peers"
+      ],
+      "good_to_hit": [
+        "Correctly citing valid matched pairs as counterexamples: EV/EBITDA, EV/EBIT, EV/Revenue, and P/E, P/B, P/FCF as properly constructed multiples",
+        "Noting that the distortion worsens with extreme leverage \u2014 e.g., two identical operating businesses with different capital structures would yield wildly different EV/Earnings multiples, rendering peer comparison meaningless",
+        "Mentioning that EBITDA also excludes D&A and capex, making it a proxy for unlevered cash flow, which further underscores why it should only be paired with an enterprise-level numerator like EV"
+      ],
+      "common_pitfalls": [
+        "Stating only that 'you shouldn't mix debt and equity metrics' without explaining which specific metric belongs to which level of the capital structure",
+        "Confusing the direction of the mismatch \u2014 e.g., incorrectly claiming EV/Earnings overstates rather than correctly explaining that it conflates pre- and post-debt figures in an inconsistent way",
+        "Failing to articulate why the mismatch matters practically (i.e., not explaining the leveraged-firm distortion and comparability problem)",
+        "Conflating this question with a criticism of EBITDA as a metric in general (e.g., 'EBITDA ignores capex') without tying the answer back to the capital structure mismatch"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-16660c6d",
+    "category": "Advanced Accounting & Working Capital",
+    "difficulty": "fundamental",
+    "question": "Walk me through what happens on the statements when inventory goes up by $10, paid for with cash.",
+    "rubric": {
+      "must_hit": [
+        "Balance sheet: Inventory (current asset) increases by $10",
+        "Balance sheet: Cash (current asset) decreases by $10, keeping the balance sheet balanced (Assets unchanged net, Liabilities/Equity unchanged)",
+        "Income statement: No impact \u2014 inventory purchase is not expensed until sold (matching principle); COGS is only recognized upon sale",
+        "Cash flow statement: $10 outflow shown in cash from operations as an increase in inventory (working capital use), reducing CFO by $10"
+      ],
+      "good_to_hit": [
+        "Explicitly notes that net working capital increases by $10 if we define NWC as current assets minus current liabilities, since cash decreases and inventory increases by the same amount \u2014 NWC is actually unchanged (both are current assets), and candidate correctly identifies no NWC change",
+        "Mentions that under indirect method on the CFS, the increase in inventory is subtracted from net income as a use of cash in the operating section",
+        "Notes that total assets remain flat because the $10 shift is asset-for-asset (cash to inventory), reinforcing the accounting equation stays balanced",
+        "Distinguishes that if inventory were purchased on credit (accounts payable) instead of cash, the CFS impact would differ and AP would increase on the balance sheet"
+      ],
+      "common_pitfalls": [
+        "Incorrectly recording a $10 expense on the income statement and flowing that through to retained earnings \u2014 inventory purchase is capitalized, not immediately expensed",
+        "Forgetting the CFS impact entirely or placing the $10 outflow in investing activities rather than operating activities",
+        "Claiming net working capital changes when in fact both sides of the transaction (cash down, inventory up) are current assets, leaving NWC flat",
+        "Incorrectly stating total assets increase by $10 rather than recognizing the offsetting cash decrease keeps total assets flat"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-0d651cee",
+    "category": "Advanced Accounting & Working Capital",
+    "difficulty": "fundamental",
+    "question": "Walk me through what happens when a company writes down $10 of asset value.",
+    "rubric": {
+      "must_hit": [
+        "Write-down reduces the asset's book value on the balance sheet by $10 (e.g., PP&E, goodwill, or inventory decreases by $10)",
+        "Impairment/write-down charge of $10 flows through the income statement as an operating or non-cash expense, reducing pre-tax income by $10",
+        "Tax effect: tax expense decreases by $10 \u00d7 tax rate (e.g., ~$3.5 at 35%), so net income decreases by $10 \u00d7 (1 \u2212 tax rate) \u2248 $6.50",
+        "On the cash flow statement, the non-cash charge is added back in operating activities (CFO), so operating cash flow is unaffected assuming no cash tax impact in same period",
+        "Balance sheet remains in balance: asset down $10, retained earnings (equity) down by after-tax amount \u2248 $6.50, and deferred tax liability/asset adjusts by ~$3.50"
+      ],
+      "good_to_hit": [
+        "Distinguishes between different asset types: goodwill impairment is non-deductible for taxes in many cases (no tax shield), whereas inventory or PP&E write-downs typically are tax-deductible, affecting the DTA/DTL treatment",
+        "Notes that if the write-down is not tax-deductible (e.g., goodwill), net income falls by the full $10, taxes are unchanged, and a deferred tax asset does NOT arise",
+        "Mentions that write-downs are non-recurring and analysts often add them back when calculating adjusted/normalized EBITDA or earnings",
+        "Explains that future depreciation expense decreases because the asset's depreciable base is now lower, so future net income and book value of assets will be slightly higher going forward"
+      ],
+      "common_pitfalls": [
+        "Forgetting to add back the non-cash charge on the cash flow statement, incorrectly stating that FCF or operating cash flow declines by $10",
+        "Applying the tax shield universally without distinguishing between tax-deductible and non-deductible write-downs (e.g., goodwill impairment often has no tax benefit under US GAAP)",
+        "Failing to balance the balance sheet \u2014 stating the asset drops $10 but not accounting for the retained earnings reduction and deferred tax impact on the equity/liability side",
+        "Confusing a write-down (partial reduction in book value) with a write-off (full removal of the asset), or misidentifying where the charge appears on the income statement (e.g., placing it below the line incorrectly)"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-88d341ef",
+    "category": "Advanced Accounting & Working Capital",
+    "difficulty": "fundamental",
+    "question": "A company buys a factory for $100 using debt. Walk me through the year 1 statements (assuming 10% interest, 10% depreciation).",
+    "rubric": {
+      "must_hit": [
+        "Balance sheet at acquisition: PP&E increases by $100, debt increases by $100, no equity impact at time of purchase",
+        "Income statement shows $10 depreciation expense and $10 interest expense, reducing pre-tax income by $20 (assuming no revenue change, pre-tax income down $20)",
+        "Net income decreases by $20 \u00d7 (1 \u2212 tax rate), e.g. $14 reduction assuming 30% tax rate, reducing retained earnings and thus equity by $14",
+        "Balance sheet end of year 1: PP&E net of depreciation = $90, debt remains $100 (principal unchanged), retained earnings/equity down $14",
+        "Cash flow statement: depreciation $10 added back in CFO; $10 interest payment flows through CFO (or noted as financing per IFRS); $100 capex shown as CFI outflow; $100 debt proceeds shown as CFF inflow \u2014 net cash change = $0 at acquisition, then reflects operating cash flows in year 1",
+        "The three statements tie together: ending cash on CFS matches balance sheet cash, retained earnings change equals net income"
+      ],
+      "good_to_hit": [
+        "Explicitly notes that the $100 debt principal repayment is NOT on the income statement \u2014 only interest expense is, distinguishing principal vs. interest treatment",
+        "Mentions deferred tax liability could arise if book depreciation differs from tax depreciation (e.g., accelerated tax depreciation), creating a DTL on the balance sheet",
+        "Flags that interest expense placement on the cash flow statement differs under US GAAP (CFO) vs. IFRS (CFO or CFF), showing awareness of accounting standard differences",
+        "Notes that if debt covenants or amortization schedule exists, principal payments would appear in CFF, and walks through the leverage/interest coverage implications"
+      ],
+      "common_pitfalls": [
+        "Recording the $100 factory purchase as an immediate income statement expense rather than capitalizing it as a PP&E asset on the balance sheet",
+        "Forgetting to add back depreciation in CFO on the cash flow statement, or double-counting it as both an IS charge and a cash outflow",
+        "Failing to tax-effect net income correctly \u2014 stating net income falls by the full $20 rather than $20 \u00d7 (1 \u2212 tax rate)",
+        "Not ensuring the balance sheet balances at year-end \u2014 mismatching the retained earnings reduction with the net income figure or omitting the accumulated depreciation contra-asset"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-98a4f32f",
+    "category": "Advanced Accounting & Working Capital",
+    "difficulty": "fundamental",
+    "question": "What is Net Working Capital, and how does its change impact a DCF?",
+    "rubric": {
+      "must_hit": [
+        "Defines NWC as current operating assets minus current operating liabilities (e.g., accounts receivable + inventory \u2013 accounts payable \u2013 accrued liabilities), explicitly excluding cash and short-term debt",
+        "States that an INCREASE in NWC is a cash OUTFLOW (uses cash) and a DECREASE in NWC is a cash INFLOW (sources cash) \u2014 i.e., correctly signs the change",
+        "Explains that Change in NWC is subtracted from EBIT(1-t) + D&A in the FCFF/Unlevered Free Cash Flow build: FCF = EBIT(1-t) + D&A \u2013 CapEx \u2013 \u0394NWC",
+        "Explains the economic intuition: if a company builds up receivables or inventory faster than it collects cash, it consumes cash and lowers FCF even if accounting profits are high"
+      ],
+      "good_to_hit": [
+        "Notes that NWC needs (increases) typically accompany revenue growth, so in a DCF with growing revenue projections, NWC is often a recurring drag on FCF (i.e., NWC as a % of revenue assumption)",
+        "Distinguishes between operating NWC items (AR, inventory, AP, accrued liabilities) and non-operating items (cash, marketable securities, short-term debt) and explains why the latter are excluded",
+        "Mentions that terminal value assumptions must be consistent with steady-state NWC changes \u2014 in perpetuity growth model, NWC changes are often embedded in the g rate or explicitly modeled as a % of incremental revenue",
+        "Highlights that negative NWC businesses (e.g., subscription or retail models with deferred revenue) actually generate cash from growth, reversing the typical sign convention"
+      ],
+      "common_pitfalls": [
+        "Reversing the sign \u2014 saying an increase in NWC adds to FCF (confusing the direction of cash flow impact)",
+        "Including cash or short-term debt/revolving credit in NWC calculation, inflating or deflating the metric",
+        "Confusing the level of NWC with the change in NWC \u2014 only the period-over-period CHANGE flows through FCF, not the balance itself",
+        "Failing to connect NWC changes to the DCF mechanics at all \u2014 only defining NWC without explaining its specific role in the free cash flow build"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-02a30cc2",
+    "category": "Advanced Accounting & Working Capital",
+    "difficulty": "fundamental",
+    "question": "Is negative working capital always a bad sign for a company?",
+    "rubric": {
+      "must_hit": [
+        "Defines working capital as current assets minus current liabilities, and clarifies that negative working capital means current liabilities exceed current assets",
+        "Identifies that for certain business models (e.g., large retailers like Walmart/Amazon, fast-food chains) negative working capital is structurally advantageous because customers pay upfront while suppliers are paid on extended credit terms, creating a self-financing 'float'",
+        "Explains the cash conversion cycle context: a negative CCC (collect cash before paying suppliers) means the business is effectively funded by its suppliers, which is a competitive advantage, not a weakness",
+        "Distinguishes between 'structural' negative working capital (business model-driven, sustainable) vs. 'distress-driven' negative working capital (inability to pay short-term obligations, liquidity crisis)",
+        "States that context and industry matter: negative working capital is dangerous in capital-intensive or long-cycle businesses (e.g., manufacturing, construction) where it signals inability to meet obligations"
+      ],
+      "good_to_hit": [
+        "Quantifies or references a real-world example: e.g., Amazon or Walmart consistently running negative working capital while remaining financially healthy and using supplier float to fund growth capex",
+        "Mentions that subscription or prepaid revenue businesses (e.g., SaaS with annual contracts) naturally carry negative working capital due to deferred revenue, which is not a liquidity concern",
+        "Notes that analysts should pair working capital analysis with the current ratio, quick ratio, and free cash flow generation to get a complete liquidity picture rather than relying on working capital alone",
+        "Explains that in a high-growth context, increasing negative working capital can signal growing bargaining power with suppliers and accelerating sales velocity"
+      ],
+      "common_pitfalls": [
+        "Stating categorically that negative working capital is always bad without acknowledging business model nuances, demonstrating surface-level thinking",
+        "Confusing negative working capital with negative cash flow or insolvency without distinguishing liquidity from structural financing advantages",
+        "Failing to mention any concrete industry or company example, making the answer purely theoretical and unconvincing",
+        "Overlooking the cash conversion cycle as the correct analytical lens, and instead relying solely on the static balance sheet ratio"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-906c4603",
+    "category": "Advanced Accounting & Working Capital",
+    "difficulty": "fundamental",
+    "question": "What is Goodwill, and how is it created on the balance sheet?",
+    "rubric": {
+      "must_hit": [
+        "Goodwill is an intangible asset created exclusively in an acquisition/M&A context \u2014 it is NOT created through organic operations",
+        "Formula: Goodwill = Purchase Price Paid \u2212 Fair Market Value of Net Identifiable Assets Acquired (where Net Identifiable Assets = identifiable assets minus liabilities assumed)",
+        "It represents the premium paid above the fair value of net assets, capturing unquantifiable value such as brand reputation, customer relationships, synergies, or management quality",
+        "Under US GAAP (ASC 350), Goodwill is NOT amortized but is tested annually for impairment; candidate should note IFRS also prohibits amortization post-2004",
+        "Goodwill sits on the acquirer's balance sheet, not the target's \u2014 it only appears after a business combination is recorded under purchase price accounting (ASC 805)"
+      ],
+      "good_to_hit": [
+        "Distinguishes between Goodwill and other identifiable intangibles allocated during purchase price allocation (PPA), such as customer lists or patents, which ARE amortized",
+        "Notes that an impairment write-down reduces Goodwill on the balance sheet and flows as a non-cash charge through the income statement, reducing net income but typically added back in operating cash flow",
+        "Mentions the concept of 'negative goodwill' (bargain purchase) \u2014 when purchase price is below fair value of net assets \u2014 and that it is recognized immediately as a gain under US GAAP",
+        "References the two-step (legacy) vs. one-step qualitative impairment test under ASC 350 and how the simplified test works: if carrying value of reporting unit exceeds fair value, impairment equals the difference up to the amount of goodwill"
+      ],
+      "common_pitfalls": [
+        "Confusing Goodwill with general intangible assets or stating it can be created organically (e.g., 'a company builds goodwill through brand investment') \u2014 Goodwill on the balance sheet is strictly an acquisition artifact",
+        "Incorrectly stating Goodwill is amortized under US GAAP (it is only tested for impairment; amortization was eliminated by SFAS 142 in 2001)",
+        "Leaving out the fair value step \u2014 saying Goodwill = Purchase Price minus Book Value of equity instead of Purchase Price minus Fair Market Value of Net Identifiable Assets",
+        "Failing to mention that Goodwill impairment is a non-cash charge and mischaracterizing its income statement and cash flow statement treatment"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-54775532",
+    "category": "Advanced Accounting & Working Capital",
+    "difficulty": "fundamental",
+    "question": "What is the difference between LIFO and FIFO, and how do they impact the income statement in an inflationary environment?",
+    "rubric": {
+      "must_hit": [
+        "FIFO (First-In, First-Out) assumes the oldest inventory units are sold first, so COGS reflects older, lower-cost inventory in an inflationary environment",
+        "LIFO (Last-In, First-Out) assumes the most recently purchased units are sold first, so COGS reflects newer, higher-cost inventory in an inflationary environment",
+        "In inflation, LIFO produces higher COGS \u2192 lower pre-tax income \u2192 lower taxes paid, while FIFO produces lower COGS \u2192 higher pre-tax income \u2192 higher taxes paid",
+        "LIFO results in a lower ending inventory balance on the balance sheet (understated relative to current cost) because remaining inventory reflects older, cheaper costs; FIFO ending inventory is closer to current replacement cost",
+        "Net income is lower under LIFO and higher under FIFO in an inflationary environment due to the COGS difference"
+      ],
+      "good_to_hit": [
+        "LIFO is banned under IFRS and only permitted under US GAAP, which is a key practical limitation for multinational companies",
+        "The LIFO reserve concept: the difference between FIFO and LIFO inventory values on the balance sheet, which analysts use to convert LIFO financials to FIFO for comparability (FIFO Inventory = LIFO Inventory + LIFO Reserve)",
+        "Cash flow implication: despite lower net income, LIFO is actually more tax-efficient (lower cash taxes), so operating cash flow is higher under LIFO in inflation \u2014 distinguishing accounting income from economic cash reality",
+        "LIFO liquidation risk: if a LIFO company draws down old inventory layers, artificially low historical costs flow through COGS, temporarily inflating income"
+      ],
+      "common_pitfalls": [
+        "Confusing the direction of impact \u2014 incorrectly stating FIFO produces lower income or that LIFO produces higher income in an inflationary environment",
+        "Ignoring the tax effect and only discussing the income statement impact without noting LIFO's cash tax advantage despite lower reported net income",
+        "Stating LIFO is acceptable under IFRS \u2014 it is explicitly prohibited under IFRS (IAS 2)",
+        "Conflating the inventory balance sheet effect with the income statement effect \u2014 e.g., incorrectly claiming LIFO overstates the balance sheet inventory in inflation rather than understates it"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-12880fd8",
+    "category": "Mergers & Acquisitions (M&A)",
+    "difficulty": "fundamental",
+    "question": "Walk me through a basic merger model.",
+    "rubric": {
+      "must_hit": [
+        "Explain that a merger model projects the combined financials of an acquirer and target to determine whether the deal is accretive or dilutive to the acquirer's EPS (earnings per share)",
+        "Describe the three primary deal funding mechanisms: all-cash, all-stock, or a mix, and note that cash deals use existing cash or debt while stock deals require calculating new shares issued based on the exchange ratio",
+        "Identify and explain key transaction adjustments: purchase price allocation (write-up of assets, creation of goodwill), new D&A from intangibles step-up, and financing costs (interest expense on new debt or lost interest income on cash used)",
+        "Show the accretion/dilution test: Combined Net Income divided by pro forma diluted share count yields new EPS; compare to standalone acquirer EPS \u2014 if higher it's accretive, if lower it's dilutive",
+        "Note that synergies (revenue and/or cost synergies, net of taxes) are added to combined pre-tax income to reflect expected value creation from the merger"
+      ],
+      "good_to_hit": [
+        "Mention that in a stock deal, the exchange ratio is calculated as offer price per target share divided by acquirer share price, determining how many new acquirer shares are issued",
+        "Explain the concept of the accretion/dilution break-even: the deal is accretive if the earnings yield on the target (target EPS / offer price) exceeds the acquirer's P/E-implied cost of equity (1 / acquirer P/E) in an all-stock deal",
+        "Note that goodwill is calculated as equity purchase price minus the fair value of net assets acquired (after write-ups) and is not amortized under GAAP but is tested annually for impairment",
+        "Acknowledge that a full merger model may extend to a combined 3-statement model or at minimum a combined income statement and balance sheet with financing adjustments"
+      ],
+      "common_pitfalls": [
+        "Confusing purchase equity value with enterprise value when computing goodwill or the total consideration paid, ignoring assumed debt and transaction fees",
+        "Forgetting to tax-affect the new interest expense on acquisition debt or failing to remove the after-tax interest income lost on cash used in the deal",
+        "Claiming a cash deal is always accretive without acknowledging that a high acquisition premium or low target earnings yield can make even a cash deal dilutive",
+        "Omitting the D&A step-up from intangible asset write-ups in purchase price allocation, which reduces combined net income and can flip accretion to dilution"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-e422921e",
+    "category": "Mergers & Acquisitions (M&A)",
+    "difficulty": "fundamental",
+    "question": "What does it mean for an M&A deal to be accretive or dilutive?",
+    "rubric": {
+      "must_hit": [
+        "Accretion/dilution is measured by the change in pro forma Earnings Per Share (EPS) post-deal relative to the acquirer's standalone EPS",
+        "Accretive means the acquirer's pro forma EPS increases after the deal; dilutive means pro forma EPS decreases",
+        "The key driver of accretion/dilution is whether the target's earnings yield (E/P) exceeds the cost of the acquisition financing (e.g., after-tax cost of debt, opportunity cost of cash, or dilution from new shares issued)",
+        "Purchase price, deal financing mix (cash, debt, stock), and the target's earnings all directly impact whether a deal is accretive or dilutive",
+        "When stock is used as consideration, share count increases and EPS can be diluted even if the deal adds net income, unless the target's earnings yield exceeds the acquirer's P/E implied yield"
+      ],
+      "good_to_hit": [
+        "Accretion/dilution analysis is typically done on a Year 1 and Year 2 pro forma basis, and synergies are often modeled separately to show both with and without synergies scenarios",
+        "A deal can be dilutive in Year 1 but accretive in later years as synergies are realized or as the target grows, so breakeven EPS year is a meaningful output",
+        "EPS accretion/dilution is an accounting metric and does not capture value creation; a deal can be EPS accretive yet value destructive if the acquirer overpays relative to the NPV of synergies"
+      ],
+      "common_pitfalls": [
+        "Conflating EPS accretion/dilution with value creation \u2014 candidates often state that accretive deals are always 'good' without acknowledging a deal can destroy value while being EPS accretive",
+        "Ignoring the role of financing mix \u2014 candidates focus only on the target's earnings without explaining how cash, debt, or stock consideration differently affects the accretion/dilution outcome",
+        "Forgetting that goodwill amortization (under certain accounting frameworks) or other purchase price adjustments (e.g., deferred revenue write-downs) can affect pro forma EPS and the accretion/dilution result",
+        "Defining accretion/dilution vaguely as 'earnings go up or down' without specifying it is on a per-share basis relative to the acquirer's standalone EPS"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-42a295ee",
+    "category": "Mergers & Acquisitions (M&A)",
+    "difficulty": "fundamental",
+    "question": "If Company A has a higher P/E multiple than Company B, and A acquires B in an all-stock deal, will the deal be accretive or dilutive?",
+    "rubric": {
+      "must_hit": [
+        "States the deal will be accretive to Company A's EPS when A's P/E is higher than B's P/E in an all-stock deal",
+        "Explains the core mechanic: A issues fewer shares (relative to earnings acquired) because its stock price is higher per unit of earnings, so EPS increases post-deal",
+        "Demonstrates understanding that accretion/dilution hinges on whether the acquirer's P/E (the 'price paid' in earnings terms) is above or below the target's P/E \u2014 acquirer paying a lower earnings multiple than its own trading multiple is accretive",
+        "Acknowledges that this is a simplified/preliminary conclusion assuming no deal premium, synergies, or transaction costs \u2014 the actual outcome depends on the purchase price paid relative to A's own multiple",
+        "Clarifies that in an all-stock deal, accretion/dilution is driven by comparing the earnings yield (1/P/E) of the acquirer vs. the effective earnings yield of the acquisition price paid"
+      ],
+      "good_to_hit": [
+        "Provides a numerical example: e.g., A trades at 20x P/E with $1 EPS ($20 stock), B trades at 10x P/E with $1 EPS ($10 stock); A issues 0.5 shares per B share, acquires $1 of earnings for 0.5 shares, boosting A's EPS",
+        "Notes that if a deal premium is paid and raises the effective P/E paid above A's own P/E, the deal could flip to dilutive despite B's lower standalone P/E",
+        "Mentions that synergies (cost or revenue) can offset dilution or enhance accretion by adding incremental earnings to the combined entity",
+        "References that the deal is accretive when the acquirer's earnings yield (1/P/E_A) exceeds the effective earnings yield of the target at the purchase price (1/P/E_paid)"
+      ],
+      "common_pitfalls": [
+        "Confusing the direction \u2014 stating the deal is dilutive when A's P/E is higher than B's in an all-stock deal (the opposite is true under base case assumptions)",
+        "Failing to caveat that the conclusion assumes no deal premium; in practice a premium is almost always paid, which could narrow or eliminate accretion",
+        "Conflating book value or revenue multiples with P/E, or muddling the share issuance mechanics (e.g., not explaining why a higher P/E means fewer shares issued per dollar of earnings acquired)",
+        "Ignoring that synergies, financing costs, and purchase price adjustments all affect the real-world accretion/dilution outcome beyond the simple P/E comparison"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-3dd9e317",
+    "category": "Mergers & Acquisitions (M&A)",
+    "difficulty": "fundamental",
+    "question": "What are synergies, and what are the two main types?",
+    "rubric": {
+      "must_hit": [
+        "Define synergies as the incremental value created when two companies combine that would not exist as separate standalone entities (i.e., the combined entity is worth more than the sum of its parts)",
+        "Identify revenue synergies as the first main type, including examples such as cross-selling, expanded customer base, new geographies, or increased pricing power",
+        "Identify cost synergies as the second main type, including examples such as headcount reductions, elimination of duplicate facilities, procurement savings, or SG&A rationalization",
+        "Clarify that cost synergies are generally considered more reliable and achievable than revenue synergies, and therefore are given more credibility in deal modeling"
+      ],
+      "good_to_hit": [
+        "Note that synergies are a key justification for paying an acquisition premium (i.e., the buyer must realize synergies to make the deal accretive and justify the price paid above intrinsic value)",
+        "Mention that revenue synergies typically take longer to realize and carry greater execution risk compared to cost synergies, which are more near-term and quantifiable",
+        "Reference financial synergies as an additional type (e.g., lower cost of debt due to larger combined entity, tax benefits from NOL utilization, or improved credit profile)",
+        "Mention the concept of synergy NPV \u2014 synergies are often discounted back at WACC to determine how much of the purchase premium is justified"
+      ],
+      "common_pitfalls": [
+        "Conflating synergies with general 'benefits of the deal' without specifically tying them to incremental value above standalone valuations",
+        "Failing to distinguish that cost synergies are more credible/modeled conservatively while revenue synergies are speculative and often haircut heavily by analysts",
+        "Only listing one type of synergy (usually cost) without addressing revenue synergies, or vice versa",
+        "Giving vague examples like 'the companies work better together' without naming concrete operational sources such as headcount overlap, cross-sell opportunities, or procurement leverage"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-f2062aa8",
+    "category": "Mergers & Acquisitions (M&A)",
+    "difficulty": "fundamental",
+    "question": "Why do most M&A deals fail to deliver their expected value or synergies?",
+    "rubric": {
+      "must_hit": [
+        "Identifies integration failure as a primary cause \u2014 cultural clashes, IT system incompatibilities, or retention of key talent post-close undermining projected synergies",
+        "Explains overpayment / winner's curse: acquirer pays a premium (often 20\u201340% above market price) that exceeds the present value of realizable synergies, destroying acquirer shareholder value on day one",
+        "Distinguishes between synergy types (cost/revenue) and notes revenue synergies are routinely overestimated due to cross-sell assumptions, customer overlap, or market timing risks that prove harder to execute than cost cuts",
+        "Cites due diligence gaps \u2014 hidden liabilities, customer concentration risk, or undisclosed operational issues discovered only post-close that erode expected value",
+        "Mentions management distraction and organizational disruption: leadership bandwidth consumed by integration diverts focus from core business, causing performance deterioration in the base business"
+      ],
+      "good_to_hit": [
+        "References empirical evidence that ~50\u201370% of M&A deals destroy acquirer shareholder value (e.g., McKinsey, KPMG studies), grounding the answer in data",
+        "Explains the agency problem / empire-building motive: CEOs pursuing deals for size, prestige, or compensation tied to revenue scale rather than shareholder value maximization, leading to strategically flawed deals",
+        "Notes that synergy timelines are compressed in the deal model (e.g., year 1\u20133 full run-rate) but realization in practice takes significantly longer, inflating NPV of synergies used to justify the price paid",
+        "Mentions deal structure issues such as all-stock vs. all-cash signaling, earnout disagreements, or misaligned incentives for the target management team post-close"
+      ],
+      "common_pitfalls": [
+        "Giving only vague, generic answers like 'cultures don't fit' without specifying measurable mechanisms (e.g., employee attrition spikes, productivity loss) that translate cultural issues into financial value destruction",
+        "Conflating deal failure with deal abandonment \u2014 candidates discuss regulatory blocks or financing issues rather than post-close value destruction, which is what the question asks",
+        "Ignoring the buy-side financial engineering side (overpayment / premium paid) and focusing exclusively on soft integration issues, missing the valuation discipline aspect",
+        "Failing to distinguish cost synergies from revenue synergies and treating all synergies as equally achievable, showing lack of deal-level analytical nuance"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-5d89fbde",
+    "category": "Mergers & Acquisitions (M&A)",
+    "difficulty": "fundamental",
+    "question": "What is the difference between a strategic buyer and a financial sponsor? Which one typically pays more, and why?",
+    "rubric": {
+      "must_hit": [
+        "Strategic buyer is an operating company in the same or adjacent industry seeking synergies; financial sponsor (PE firm) is an investment vehicle seeking financial returns within a defined hold period (typically 3-7 years)",
+        "Strategic buyers can realize revenue and cost synergies (e.g., cross-selling, headcount reduction, procurement savings), which allow them to justify a higher standalone valuation and pay a premium",
+        "Financial sponsors rely primarily on three return drivers: leverage (debt paydown), operational improvement, and multiple expansion \u2014 without the benefit of synergies",
+        "Strategic buyers typically pay more because they can model synergies into their offer price, effectively sharing anticipated synergy value with the seller (synergy premium)",
+        "Financial sponsors are constrained by IRR/MOIC return thresholds (e.g., targeting 20%+ IRR or 2-3x MOIC), which caps the entry price they can pay while still hitting return hurdles"
+      ],
+      "good_to_hit": [
+        "Financial sponsors use significant leverage (LBO capital structure with 50-70% debt) to amplify equity returns, but this also limits how much they can pay vs. an all-equity or low-leverage strategic acquirer",
+        "Strategic buyers have a perpetual hold period and lower cost of capital (corporate WACC vs. PE hurdle rate), which mechanically justifies a higher DCF valuation for the same asset",
+        "Mention that in a competitive auction, a well-run target may extract most of the synergy value from a strategic buyer, while a financial sponsor competing in the same process is at a structural disadvantage on price",
+        "Carve-outs or distressed situations where a PE firm's operational expertise or speed/certainty of close may allow them to win deals even at lower headline prices"
+      ],
+      "common_pitfalls": [
+        "Claiming financial sponsors always lose on price without acknowledging contexts where they win (proprietary deals, seller preferring confidentiality/speed, management rollover situations)",
+        "Confusing synergies as something financial sponsors also benefit from \u2014 PE firms generally cannot realize cross-portfolio synergies at the same scale as true strategic acquirers",
+        "Failing to explain WHY the IRR constraint limits PE offer price (i.e., not connecting entry multiple to exit multiple, leverage, and hold period math)",
+        "Vague or circular answer that says 'strategics pay more because they value the company more' without explaining the underlying mechanism of synergy value creation"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-8bb5509d",
+    "category": "Mergers & Acquisitions (M&A)",
+    "difficulty": "fundamental",
+    "question": "What is an exchange ratio, and how is it calculated in an all-stock deal?",
+    "rubric": {
+      "must_hit": [
+        "Define exchange ratio as the number of acquirer shares issued per target share in an all-stock deal (e.g., 0.5x means target shareholder receives 0.5 acquirer shares per target share held)",
+        "State the core formula: Exchange Ratio = Offer Price per Target Share \u00f7 Acquirer Share Price at time of deal pricing",
+        "Explain that the offer price per target share typically includes a control premium over the target's unaffected market price",
+        "Clarify that a fixed exchange ratio exposes both parties to market price fluctuations between signing and closing, unlike a fixed-price cash deal"
+      ],
+      "good_to_hit": [
+        "Distinguish between fixed exchange ratio (ratio locked, dollar value floats with acquirer stock) vs. fixed-value/floating exchange ratio (dollar value locked, ratio adjusts) and the risk allocation implications for each",
+        "Mention collar provisions as a mechanism to cap/floor the exchange ratio within a band, protecting both acquirer dilution and target deal value",
+        "Note that post-merger ownership split for the acquirer can be derived from the exchange ratio: target shareholders' ownership % = (Shares Issued to Target) \u00f7 (Existing Acquirer Shares + Shares Issued to Target)",
+        "Reference that exchange ratio affects EPS accretion/dilution analysis because it determines total share count increase for the combined entity"
+      ],
+      "common_pitfalls": [
+        "Confusing the exchange ratio direction \u2014 stating it as acquirer shares received per acquirer share rather than per target share",
+        "Forgetting that the offer price used in the numerator is the acquisition price (including premium), not merely the current unaffected target share price, leading to an understated ratio",
+        "Treating a fixed exchange ratio as equivalent in risk to a fixed-price deal, ignoring that the dollar value received by target shareholders fluctuates with the acquirer's stock price between signing and closing",
+        "Failing to mention that dilution to existing acquirer shareholders is a direct consequence of the exchange ratio magnitude"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-f5e9d89f",
+    "category": "Mergers & Acquisitions (M&A)",
+    "difficulty": "fundamental",
+    "question": "How do you account for an acquisition on the balance sheet (purchase accounting)?",
+    "rubric": {
+      "must_hit": [
+        "Assets and liabilities of the target are written up (or down) to fair market value on the acquisition date, replacing historical book values",
+        "Goodwill is calculated as the excess of purchase price over the fair value of net identifiable assets (Purchase Price \u2212 Fair Value of Net Assets = Goodwill)",
+        "Identifiable intangible assets (e.g., brand, customer relationships, patents) must be separately recognized at fair value apart from goodwill under ASC 805",
+        "The target's equity (retained earnings, common stock) is eliminated and does not carry over to the acquirer's balance sheet",
+        "The consideration paid (cash, stock, debt assumed, or combination) is reflected on the acquirer's balance sheet \u2014 cash reduces cash, stock issuance increases equity, assumed debt increases liabilities"
+      ],
+      "good_to_hit": [
+        "Deferred tax liabilities (DTLs) arise from writing up assets to fair value for book purposes without a corresponding step-up in tax basis (e.g., in a stock deal), which itself increases goodwill",
+        "Transaction fees (advisory, legal) are expensed as incurred under ASC 805, not capitalized \u2014 contrast with pre-2009 pooling-of-interests treatment",
+        "Contingent consideration (earnouts) must be recognized at fair value on the acquisition date and remeasured each period through P&L",
+        "Under a 338(h)(10) or asset deal, the acquirer may receive a tax step-up in asset basis, eliminating the DTL that would otherwise arise in a stock deal"
+      ],
+      "common_pitfalls": [
+        "Confusing goodwill with other intangibles \u2014 candidates often fail to distinguish that goodwill is a residual catch-all, while identifiable intangibles must be separately valued and amortized (or tested for impairment in goodwill's case)",
+        "Stating that the target's retained earnings carry over to the combined entity's balance sheet \u2014 they are eliminated entirely",
+        "Forgetting to account for the liability side of the target (assumed debt, unfunded pension obligations, etc.) being stepped up to fair value, not just assets",
+        "Mixing up purchase accounting (ASC 805, current standard) with pooling-of-interests (abolished in 2001), suggesting the two methods are still alternatives"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-010f1d02",
+    "category": "Leveraged Buyouts (LBO)",
+    "difficulty": "fundamental",
+    "question": "Walk me through a basic LBO model.",
+    "rubric": {
+      "must_hit": [
+        "Sponsor acquires target using a mix of debt and equity (typically 60-70% debt / 30-40% equity), with debt levered against target's cash flows or assets",
+        "Project target's income statement and cash flows over the holding period (typically 3-7 years), using EBITDA as the primary cash flow metric to service debt",
+        "Debt is paid down over the holding period using free cash flow, reducing leverage and building equity value",
+        "Exit via sale or IPO at an assumed exit multiple (applied to exit-year EBITDA), with equity value = enterprise value minus remaining net debt at exit",
+        "Returns calculated as IRR and/or MOIC to the equity sponsor: MOIC = exit equity / entry equity; IRR annualizes that return over the holding period"
+      ],
+      "good_to_hit": [
+        "Identify the three primary drivers of equity return: EBITDA growth (operational improvement), multiple expansion (buy low / sell high), and debt paydown (deleveraging)",
+        "Mention the debt structure typically includes multiple tranches (e.g., Term Loan B, revolving credit facility, high-yield bonds) with different seniority, pricing, and amortization schedules",
+        "Explain that entry price is often expressed as a purchase price multiple (e.g., 8x-10x EBITDA) and that a key test is whether the deal can achieve a 20%+ IRR or 2.0x+ MOIC at sponsor's hurdle rate",
+        "Note that the sources and uses table balances the transaction, with uses = purchase price + fees and sources = debt tranches + sponsor equity"
+      ],
+      "common_pitfalls": [
+        "Conflating total enterprise value returns with equity returns \u2014 failing to subtract remaining debt at exit to arrive at sponsor equity proceeds",
+        "Stating that all free cash flow goes to debt repayment without acknowledging the cash sweep mechanics or minimum cash balance assumptions",
+        "Describing a generic DCF or merger model instead of highlighting the leveraged capital structure and equity return framework specific to LBOs",
+        "Omitting the entry vs. exit multiple dynamic and treating EBITDA growth as the sole driver of returns"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-0386551c",
+    "category": "Leveraged Buyouts (LBO)",
+    "difficulty": "fundamental",
+    "question": "Why would a private equity firm use leverage when buying a company?",
+    "rubric": {
+      "must_hit": [
+        "Leverage amplifies equity returns (IRR) by allowing the PE firm to control a larger asset base with less equity capital \u2014 same absolute dollar gain on exit divided by smaller equity check = higher IRR",
+        "Debt is cheaper than equity (interest is tax-deductible via interest tax shield, lowering effective cost of capital)",
+        "Debt repayment over the holding period builds equity value mechanically (debt paydown increases equity stake without operating improvement)",
+        "Discipline / alignment effect: heavy debt load forces management to generate consistent cash flows and avoid value-destructive capital allocation"
+      ],
+      "good_to_hit": [
+        "Quantitative illustration: e.g., buying a $100M company with $30M equity vs. $100M equity \u2014 if sold for $150M, equity return is 67% vs. 50%, demonstrating the levered IRR uplift",
+        "Return on equity decomposition: distinguishes between value creation from multiple expansion, EBITDA growth, and leverage/debt paydown as three separate return drivers",
+        "Mention of optimal leverage limits \u2014 too much debt raises distress risk and debt service burden, so PE firms size leverage to sustainable free cash flow coverage (e.g., interest coverage ratios, Debt/EBITDA thresholds)"
+      ],
+      "common_pitfalls": [
+        "Stating leverage 'increases returns' without explaining the mechanism (smaller equity denominator on the same exit proceeds)",
+        "Confusing the tax shield benefit as the primary reason rather than a supporting reason alongside the equity amplification effect",
+        "Ignoring the risk trade-off \u2014 answering as if leverage is purely beneficial without acknowledging increased financial risk and potential for distress",
+        "Conflating LBO leverage rationale with general corporate finance capital structure theory without tying it specifically to the PE return model and exit event"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-25afcd16",
+    "category": "Leveraged Buyouts (LBO)",
+    "difficulty": "fundamental",
+    "question": "What characteristics make a company an ideal LBO candidate?",
+    "rubric": {
+      "must_hit": [
+        "Strong, stable, and predictable free cash flows (e.g., recurring revenue, low capex intensity) to service high debt load",
+        "Established market position with defensible competitive advantages (pricing power, loyal customer base) reducing revenue risk",
+        "Significant debt capacity \u2014 ideally asset-heavy balance sheet or high EBITDA margins enabling leverage of 4\u20137x EBITDA",
+        "Clear value creation levers and exit opportunities (multiple expansion, operational improvements, bolt-on M&A) within a 3\u20137 year hold period",
+        "Low existing debt on balance sheet at time of acquisition, allowing PE sponsor to layer on new leverage"
+      ],
+      "good_to_hit": [
+        "Fragmented industry enabling a buy-and-build / roll-up strategy to drive EBITDA growth and multiple arbitrage",
+        "Management team aligned with sponsor incentives (rollover equity, options) or identifiable operational improvements under new ownership",
+        "Non-cyclical or recession-resistant end markets (e.g., healthcare, essential services) that protect cash flows through economic downturns",
+        "Tangible asset base or high-quality collateral (real estate, equipment, receivables) that supports secured debt issuance"
+      ],
+      "common_pitfalls": [
+        "Conflating a 'good company' with a 'good LBO candidate' \u2014 failing to explain why leverage is the key differentiator (i.e., must specifically tie characteristics to debt serviceability)",
+        "Ignoring exit strategy \u2014 not mentioning that an identifiable path to liquidity (strategic buyer, IPO, secondary buyout) is essential to generating sponsor returns",
+        "Omitting the importance of limited future capex or working capital needs, which would otherwise consume cash that should service debt",
+        "Stating high growth as a universally positive trait without acknowledging that high-growth companies often require reinvestment that conflicts with LBO debt repayment"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-c17e53f6",
+    "category": "Leveraged Buyouts (LBO)",
+    "difficulty": "fundamental",
+    "question": "What are the main drivers of the Internal Rate of Return (IRR) in an LBO?",
+    "rubric": {
+      "must_hit": [
+        "Entry and exit multiple expansion/contraction: a higher exit EBITDA multiple than the entry multiple directly boosts equity returns, and candidate must name this as a key driver",
+        "EBITDA growth (revenue growth and/or margin expansion) increasing the exit equity value, since Exit Equity Value \u2248 Exit EBITDA \u00d7 Exit Multiple \u2212 Net Debt at Exit",
+        "Debt paydown/leverage: free cash flow used to repay debt reduces net debt at exit, increasing equity value to sponsors without changing enterprise value",
+        "Initial leverage/entry price: the amount of debt used at entry (financial leverage) amplifies equity returns analogous to a mortgage \u2014 lower equity check for same asset magnifies IRR",
+        "Time horizon: IRR is time-weighted, so a shorter hold period increases IRR for the same total return multiple (MOIC), and candidate must articulate this inverse relationship"
+      ],
+      "good_to_hit": [
+        "Distinction between value creation levers: separating multiple expansion (market-driven, less controllable) from EBITDA growth (operational, more controllable) and leverage (financial engineering)",
+        "Cash yield / dividends: mention of dividend recapitalizations or cash distributions during the hold period as an additional IRR driver by returning capital earlier",
+        "Quantitative illustration: candidate sketches a simplified IRR bridge (e.g., entry equity $300M, exit equity $600M in 5 years \u2192 ~15% IRR) to demonstrate intuition",
+        "Interaction effects: recognizing that leverage amplifies EBITDA growth gains since debt is fixed while equity captures all upside above the debt threshold"
+      ],
+      "common_pitfalls": [
+        "Conflating IRR with MOIC: stating that a 2x MOIC always equals a specific IRR without acknowledging the time dimension that separates the two metrics",
+        "Ignoring debt paydown as a standalone driver: candidates often only mention EBITDA growth and multiple expansion while forgetting that principal repayment mechanically increases equity value",
+        "Overstating multiple expansion as controllable: claiming sponsors can reliably engineer exit multiple expansion without noting it depends heavily on market conditions and entry timing",
+        "Failing to mention entry valuation/price paid: overlooking that a lower purchase price (lower entry multiple) is itself a critical IRR driver independent of operational improvements"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-bc5ea7c3",
+    "category": "Leveraged Buyouts (LBO)",
+    "difficulty": "fundamental",
+    "question": "How do you calculate cash-on-cash return (MoM), and how does it mathematically relate to IRR?",
+    "rubric": {
+      "must_hit": [
+        "Define cash-on-cash (MoM) as total equity proceeds received divided by total equity invested (e.g., exit equity value / initial equity check)",
+        "Explain IRR as the discount rate that sets NPV of all cash flows to zero, solved via: Initial Equity = \u03a3 [Cash Flow_t / (1+IRR)^t]",
+        "State the mathematical bridge: for a single-entry/single-exit LBO with no interim dividends, MoM = (1 + IRR)^n, or equivalently IRR = MoM^(1/n) \u2212 1, where n is the holding period in years",
+        "Clarify that MoM ignores time (a 3x in 2 years vs. 3x in 7 years have the same MoM but vastly different IRRs)",
+        "Identify that interim cash flows (dividends, recaps) cause MoM and the simple (1+IRR)^n relationship to diverge, requiring iterative IRR solving"
+      ],
+      "good_to_hit": [
+        "Provide benchmark intuition: 2x MoM over 5 years \u2248 15% IRR; 3x over 5 years \u2248 25% IRR, showing how sponsors use both metrics together",
+        "Note that MoM is a better measure of absolute wealth creation while IRR is a better measure of capital efficiency/time-weighted return, and sponsors typically require both (e.g., \u22652.0x MoM AND \u226520% IRR) to clear hurdle",
+        "Explain that in a zero-dividend LBO model, equity proceeds = exit enterprise value minus net debt at exit minus transaction fees, and that's the numerator in MoM",
+        "Mention that for partial exits or fund-level calculations, MOIC (Multiple on Invested Capital) and DPI/TVPI are related LP-level variants of the same concept"
+      ],
+      "common_pitfalls": [
+        "Conflating MoM with MOIC at the fund level vs. deal level, or using total transaction value instead of equity invested/received",
+        "Stating MoM and IRR are interchangeable or always move in the same direction without acknowledging the holding period and interim cash flow effects",
+        "Forgetting that IRR^n \u2260 MoM when there are interim dividend recapitalizations or equity rollovers that create multiple cash flow events",
+        "Inverting the formula (e.g., writing IRR = n^(1/MoM) \u2212 1) or misapplying the exponent when solving for IRR from MoM"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-543dc58b",
+    "category": "Leveraged Buyouts (LBO)",
+    "difficulty": "fundamental",
+    "question": "What are the different tranches of debt commonly used in an LBO (e.g., Senior Debt vs. Subordinated Debt)?",
+    "rubric": {
+      "must_hit": [
+        "Senior Secured Debt (Term Loan A/B and Revolving Credit Facility) sits at the top of the capital structure with first lien on assets and lowest interest rate due to lowest risk",
+        "Subordinated/Junior Debt (mezzanine, second lien, high-yield bonds) sits below senior debt, carries higher interest rates (cash pay and/or PIK) to compensate for higher risk and lower recovery priority",
+        "Correct ordering of repayment priority (waterfall): Senior Secured \u2192 Second Lien/Senior Unsecured \u2192 Mezzanine/Sub Debt \u2192 Equity",
+        "Sponsor equity (typically 30-40% of capital structure) is the most junior claim and bears the most risk but captures upside through leverage",
+        "Each tranche has distinct covenant structures: senior debt has maintenance covenants (tighter) while high-yield bonds typically have incurrence covenants (looser)"
+      ],
+      "good_to_hit": [
+        "Specific mention of PIK (Payment-in-Kind) toggle notes or mezzanine warrants as yield-enhancement features for junior tranches",
+        "Reference to typical leverage multiples by tranche (e.g., senior secured at ~3-4x EBITDA, total debt at ~5-6x EBITDA) in a standard LBO",
+        "Explanation of how the blended cost of debt (weighted average across tranches) must be below the target company's unlevered return for the LBO to create equity value",
+        "Mention of unitranche facilities as a modern alternative that blends senior and junior debt into a single instrument often used in middle-market LBOs"
+      ],
+      "common_pitfalls": [
+        "Confusing the seniority of second lien loans vs. high-yield bonds or mezzanine \u2014 failing to correctly order claims in the waterfall",
+        "Treating all senior debt as identical without distinguishing Term Loan A (amortizing, held by banks) from Term Loan B (bullet, held by institutional investors)",
+        "Omitting the revolving credit facility entirely or misidentifying it as a drawn term loan rather than a liquidity backstop",
+        "Describing mezzanine purely as equity rather than a hybrid debt instrument with equity-like features (warrants, PIK), conflating it with preferred equity"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-febfe603",
+    "category": "Leveraged Buyouts (LBO)",
+    "difficulty": "fundamental",
+    "question": "What is PIK (Payment In Kind) interest, and why is it used?",
+    "rubric": {
+      "must_hit": [
+        "PIK interest accrues and is added to the principal balance rather than being paid in cash periodically (i.e., interest is 'paid' by issuing additional debt or securities)",
+        "Preserves cash flow for the borrower/portfolio company by eliminating current cash interest payments, which is valuable in a highly leveraged buyout where free cash flow is scarce",
+        "PIK results in a compounding effect on the outstanding debt balance, meaning the principal grows over time and the effective cost is higher than the stated rate",
+        "Lenders demand a higher interest rate (spread) on PIK instruments compared to cash-pay debt to compensate for increased credit risk and deferred cash receipt"
+      ],
+      "good_to_hit": [
+        "Distinction between pure PIK (always non-cash) and PIK-toggle notes (borrower can elect to pay cash or PIK each period), and that PIK-toggle is common in sponsor-backed LBOs to retain flexibility",
+        "PIK instruments typically sit at the bottom of the capital structure (e.g., mezzanine or holding company level) and are subordinated to senior secured debt, reflecting their higher risk profile",
+        "Tax treatment nuance: PIK interest is generally deductible when it accrues (original issue discount/OID rules), not when cash is paid, which provides some shield despite no cash outflow",
+        "Used in dividend recapitalizations or seller notes in addition to buyout financing, illustrating breadth of PIK use cases beyond pure acquisition debt"
+      ],
+      "common_pitfalls": [
+        "Confusing PIK with zero-coupon bonds \u2014 PIK accrues interest at a stated rate that capitalizes, whereas a zero-coupon bond is issued at a discount; they are mechanically different",
+        "Failing to mention the compounding / growing principal risk to the equity, which is critical context for why PIK is expensive and risky despite short-term cash relief",
+        "Stating that PIK is 'free' or has no cost because no cash leaves the company, ignoring the higher rate, compounding balance, and ultimate repayment obligation",
+        "Not connecting PIK to the LBO context \u2014 answering only mechanically without explaining why a financial sponsor or leveraged borrower would choose it over cash-pay debt"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  },
+  {
+    "id": "q-1aa22e2f",
+    "category": "Leveraged Buyouts (LBO)",
+    "difficulty": "fundamental",
+    "question": "How does a dividend recapitalization work, and how does it impact IRR?",
+    "rubric": {
+      "must_hit": [
+        "Defines dividend recapitalization as the process where a PE-owned portfolio company takes on additional debt post-acquisition and uses proceeds to pay a special dividend to the PE sponsor/equity holders",
+        "Explains that the new debt replaces equity value on the balance sheet, increasing leverage without changing enterprise value at that moment",
+        "States that dividend recap accelerates return of capital to the PE sponsor before exit, which shortens the effective payback period and boosts IRR by pulling cash flows earlier in the holding period",
+        "Clarifies that IRR improves because the sponsor receives a large cash inflow mid-hold (time value of money effect) even if the total equity proceeds at exit are reduced by the same debt burden",
+        "Notes that the equity check at exit is lower because the company carries more debt, but the earlier dividend receipt more than offsets this in IRR terms depending on timing"
+      ],
+      "good_to_hit": [
+        "Quantifies the IRR impact with a directional example: e.g., a $50M dividend received in year 2 of a 5-year hold materially increases IRR versus receiving all proceeds at exit in year 5, due to discounting",
+        "Distinguishes between IRR improvement and MOIC impact \u2014 dividend recaps typically improve IRR but may reduce or leave MOIC unchanged since total cash returned is not increased by the recap itself",
+        "Mentions market/structural conditions that enable a dividend recap: strong credit markets, company generating sufficient EBITDA/cash flows to support higher leverage, and lender willingness",
+        "Notes the downside risks: increased financial distress risk for the portfolio company, potential covenant breaches, and reputational concern if the company subsequently struggles"
+      ],
+      "common_pitfalls": [
+        "Confusing dividend recapitalization with a recapitalization at the time of the original LBO \u2014 a div recap occurs post-acquisition during the holding period",
+        "Claiming that a dividend recap increases both IRR and MOIC equally \u2014 MOIC is generally unaffected or marginally affected while IRR benefits from the earlier cash receipt",
+        "Failing to explain the time value of money mechanics that drive IRR improvement (i.e., just saying 'you get money earlier' without connecting it to the IRR formula's sensitivity to timing)",
+        "Stating that enterprise value increases as a result of the dividend recap \u2014 EV is largely unchanged at the moment of recap; only the capital structure (more debt, less equity) shifts"
+      ],
+      "scoring_weights": {
+        "must_hit": 0.65,
+        "good_to_hit": 0.2,
+        "clarity_structure": 0.15
+      }
+    }
+  }
+]
