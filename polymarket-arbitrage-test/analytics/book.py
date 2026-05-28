@@ -72,7 +72,7 @@ class PolymarketBookState:
         if side not in ("bids", "asks"):
             raise ValueError(f"side must be 'bids' or 'asks', got {side!r}")
         book = self.books.get(asset_id)
-        if not book:
+        if book is None:
             return {}
         return dict(book.get(side, {}))
 
@@ -167,10 +167,11 @@ class KalshiBookState:
         """Return a shallow copy of {price_dollars: size} for the requested side.
 
         side: 'yes' or 'no' — both store BID-side liquidity for that outcome.
+        Copy is defensive: callers can mutate without affecting internal state.
         """
         if side not in ("yes", "no"):
             raise ValueError(f"side must be 'yes' or 'no', got {side!r}")
         book = self.books.get(ticker)
-        if not book:
+        if book is None:
             return {}
         return dict(book.get(side, {}))

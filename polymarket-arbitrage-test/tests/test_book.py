@@ -43,3 +43,28 @@ def test_kalshi_get_levels_yes_and_no_sides():
 def test_kalshi_get_levels_unknown_ticker_returns_empty():
     bs = KalshiBookState()
     assert bs.get_levels("nope", "yes") == {}
+
+
+def test_polymarket_get_levels_invalid_side_raises():
+    import pytest
+    bs = PolymarketBookState()
+    with pytest.raises(ValueError):
+        bs.get_levels("A1", "middle")
+
+
+def test_kalshi_get_levels_invalid_side_raises():
+    import pytest
+    bs = KalshiBookState()
+    with pytest.raises(ValueError):
+        bs.get_levels("T1", "middle")
+
+
+def test_kalshi_get_levels_returns_snapshot_copy():
+    bs = KalshiBookState()
+    bs.apply({
+        "type": "orderbook_snapshot",
+        "msg": {"market_ticker": "T1", "yes": [[50, 100]], "no": [[48, 200]]},
+    })
+    yes = bs.get_levels("T1", "yes")
+    yes[0.50] = 9999.0
+    assert bs.get_levels("T1", "yes")[0.50] == 100.0
