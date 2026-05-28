@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os as _os
 import time
 from dataclasses import dataclass
 
@@ -43,6 +44,13 @@ MIN_LOG_EDGE = -0.05     # log anything with net edge >= -5 cents per $1 (so we 
 MIN_PRINT_EDGE = 0.005   # only print to stdout when net edge >= 0.5¢ per $1
 MAX_QUOTE_AGE_S = 30     # skip pair if either side's latest quote is older than this
 EDGE_CHANGE_EPSILON = 1e-4  # only persist a new row when net edge moves by >1bp
+
+# Depth-walked fill behavior. When enabled, evaluate() walks the supplied
+# depth dicts on each leg up to FILL_SIZE_CONTRACTS contracts and uses the
+# resulting VWAP as the fill price (instead of top-of-book ask). When
+# depth dicts are absent or the gate is off, falls back to top-of-book.
+FILL_DEPTH_ENABLED = _os.environ.get("FILL_DEPTH_ENABLED", "0") not in ("0", "false", "False", "")
+FILL_SIZE_CONTRACTS = float(_os.environ.get("FILL_SIZE_CONTRACTS", "100"))
 
 log = logging.getLogger("arb")
 
@@ -122,14 +130,40 @@ def evaluate(pq: PairQuote, now_ns: int | None = None) -> list[dict]:
     """Return list of candidate trades with edge breakdown.
 
     Skips any direction whose required quote leg is stale (older than
-    MAX_QUOTE_AGE_S). This avoids fake arb signals when one feed has dropped
-    while the other is still being updated.
+    MAX_QUOTE_AGE_S). When FILL_DEPTH_ENABLED and depth dicts are present
+    on pq, fills are computed by walking up to FILL_SIZE_CONTRACTS contracts
+    of the relevant side and using the VWAP as the leg price. Otherwise
+    falls back to top-of-book ask.
+
+    Each candidate dict now also contains:
+      fill_vwap_poly, fill_vwap_kalshi : float — actual per-contract fill price
+      fill_qty_poly, fill_qty_kalshi   : float — contracts that would be filled
+      levels_consumed_poly, levels_consumed_kalshi : int — book levels walked
+                                                          (0 = top-of-book fallback)
+      partial_fill : bool — True if either leg's filled qty < requested
     """
+    from analytics.depth import walk_levels
+
     import time as _time
     if now_ns is None:
         now_ns = _time.time_ns()
+
+    # Re-read env per-call so tests can monkeypatch.setenv() between invocations.
+    gate_on = _os.environ.get("FILL_DEPTH_ENABLED", "0") not in ("0", "false", "False", "")
+    fill_size = float(_os.environ.get("FILL_SIZE_CONTRACTS", "100"))
+
     stale = pq.is_stale(now_ns)
     results: list[dict] = []
+
+    def _resolve_leg(top_of_book: float | None, depth: dict | None, side: str):
+        """Return (price_used, fill_qty, levels_consumed) for one leg."""
+        if gate_on and depth:
+            vwap, filled, levels_used = walk_levels(depth, fill_size, side)
+            if vwap is not None:
+                return (vwap, filled, levels_used)
+        if top_of_book is None:
+            return (None, 0.0, 0)
+        return (top_of_book, fill_size, 0)
 
     # Direction A: buy YES on Poly, buy NO on Kalshi
     if (
@@ -138,24 +172,30 @@ def evaluate(pq: PairQuote, now_ns: int | None = None) -> list[dict]:
         and not stale["poly_yes"]
         and not stale["kalshi"]
     ):
-        cost = pq.poly_yes_ask + pq.kalshi_no_ask
-        gross = 1.0 - cost
-        fees = (
-            poly_fee(pq.poly_yes_ask)
-            + kalshi_fee(pq.kalshi_no_ask)
-        )
-        net = gross - fees
-        results.append(
-            {
+        poly_vwap, poly_qty, poly_levels = _resolve_leg(pq.poly_yes_ask, pq.poly_yes_asks, "ask")
+        kalshi_vwap, kalshi_qty, kalshi_levels = _resolve_leg(pq.kalshi_no_ask, pq.kalshi_no_asks, "ask")
+        if poly_vwap is not None and kalshi_vwap is not None:
+            cost = poly_vwap + kalshi_vwap
+            gross = 1.0 - cost
+            fees = poly_fee(poly_vwap) + kalshi_fee(kalshi_vwap)
+            net = gross - fees
+            partial = (poly_qty < fill_size) or (kalshi_qty < fill_size)
+            results.append({
                 "direction": "poly_yes_kalshi_no",
                 "gross_edge": gross,
                 "net_edge": net,
                 "cost": cost,
-                "poly_leg_price": pq.poly_yes_ask,
-                "kalshi_leg_price": pq.kalshi_no_ask,
+                "poly_leg_price": poly_vwap,
+                "kalshi_leg_price": kalshi_vwap,
                 "fees": fees,
-            }
-        )
+                "fill_vwap_poly": poly_vwap,
+                "fill_vwap_kalshi": kalshi_vwap,
+                "fill_qty_poly": poly_qty,
+                "fill_qty_kalshi": kalshi_qty,
+                "levels_consumed_poly": poly_levels,
+                "levels_consumed_kalshi": kalshi_levels,
+                "partial_fill": partial,
+            })
 
     # Direction B: buy YES on Kalshi, buy NO on Poly
     if (
@@ -164,24 +204,30 @@ def evaluate(pq: PairQuote, now_ns: int | None = None) -> list[dict]:
         and not stale["poly_no"]
         and not stale["kalshi"]
     ):
-        cost = pq.kalshi_yes_ask + pq.poly_no_ask
-        gross = 1.0 - cost
-        fees = (
-            poly_fee(pq.poly_no_ask)
-            + kalshi_fee(pq.kalshi_yes_ask)
-        )
-        net = gross - fees
-        results.append(
-            {
+        poly_vwap, poly_qty, poly_levels = _resolve_leg(pq.poly_no_ask, pq.poly_no_asks, "ask")
+        kalshi_vwap, kalshi_qty, kalshi_levels = _resolve_leg(pq.kalshi_yes_ask, pq.kalshi_yes_asks, "ask")
+        if poly_vwap is not None and kalshi_vwap is not None:
+            cost = poly_vwap + kalshi_vwap
+            gross = 1.0 - cost
+            fees = poly_fee(poly_vwap) + kalshi_fee(kalshi_vwap)
+            net = gross - fees
+            partial = (poly_qty < fill_size) or (kalshi_qty < fill_size)
+            results.append({
                 "direction": "kalshi_yes_poly_no",
                 "gross_edge": gross,
                 "net_edge": net,
                 "cost": cost,
-                "poly_leg_price": pq.poly_no_ask,
-                "kalshi_leg_price": pq.kalshi_yes_ask,
+                "poly_leg_price": poly_vwap,
+                "kalshi_leg_price": kalshi_vwap,
                 "fees": fees,
-            }
-        )
+                "fill_vwap_poly": poly_vwap,
+                "fill_vwap_kalshi": kalshi_vwap,
+                "fill_qty_poly": poly_qty,
+                "fill_qty_kalshi": kalshi_qty,
+                "levels_consumed_poly": poly_levels,
+                "levels_consumed_kalshi": kalshi_levels,
+                "partial_fill": partial,
+            })
 
     return results
 
