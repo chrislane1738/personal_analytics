@@ -187,16 +187,39 @@ class PaperTrader:
         )
         return pid
 
-    def _exit_leg_prices(self, pq, direction: str):
-        """Return (poly_close, kalshi_close) bid prices to use for closing this direction.
+    def _compute_exit_legs(self, pq, direction: str, size: float):
+        """Return (poly_exit_price, kalshi_exit_price) for closing this position.
 
-        Returns (None, None) if either side's bid is unavailable.
+        When FILL_DEPTH_ENABLED and the relevant bid-side depth dict is on pq,
+        return depth-walked VWAP for `size` contracts. Otherwise top-of-book bid.
+        Returns (None, None) if either side has no quote.
         """
+        from analytics.depth import walk_levels
+        gate_on = os.environ.get("FILL_DEPTH_ENABLED", "0") not in ("0", "false", "False", "")
+
+        def _resolve(top_bid, depth):
+            if gate_on and depth:
+                vwap, filled, _ = walk_levels(depth, size, "bid")
+                if vwap is not None:
+                    return vwap
+            return top_bid
+
         if direction == "poly_yes_kalshi_no":
-            return pq.poly_yes_bid, pq.kalshi_no_bid
-        if direction == "kalshi_yes_poly_no":
-            return pq.poly_no_bid, pq.kalshi_yes_bid
-        return None, None
+            poly = _resolve(pq.poly_yes_bid, pq.poly_yes_bids)
+            kalshi = _resolve(pq.kalshi_no_bid, pq.kalshi_no_bids)
+        elif direction == "kalshi_yes_poly_no":
+            poly = _resolve(pq.poly_no_bid, pq.poly_no_bids)
+            kalshi = _resolve(pq.kalshi_yes_bid, pq.kalshi_yes_bids)
+        else:
+            return (None, None)
+        return (poly, kalshi)
+
+    def _exit_leg_prices(self, pq, direction: str):
+        """Return (poly_close, kalshi_close) bid prices to use for closing.
+
+        Walks bid-side depth when available; falls back to top-of-book.
+        """
+        return self._compute_exit_legs(pq, direction, PAPER_SIZE_CONTRACTS)
 
     def _execute_exit(self, pos, poly_close, kalshi_close, reason: str, detail: str) -> None:
         result = self.store.close_paper_position(
@@ -305,7 +328,10 @@ class PaperTrader:
                 continue
 
     def mark_all(self, pair_quotes) -> None:
-        """Update MTM for every open position from current pair quotes."""
+        """Update MTM for every open position from current pair quotes.
+
+        Uses depth-walked bid VWAP for liquidation value when available.
+        """
         if not self.enabled:
             return
         by_pair = {p.pair_name: p for p in pair_quotes}
@@ -313,16 +339,7 @@ class PaperTrader:
             pq = by_pair.get(pos["pair_name"])
             if pq is None:
                 continue
-            d = pos["direction"]
-            # Find liquidation prices = the BIDS on the legs we currently own
-            if d == "poly_yes_kalshi_no":
-                poly_exit = pq.poly_yes_bid
-                kalshi_exit = pq.kalshi_no_bid
-            elif d == "kalshi_yes_poly_no":
-                poly_exit = pq.poly_no_bid
-                kalshi_exit = pq.kalshi_yes_bid
-            else:
-                continue
+            poly_exit, kalshi_exit = self._compute_exit_legs(pq, pos["direction"], pos["size"])
             if poly_exit is None or kalshi_exit is None:
                 continue
             entry_cost = pos["entry_poly_price"] + pos["entry_kalshi_price"]
