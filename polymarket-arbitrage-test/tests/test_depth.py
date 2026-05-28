@@ -55,3 +55,28 @@ def test_walk_zero_qty_returns_no_fill():
     assert vwap is None
     assert filled == 0.0
     assert levels_used == 0
+
+
+def test_walk_bid_runs_out_of_liquidity_returns_partial():
+    levels = {0.55: 10.0}
+    vwap, filled, levels_used = walk_levels(levels, qty=100.0, side="bid")
+    assert filled == pytest.approx(10.0)
+    assert vwap == pytest.approx(0.55)
+    assert levels_used == 1
+
+
+def test_walk_negative_qty_returns_no_fill():
+    vwap, filled, levels_used = walk_levels({0.50: 100.0}, qty=-5.0, side="ask")
+    assert vwap is None
+    assert filled == 0.0
+    assert levels_used == 0
+
+
+def test_walk_filters_nan_price_levels():
+    levels = {float("nan"): 100.0, 0.50: 30.0, 0.51: 70.0}
+    vwap, filled, levels_used = walk_levels(levels, qty=100.0, side="ask")
+    # NaN level must be filtered; fill from finite levels only
+    # 30 @ 0.50 + 70 @ 0.51 = 15 + 35.7 = 50.7 → VWAP 0.507
+    assert filled == pytest.approx(100.0)
+    assert vwap == pytest.approx(0.507)
+    assert levels_used == 2

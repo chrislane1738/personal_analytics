@@ -11,6 +11,8 @@ Pure function. No I/O. No side effects.
 """
 from __future__ import annotations
 
+import math
+
 
 def walk_levels(
     levels: dict[float, float],
@@ -39,7 +41,14 @@ def walk_levels(
 
     # Snapshot to list first — defensive against concurrent mutation by WS
     # writer task. Sorting also normalizes order regardless of dict insertion.
-    sorted_levels = sorted(levels.items(), key=lambda kv: kv[0], reverse=(side == "bid"))
+    # Filter NaN/Inf prices: they would propagate silently into VWAP and
+    # corrupt downstream cost/edge calculations (silent corruption is the
+    # dangerous failure mode in a trading context).
+    sorted_levels = sorted(
+        ((p, s) for p, s in levels.items() if math.isfinite(p)),
+        key=lambda kv: kv[0],
+        reverse=(side == "bid"),
+    )
 
     remaining = qty
     notional = 0.0
