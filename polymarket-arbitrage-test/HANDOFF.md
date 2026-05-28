@@ -8,7 +8,7 @@ You are taking over a live, long-running cross-venue arbitrage research system b
 
 A depth-walking fills feature was built and committed (commits `88fb0c4`..`c43a100`, plan at `docs/superpowers/plans/2026-05-27-depth-walking.md`). It replaces top-of-book paper fills with depth-walked VWAP for `FILL_SIZE_CONTRACTS` contracts, so paper PnL reflects real slippage. **Gated by `FILL_DEPTH_ENABLED` (default `0` = OFF).**
 
-- **Currently deployed with gate OFF** — live behavior identical to before; new DB columns (`fill_vwap_*`, `levels_consumed_*`, `partial_fill` on `arb_candidates`; `entry_fill_vwap_*` etc. on `paper_positions`) populate with top-of-book values and `levels_consumed=0`.
+- **ACTIVATED gate=1 on 2026-05-28 09:14** — running `FILL_DEPTH_ENABLED=1 FILL_SIZE_CONTRACTS=100`. Verified live: BTC-dip arbs walk 2-3 levels (`levels_consumed`>1), deep books stay at 1, no `partial_fill`, no auto-exits on the flip. To revert: restart without the env var (or `=0`). New DB columns (`fill_vwap_*`, `levels_consumed_*`, `partial_fill` on `arb_candidates`; `entry_fill_vwap_*` etc. on `paper_positions`) now record real walked VWAPs.
 - **To activate depth-walking**: restart with `FILL_DEPTH_ENABLED=1 FILL_SIZE_CONTRACTS=100 .venv/bin/python -m scripts.run_feeds > logs/run_feeds.log 2>&1 &`. ⚠️ This re-marks the 8 open positions at depth-walked bid VWAP (worse than top-of-book) — positions near the −$0.10/c MAE stop could auto-exit. Direction B exit path (ids 19/28) has no test coverage yet.
 - 30 pytest tests cover the feature: `.venv/bin/python -m pytest tests/ -q`.
 
